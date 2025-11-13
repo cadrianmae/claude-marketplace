@@ -20,13 +20,13 @@
     {
       "name": "context-handoff",
       "source": "./plugins/context-handoff",
-      "description": "Generic hierarchical parent-child session context handoff system. Pass context between sessions using /ctx-to and /ctx-from commands.",
+      "description": "Hierarchical parent-child session context handoff system. Pass context between sessions using /context:send and /context:fetch. Supports optional subject and custom paths. Files use pattern: /tmp/ctx-{direction}-{subject}.md",
       "version": "1.0.0",
       "author": {
         "name": "Mae Capacite",
         "email": "cadrianmae@users.noreply.github.com"
       },
-      "keywords": ["context", "sessions", "hierarchy", "workflow"]
+      "keywords": ["context", "sessions", "hierarchy", "workflow", "handoff"]
     },
     {
       "name": "doc-tracking",

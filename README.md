@@ -2,6 +2,12 @@
 
 Personal marketplace for Mae's custom Claude Code plugins.
 
+## Platform Compatibility
+
+**Supported:** Linux, macOS, Windows (via Git Bash)
+
+**Note for Windows users:** Context files default to `/tmp/` which maps to your Git Bash temp directory. You can specify a custom path using the optional path parameter if needed (e.g., `/context:send child subject /c/Temp/`).
+
 ## Available Plugins
 
 ### session
@@ -20,8 +26,12 @@ Flat session management system with `.current-session` tracking.
 Generic hierarchical parent-child session context handoff.
 
 **Commands:**
-- `/ctx-from` - Receive context from parent/child
-- `/ctx-to` - Send context before switching sessions
+- `/context:fetch` - Receive context from parent/child session
+- `/context:send` - Send context before switching sessions
+
+**File pattern:**
+- Parent to child: `/tmp/ctx-parent-to-child-{subject}.md`
+- Child to parent: `/tmp/ctx-child-to-parent-{subject}.md`
 
 ### doc-tracking
 Documentation tracking for research sources and development prompts.
@@ -39,15 +49,15 @@ Documentation tracking for research sources and development prompts.
 ### Local Installation
 ```bash
 /plugin marketplace add ~/.claude/marketplaces/cadrianmae-claude-marketplace
-/plugin install session@cadrianmae-claude-marketplace
+/plugin install session-management@cadrianmae-claude-marketplace
 /plugin install context-handoff@cadrianmae-claude-marketplace
 /plugin install doc-tracking@cadrianmae-claude-marketplace
 ```
 
-### From GitHub (when pushed)
+### From GitHub
 ```bash
 /plugin marketplace add cadrianmae/claude-marketplace
-/plugin install session@cadrianmae-claude-marketplace
+/plugin install session-management@cadrianmae-claude-marketplace
 ```
 
 ## Plugin Sources
