@@ -17,18 +17,20 @@ Both subject and path are optional:
 
 1. Determines direction: parent-to-child or child-to-parent
 2. If subject provided, looks for `{path}/ctx-{direction}-{subject}.md`
-3. If no subject, uses wildcard: `{path}/ctx-{direction}-*.md` (finds any matching file)
+3. If no subject, uses wildcard: `{path}/ctx-{direction}-*.md` **sorted by newest first**
 4. Path defaults to `/tmp/` but can be customized
 5. Reads and displays context file
 6. Integrates context into current session understanding
+
+**Important:** When using wildcard (no subject), files are sorted by modification time with **newest first**, ensuring you get the most recent context.
 
 ## Example: Receiving from Parent (Wildcard)
 
 ```
 /context:fetch parent
 
-✓ Searching for context files: /tmp/ctx-parent-to-child-*.md
-✓ Found: /tmp/ctx-parent-to-child-database-migration.md
+✓ Searching for context files: /tmp/ctx-parent-to-child-*.md (newest first)
+✓ Found: /tmp/ctx-parent-to-child-database-migration.md (modified 2 minutes ago)
 
 [Context displayed with parent session details]
 

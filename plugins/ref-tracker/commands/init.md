@@ -11,12 +11,12 @@ Initialize reference and research tracking for the current project.
 
 2. **Create `.claude/` directory structure:**
    - Creates `./.claude/` directory if missing
-   - Creates `./.claude/.ref-autotrack` (empty marker file - enables auto-tracking)
    - Creates `./.claude/.ref-config` with default settings:
      ```
      PROMPTS_VERBOSITY=major
      SOURCES_VERBOSITY=all
      ```
+   - **Note:** Does NOT create `.ref-autotrack` marker (use `/track:auto` to enable)
 
 3. **Check skill availability:**
    - Verifies ref-tracker skill is available
@@ -24,15 +24,17 @@ Initialize reference and research tracking for the current project.
 
 4. **Show setup summary:**
    - Files created/existing
-   - Auto-tracking status (enabled)
+   - Auto-tracking status (disabled by default)
    - Config location
    - Next steps
 
 ## Default configuration
 
-After init, tracking is **automatically enabled** with these defaults:
-- **Sources**: Track all WebSearch/WebFetch operations
-- **Prompts**: Track major academic/development work only
+After init, tracking is **disabled by default**. Configuration file contains these defaults:
+- **Sources**: Track all WebSearch/WebFetch operations (when enabled)
+- **Prompts**: Track major academic/development work only (when enabled)
+
+Use `/track:auto` to enable auto-tracking.
 
 ## Next steps
 

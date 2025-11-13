@@ -1,6 +1,14 @@
-# auto - Toggle auto-tracking on/off
+# auto - Control auto-tracking on/off
 
-Toggle automatic reference tracking on or off.
+Toggle or explicitly set automatic reference tracking state.
+
+## Usage
+
+```bash
+/track:auto          # Toggle between enabled/disabled
+/track:auto on       # Explicitly enable
+/track:auto off      # Explicitly disable
+```
 
 ## What it does
 
@@ -9,24 +17,31 @@ Toggle automatic reference tracking on or off.
    - If exists → auto-tracking is enabled
    - If missing → auto-tracking is disabled
 
-2. **Toggle state:**
-   - If **enabled** → deletes `./.claude/.ref-autotrack` (disables)
-   - If **disabled** → creates `./.claude/.ref-autotrack` (enables)
+2. **Update state:**
+   - **No argument** → toggle current state
+   - **Argument "on"** → enable (create marker if missing)
+   - **Argument "off"** → disable (delete marker if exists)
 
-3. **Show new status:**
+3. **When enabling:**
+   - Creates `./.claude/.ref-autotrack` with explanatory content:
+     ```
+     # Auto-tracking marker for ref-tracker plugin
+     # Presence = enabled | Absence = disabled
+     # Managed by: /track:auto command
+     # See: /track:help for details
+     ```
+
+4. **When disabling:**
+   - Deletes `./.claude/.ref-autotrack` marker file
+
+5. **Show new status:**
    - Reports whether auto-tracking is now enabled or disabled
    - Shows what will be tracked based on current config
    - Explains how to change verbosity settings
 
-## Usage
-
-```bash
-/track:auto    # Toggle between enabled/disabled
-```
-
 ## Output examples
 
-**When toggling ON:**
+**When enabling:**
 ```
 ✓ Auto-tracking enabled
 
@@ -41,7 +56,7 @@ Current verbosity settings:
 Use /track:config to adjust verbosity settings.
 ```
 
-**When toggling OFF:**
+**When disabling:**
 ```
 ✓ Auto-tracking disabled
 
@@ -49,9 +64,15 @@ The ref-tracker skill will no longer automatically track.
 
 You can still manually track using:
 - /track:update - Scan recent history
-- /track:init - Re-enable auto-tracking
 
-To re-enable: /track:auto
+To re-enable: /track:auto on
+```
+
+**When toggling:**
+```
+✓ Auto-tracking toggled: OFF → ON
+
+[Shows enabled message above]
 ```
 
 ## Prerequisites
@@ -60,6 +81,7 @@ Run `/track:init` first to create `.claude/` directory structure.
 
 ## Notes
 
-- Toggling does not affect existing tracked data
-- Manual tracking via `/track:update` still works when disabled
-- Configuration in `.claude/.ref-config` persists across toggles
+- State changes do not affect existing tracked data
+- Manual tracking via `/track:update` works regardless of state
+- Configuration in `.claude/.ref-config` persists across state changes
+- Marker file includes explanatory content for other Claude sessions

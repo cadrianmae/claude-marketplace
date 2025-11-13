@@ -10,9 +10,11 @@ Automatically track research sources and major prompts for academic and project 
 
 ## When to Activate
 
-This skill activates when:
+This skill activates automatically when:
 1. User runs `/track:init` command
 2. You notice `CLAUDE_SOURCES.md` or `CLAUDE_PROMPTS.md` files in the project
+
+Claude autonomously decides when to use this skill based on the description and context.
 
 Once activated, check `./.claude/.ref-autotrack` to determine if auto-tracking is enabled.
 
@@ -36,11 +38,19 @@ Once activated, check `./.claude/.ref-autotrack` to determine if auto-tracking i
 
 **Purpose:** Marker file that enables/disables automatic tracking
 
-**Contents:** Empty file (presence = enabled, absence = disabled)
+**Contents:** Contains explanatory comments for other Claude sessions:
+```
+# Auto-tracking marker for ref-tracker plugin
+# Presence = enabled | Absence = disabled
+# Managed by: /track:auto command
+# See: /track:help for details
+```
 
-**Created by:** `/track:init` command (creates and enables)
+**Created by:** `/track:auto` or `/track:auto on` command
 
-**Managed by:** `/track:auto` command (toggles on/off)
+**Managed by:** `/track:auto` command (toggles on/off, or explicit on/off)
+
+**NOT created by:** `/track:init` - tracking starts disabled
 
 **If you find this file:** The project has reference tracking initialized. Use the ref-tracker skill to automatically log research sources and major prompts according to the verbosity configuration in `./.claude/.ref-config`.
 
