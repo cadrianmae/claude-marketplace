@@ -52,8 +52,22 @@ Documentation tracking for research sources and development prompts.
 
 ## Plugin Sources
 
-Plugins will be located in `./plugins/` subdirectories once created.
+Plugins are located in `./plugins/` subdirectories. See individual plugin READMEs for detailed documentation.
+
+## External Integrations
+
+This marketplace includes adapted code from third-party open source projects:
+
+### session-management Plugin
+**Original:** [claude-sessions](https://github.com/iannuttall/claude-sessions) by Ian Nuttall
+**License:** MIT License
+**Modifications:** Adapted for user-level installation, added session-resume command, updated command namespaces
+
+See [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md) for complete attribution and license information.
 
 ## License
 
-Personal use - MIT License
+MIT License
+
+- Original claude-sessions code: Copyright (c) Ian Nuttall
+- Modifications and marketplace: Copyright (c) Mae Capacite

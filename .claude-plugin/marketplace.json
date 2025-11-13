@@ -8,9 +8,12 @@
     {
       "name": "session-management",
       "source": "./plugins/session-management",
-      "description": "Flat session management system with .current-session tracking. Includes commands for starting, ending, updating, listing, and resuming development sessions.",
+      "description": "Flat session management system with .current-session tracking. Adapted from iannuttall/claude-sessions. Includes commands for starting, ending, updating, listing, and resuming development sessions.",
       "version": "1.0.0",
       "author": "Mae Capacite",
+      "originalAuthor": "Ian Nuttall",
+      "originalRepo": "https://github.com/iannuttall/claude-sessions",
+      "license": "MIT",
       "keywords": ["sessions", "workflow", "documentation", "development"]
     },
     {
