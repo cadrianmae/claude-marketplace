@@ -52,8 +52,9 @@ init_sessions_file() {
 # Example: /home/user/project -> -home-user-project
 encode_path() {
     local path="$1"
-    # Remove leading / and replace remaining / with -
-    echo "-${path#/}" | tr '/' '-'
+    # Remove leading / and replace / and . with -
+    # Claude encodes both slashes and dots as dashes
+    echo "-${path#/}" | tr '/.' '--'
 }
 
 # Get the Claude sessions directory for current project
@@ -112,6 +113,12 @@ for jsonl_file in glob.glob(f"{sessions_dir}/*.jsonl"):
                 # Find first user message for summary
                 if event.get("type") == "user" and not first_user_msg:
                     msg_content = event.get("message", {}).get("content", "")
+                    # Handle content that might be a list or string
+                    if isinstance(msg_content, list):
+                        # Join list items if content is an array
+                        msg_content = " ".join(str(item) for item in msg_content if item)
+                    elif not isinstance(msg_content, str):
+                        msg_content = str(msg_content)
                     # Take first 100 chars as summary
                     first_user_msg = msg_content[:100].strip()
                     if len(msg_content) > 100:
