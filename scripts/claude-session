@@ -9,6 +9,7 @@ set -euo pipefail
 SESSIONS_FILE=".claude/sessions.json"
 PROJECT_DIR="$(pwd)"
 CLAUDE_SESSIONS_DIR="$HOME/.claude/projects"
+CLAUDE_CLI="$HOME/.claude/local/claude"
 
 # Colors for output
 COLOR_RESET="\033[0m"
@@ -88,10 +89,10 @@ for jsonl_file in glob.glob(f"{sessions_dir}/*.jsonl"):
 
     try:
         with open(jsonl_file, 'r') as f:
-            # Read first few lines to find first user message
             first_user_msg = None
             session_id = None
             timestamp = None
+            last_timestamp = None
             cwd = None
 
             for line in f:
@@ -103,6 +104,11 @@ for jsonl_file in glob.glob(f"{sessions_dir}/*.jsonl"):
                     timestamp = event.get("timestamp")
                     cwd = event.get("cwd")
 
+                # Track last event timestamp (for modified time)
+                event_ts = event.get("timestamp")
+                if event_ts:
+                    last_timestamp = event_ts
+
                 # Find first user message for summary
                 if event.get("type") == "user" and not first_user_msg:
                     msg_content = event.get("message", {}).get("content", "")
@@ -110,12 +116,12 @@ for jsonl_file in glob.glob(f"{sessions_dir}/*.jsonl"):
                     first_user_msg = msg_content[:100].strip()
                     if len(msg_content) > 100:
                         first_user_msg += "..."
-                    break
 
             if session_id:
                 sessions.append({
                     "session_id": session_id,
                     "timestamp": timestamp,
+                    "last_modified": last_timestamp or timestamp,
                     "cwd": cwd,
                     "default_summary": first_user_msg or "No summary available",
                     "file": jsonl_file
@@ -124,8 +130,8 @@ for jsonl_file in glob.glob(f"{sessions_dir}/*.jsonl"):
         # Skip malformed files
         continue
 
-# Sort by timestamp descending (most recent first)
-sessions.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+# Sort by last modified timestamp descending (most recently modified first)
+sessions.sort(key=lambda x: x.get("last_modified", ""), reverse=True)
 
 # Output as JSON
 print(json.dumps(sessions))
@@ -139,9 +145,65 @@ get_current_session_id() {
 }
 
 # Read metadata for a session from sessions.json
+# Get session timestamp from Claude session file
+get_session_timestamp() {
+    local session_id="$1"
+    local sessions=$(discover_sessions)
+    echo "$sessions" | jq -r --arg sid "$session_id" '.[] | select(.session_id == $sid) | .timestamp'
+}
+
+# Get session file modification time (from last event timestamp)
+get_session_modified_time() {
+    local session_id="$1"
+    local sessions=$(discover_sessions)
+    echo "$sessions" | jq -r --arg sid "$session_id" '.[] | select(.session_id == $sid) | .last_modified'
+}
+
+# Sync 3 most recent sessions with sessions.json
+sync_recent_sessions() {
+    local sessions_path="$PROJECT_DIR/$SESSIONS_FILE"
+
+    init_sessions_file
+
+    # Get 3 most recent sessions
+    local sessions=$(discover_sessions)
+    local recent_sessions=$(echo "$sessions" | jq -c '.[:3][]')
+
+    if [[ -z "$recent_sessions" ]]; then
+        return
+    fi
+
+    local temp_file=$(mktemp)
+    local current_data=$(cat "$sessions_path")
+
+    # Update each recent session with timestamps
+    while IFS= read -r session_json; do
+        local sid=$(echo "$session_json" | jq -r '.session_id')
+        local created_at=$(echo "$session_json" | jq -r '.timestamp')
+        local modified_at=$(get_session_modified_time "$sid")
+
+        if [[ -n "$modified_at" ]]; then
+            current_data=$(echo "$current_data" | jq --arg sid "$sid" \
+                --arg created "$created_at" \
+                --arg modified "$modified_at" \
+                '.[$sid] = (.[$sid] // {
+                    "session_id": $sid,
+                    "tags": [],
+                    "notes": []
+                }) | .[$sid].created_at = $created | .[$sid].modified_at = $modified')
+        fi
+    done <<< "$recent_sessions"
+
+    echo "$current_data" > "$temp_file"
+    mv "$temp_file" "$sessions_path"
+}
+
 get_metadata() {
     local session_id="$1"
     local sessions_path="$PROJECT_DIR/$SESSIONS_FILE"
+
+    # Sync recent sessions before reading
+    sync_recent_sessions
 
     if [[ ! -f "$sessions_path" ]]; then
         echo '{}'
@@ -159,18 +221,32 @@ update_metadata() {
     local sessions_path="$PROJECT_DIR/$SESSIONS_FILE"
 
     init_sessions_file
+    sync_recent_sessions
+
+    # Get actual timestamps from Claude session file
+    local created_at=$(get_session_timestamp "$session_id")
+    local modified_at=$(get_session_modified_time "$session_id")
+
+    if [[ -z "$created_at" ]]; then
+        created_at=$(date -Iseconds)
+    fi
+    if [[ -z "$modified_at" ]]; then
+        modified_at=$(date -Iseconds)
+    fi
 
     # Create session entry if it doesn't exist
     local temp_file=$(mktemp)
     jq --arg sid "$session_id" \
        --arg k "$key" \
        --arg v "$value" \
+       --arg created "$created_at" \
+       --arg modified "$modified_at" \
        '.[$sid] = (.[$sid] // {
            "session_id": $sid,
-           "created_at": (now | todate),
+           "created_at": $created,
            "tags": [],
            "notes": []
-       }) | .[$sid][$k] = $v | .[$sid].last_updated = (now | todate)' \
+       }) | .[$sid][$k] = $v | .[$sid].modified_at = $modified | .[$sid].last_updated = (now | todate)' \
        "$sessions_path" > "$temp_file"
 
     mv "$temp_file" "$sessions_path"
@@ -184,17 +260,31 @@ append_metadata() {
     local sessions_path="$PROJECT_DIR/$SESSIONS_FILE"
 
     init_sessions_file
+    sync_recent_sessions
+
+    # Get actual timestamps from Claude session file
+    local created_at=$(get_session_timestamp "$session_id")
+    local modified_at=$(get_session_modified_time "$session_id")
+
+    if [[ -z "$created_at" ]]; then
+        created_at=$(date -Iseconds)
+    fi
+    if [[ -z "$modified_at" ]]; then
+        modified_at=$(date -Iseconds)
+    fi
 
     local temp_file=$(mktemp)
     jq --arg sid "$session_id" \
        --arg k "$key" \
        --arg v "$value" \
+       --arg created "$created_at" \
+       --arg modified "$modified_at" \
        '.[$sid] = (.[$sid] // {
            "session_id": $sid,
-           "created_at": (now | todate),
+           "created_at": $created,
            "tags": [],
            "notes": []
-       }) | .[$sid][$k] += [$v] | .[$sid].last_updated = (now | todate)' \
+       }) | .[$sid][$k] += [$v] | .[$sid].modified_at = $modified | .[$sid].last_updated = (now | todate)' \
        "$sessions_path" > "$temp_file"
 
     mv "$temp_file" "$sessions_path"
@@ -206,14 +296,14 @@ cmd_start() {
 
     # Start Claude normally and capture session ID
     # Note: Claude CLI will handle the interactive session
-    claude --print '\clear' --output-format json > /tmp/claude-session-id.json 2>/dev/null || true
+    "$CLAUDE_CLI" --print '\clear' --output-format json > /tmp/claude-session-id.json 2>/dev/null || true
 
     # Try to extract session ID
     local session_id=$(jq -r '.session_id // empty' /tmp/claude-session-id.json 2>/dev/null || echo "")
 
     if [[ -z "$session_id" ]]; then
         # Fallback: start Claude normally and get most recent session afterward
-        claude
+        "$CLAUDE_CLI"
         session_id=$(get_current_session_id)
     fi
 
@@ -234,7 +324,7 @@ cmd_resume() {
             session_id=$(enhanced_picker)
         else
             msg "$COLOR_YELLOW" "Using native Claude picker (install fzf for enhanced picker)"
-            claude --resume
+            "$CLAUDE_CLI" --resume
             return
         fi
     fi
@@ -242,7 +332,7 @@ cmd_resume() {
     if [[ -n "$session_id" ]]; then
         msg "$COLOR_BLUE" "Resuming session: $session_id"
         update_metadata "$session_id" "last_resumed" "$(date -Iseconds)"
-        claude --resume "$session_id"
+        "$CLAUDE_CLI" --resume "$session_id"
     fi
 }
 
@@ -305,21 +395,134 @@ cmd_note() {
     msg "$COLOR_GREEN" "✓ Added note to session $session_id"
 }
 
-# Command: Update summary for a session
-cmd_summary() {
+# Check if session file was modified recently (within N seconds)
+is_session_recently_modified() {
     local session_id="$1"
-    local summary="$2"
+    local threshold_seconds="${2:-300}"  # Default 5 minutes
+    local sessions_dir=$(get_sessions_dir)
+    local session_file="$sessions_dir/$session_id.jsonl"
 
-    if [[ -z "$session_id" || -z "$summary" ]]; then
-        die "Usage: claude-session summary <session-id> <summary text>"
+    if [[ ! -f "$session_file" ]]; then
+        return 1  # File doesn't exist
     fi
 
-    update_metadata "$session_id" "summary" "$summary"
-    msg "$COLOR_GREEN" "✓ Updated summary for session $session_id"
+    local file_age=$(( $(date +%s) - $(stat -c %Y "$session_file" 2>/dev/null || echo 0) ))
+    if [[ $file_age -lt $threshold_seconds ]]; then
+        return 0  # Recently modified
+    else
+        return 1  # Not recent
+    fi
+}
+
+# Generate AI summary from current session
+generate_summary_with_ai() {
+    local session_id="$1"
+
+    # Haiku has access to the session history when we resume the session
+    local prompt="Output ONLY a single short sentence (max 15 words) describing the main task. No preamble, no 'I'll', no 'Here's', no explanation. Just the task description."
+
+    # Call Claude Haiku with timeout (30 seconds) - session might be active/locked
+    local raw_output
+    raw_output=$(timeout 30s bash -c "echo '$prompt' | '$CLAUDE_CLI' --model haiku --print --resume '$session_id' 2>/dev/null")
+    local exit_code=$?
+
+    if [[ $exit_code -eq 124 ]]; then
+        die "Timeout: Unable to resume session. Try again later."
+    elif [[ $exit_code -ne 0 ]]; then
+        die "Failed to generate summary (exit code: $exit_code)"
+    fi
+
+    # Filter out preamble lines and extract actual summary
+    local summary
+    summary=$(echo "$raw_output" | \
+        grep -v "^$" | \
+        grep -v "^I'll" | \
+        grep -v "^Here" | \
+        grep -v "^Let me" | \
+        grep -v "^This session" | \
+        head -n 1 | \
+        sed 's/^[*_`-]//g; s/[*_`:.]$//g; s/\*\*//g; s/__//g' | \
+        sed 's/^ *//;s/ *$//' | \
+        cut -c 1-120)
+
+    if [[ -z "$summary" ]]; then
+        die "Failed to generate summary with Haiku"
+    fi
+
+    echo "$summary"
+}
+
+# Command: Update summary for a session
+cmd_summary() {
+    # Check if --generate flag is present
+    if [[ "$1" == "--generate" || "$1" == "-g" ]]; then
+        local session_id="${2:-}"
+        local force=false
+
+        # Check for --force flag
+        if [[ "$session_id" == "--force" || "$session_id" == "-f" ]]; then
+            force=true
+            session_id="${3:-}"
+        elif [[ "${3:-}" == "--force" || "${3:-}" == "-f" ]]; then
+            force=true
+        fi
+
+        # Default to current session if no ID provided
+        if [[ -z "$session_id" ]]; then
+            session_id=$(get_current_session_id)
+        fi
+
+        if [[ -z "$session_id" ]]; then
+            die "No active session found. Provide a session ID."
+        fi
+
+        # Check if summary already exists
+        if [[ "$force" != true ]]; then
+            local existing_summary=$(get_metadata "$session_id" | jq -r '.summary // empty')
+            if [[ -n "$existing_summary" ]]; then
+                die "Session already has a summary. Use --force to overwrite."
+            fi
+        fi
+
+        # Get session date
+        local sessions=$(discover_sessions)
+        local session_date=$(echo "$sessions" | jq -r --arg sid "$session_id" '.[] | select(.session_id == $sid) | .timestamp')
+        local formatted_date=$(date -d "$session_date" '+%Y-%m-%d %H:%M' 2>/dev/null || echo "$session_date")
+
+        msg "$COLOR_BLUE" "Generating summary for session $session_id ($formatted_date)..."
+
+        # Warn if session was recently modified (might be active)
+        if is_session_recently_modified "$session_id" 300; then
+            msg "$COLOR_YELLOW" "⚠  Warning: Session modified in last 5 minutes. If you're currently working in it, the summary prompt will appear in your conversation."
+        fi
+
+        local summary=$(generate_summary_with_ai "$session_id")
+
+        if [[ -z "$summary" ]]; then
+            die "Failed to generate summary"
+        fi
+
+        update_metadata "$session_id" "summary" "$summary"
+        msg "$COLOR_GREEN" "✓ Generated summary: $summary"
+    else
+        # Original manual summary functionality
+        local session_id="$1"
+        local summary="$2"
+
+        if [[ -z "$session_id" || -z "$summary" ]]; then
+            die "Usage: claude-session summary <session-id> <summary text>
+       claude-session summary --generate [session-id] [--force]"
+        fi
+
+        update_metadata "$session_id" "summary" "$summary"
+        msg "$COLOR_GREEN" "✓ Updated summary for session $session_id"
+    fi
 }
 
 # Command: List all sessions
 cmd_list() {
+    sync_recent_sessions
+
     local sessions=$(discover_sessions)
     local sessions_path="$PROJECT_DIR/$SESSIONS_FILE"
 
@@ -334,6 +537,7 @@ cmd_list() {
     echo "$sessions" | jq -r '.[] | @json' | while IFS= read -r session_json; do
         local sid=$(echo "$session_json" | jq -r '.session_id')
         local timestamp=$(echo "$session_json" | jq -r '.timestamp')
+        local last_modified=$(echo "$session_json" | jq -r '.last_modified')
         local default_summary=$(echo "$session_json" | jq -r '.default_summary')
 
         # Get metadata if exists
@@ -341,12 +545,14 @@ cmd_list() {
         local custom_summary=$(echo "$metadata" | jq -r '.summary // empty')
         local tags=$(echo "$metadata" | jq -r '.tags[]?' 2>/dev/null | tr '\n' ' ')
 
-        # Format timestamp
-        local formatted_date=$(date -d "$timestamp" '+%Y-%m-%d %H:%M' 2>/dev/null || echo "$timestamp")
+        # Format timestamps
+        local formatted_created=$(date -d "$timestamp" '+%Y-%m-%d %H:%M' 2>/dev/null || echo "$timestamp")
+        local formatted_modified=$(date -d "$last_modified" '+%Y-%m-%d %H:%M' 2>/dev/null || echo "$last_modified")
 
         # Print session
         echo -e "${COLOR_GREEN}$sid${COLOR_RESET}"
-        echo -e "  ${COLOR_GRAY}Date: $formatted_date${COLOR_RESET}"
+        echo -e "  ${COLOR_GRAY}Created:  $formatted_created${COLOR_RESET}"
+        echo -e "  ${COLOR_GRAY}Modified: $formatted_modified${COLOR_RESET}"
 
         if [[ -n "$custom_summary" ]]; then
             echo -e "  Summary: $custom_summary"
@@ -364,6 +570,8 @@ cmd_list() {
 
 # Command: Show statistics
 cmd_stats() {
+    sync_recent_sessions
+
     local sessions=$(discover_sessions)
     local sessions_path="$PROJECT_DIR/$SESSIONS_FILE"
     local total_count=$(echo "$sessions" | jq 'length')
@@ -412,10 +620,23 @@ enhanced_picker() {
     while IFS= read -r session_json; do
         local sid=$(echo "$session_json" | jq -r '.session_id')
         local timestamp=$(echo "$session_json" | jq -r '.timestamp')
+        local last_modified=$(echo "$session_json" | jq -r '.last_modified')
         local default_summary=$(echo "$session_json" | jq -r '.default_summary')
 
-        # Format timestamp
-        local formatted_date=$(date -d "$timestamp" '+%Y-%m-%d %H:%M' 2>/dev/null || echo "$timestamp")
+        # Format timestamps - show time only if same date
+        local created_date=$(date -d "$timestamp" '+%Y-%m-%d' 2>/dev/null)
+        local modified_date=$(date -d "$last_modified" '+%Y-%m-%d' 2>/dev/null)
+        local created_time=$(date -d "$timestamp" '+%H:%M' 2>/dev/null)
+        local modified_time=$(date -d "$last_modified" '+%H:%M' 2>/dev/null)
+
+        local date_display
+        if [[ "$created_date" == "$modified_date" ]]; then
+            # Same day: show date once with time range
+            date_display="$created_date $created_time→$modified_time"
+        else
+            # Different days: show both full timestamps
+            date_display="C:$created_date $created_time M:$modified_date $modified_time"
+        fi
 
         # Get metadata
         local metadata=$(get_metadata "$sid")
@@ -426,7 +647,7 @@ enhanced_picker() {
         local display_summary="${custom_summary:-$default_summary}"
 
         # Build display line: date | summary | tags
-        local display_line="$formatted_date | ${display_summary:0:60}"
+        local display_line="$date_display | ${display_summary:0:50}"
         if [[ -n "$tags" ]]; then
             display_line="$display_line | [$tags]"
         fi
@@ -438,13 +659,13 @@ enhanced_picker() {
     # Use fzf to select
     local selected=$(echo -n "$fzf_input" | \
         fzf --delimiter='|' \
-            --with-nth=2 \
+            --with-nth=2.. \
             --preview='echo {1}' \
             --preview-window=up:1:wrap \
             --height=60% \
             --border \
             --prompt="Select session: " \
-            --header="Date | Summary | [Tags]")
+            --header="Created→Modified | Summary | [Tags]")
 
     if [[ -n "$selected" ]]; then
         echo "$selected" | cut -d'|' -f1
@@ -457,14 +678,15 @@ show_help() {
 claude-session - Enhanced Claude CLI session management
 
 USAGE:
-    claude-session                         Start new session
-    claude-session -r [ID]                 Resume session (with picker if no ID)
-    claude-session tag [ID] <tags...>      Add tags to session
-    claude-session note [ID] <text>        Add note to session
-    claude-session summary <ID> <text>     Update session summary
-    claude-session list                    List all sessions
-    claude-session stats                   Show session statistics
-    claude-session --help                  Show this help
+    claude-session                            Start new session
+    claude-session -r [ID]                    Resume session (with picker if no ID)
+    claude-session tag [ID] <tags...>         Add tags to session
+    claude-session note [ID] <text>           Add note to session
+    claude-session summary <ID> <text>        Update session summary
+    claude-session summary --generate [ID]    Generate AI summary with Haiku
+    claude-session list                       List all sessions
+    claude-session stats                      Show session statistics
+    claude-session --help                     Show this help
 
 EXAMPLES:
     # Starting and resuming
@@ -473,7 +695,10 @@ EXAMPLES:
     claude-session -r abc123                            # Resume specific session
 
     # Managing metadata
-    claude-session summary abc123 "Database migration"  # Update summary
+    claude-session summary abc123 "Database migration"  # Update summary manually
+    claude-session summary --generate                   # AI-generate summary for current session
+    claude-session summary --generate abc123            # AI-generate for specific session
+    claude-session summary --generate abc123 --force    # Overwrite existing summary
     claude-session tag abc123 bug-fix database          # Add tags to session
     claude-session note abc123 "Fixed the login issue"  # Add note to session
 
