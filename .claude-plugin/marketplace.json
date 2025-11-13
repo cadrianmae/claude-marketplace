@@ -6,8 +6,8 @@
   },
   "plugins": [
     {
-      "name": "session-management",
-      "source": "./plugins/session-management",
+      "name": "session",
+      "source": "./plugins/session",
       "description": "Flat session management system with .current-session tracking. Adapted from iannuttall/claude-sessions. Includes commands for starting, ending, updating, listing, and resuming development sessions.",
       "version": "1.0.0",
       "author": {
