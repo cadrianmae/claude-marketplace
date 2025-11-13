@@ -1,0 +1,33 @@
+{
+  "name": "cadrianmae-claude-marketplace",
+  "owner": {
+    "name": "Mae Capacite",
+    "email": "cadrianmae@users.noreply.github.com"
+  },
+  "plugins": [
+    {
+      "name": "session-management",
+      "source": "./plugins/session-management",
+      "description": "Flat session management system with .current-session tracking. Includes commands for starting, ending, updating, listing, and resuming development sessions.",
+      "version": "1.0.0",
+      "author": "Mae Capacite",
+      "keywords": ["sessions", "workflow", "documentation", "development"]
+    },
+    {
+      "name": "context-handoff",
+      "source": "./plugins/context-handoff",
+      "description": "Generic hierarchical parent-child session context handoff system. Pass context between sessions using /ctx-to and /ctx-from commands.",
+      "version": "1.0.0",
+      "author": "Mae Capacite",
+      "keywords": ["context", "sessions", "hierarchy", "workflow"]
+    },
+    {
+      "name": "doc-tracking",
+      "source": "./plugins/doc-tracking",
+      "description": "Documentation tracking system for research sources and development prompts. Includes doc-tracker skill and commands for init/update/autotrack.",
+      "version": "1.0.0",
+      "author": "Mae Capacite",
+      "keywords": ["documentation", "tracking", "research", "citations"]
+    }
+  ]
+}
