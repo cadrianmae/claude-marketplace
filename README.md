@@ -69,6 +69,45 @@ Natural language date/time parsing and calculations using native GNU date comman
 **Skills:**
 - `datetime` - Auto-invoked for proactive temporal awareness
 
+## Scripts
+
+### claude-session
+
+Session management wrapper for Claude CLI with project-specific metadata.
+
+**Features**:
+- Project-specific session metadata (tags, notes, summaries)
+- Enhanced fzf picker for session selection
+- Session statistics and organization
+- Non-invasive (doesn't modify Claude's native files)
+
+**Installation**:
+```bash
+cp scripts/claude-session ~/.local/bin/
+chmod +x ~/.local/bin/claude-session
+```
+
+**Usage**:
+```bash
+claude-session              # Start new session
+claude-session -r           # Resume with picker
+claude-session list         # List all sessions
+claude-session stats        # Show statistics
+claude-session tag <ID> <tags...>    # Add tags
+claude-session --help       # Show help
+```
+
+**Documentation**: See `scripts/claude-session-visual-guide.md` for complete architecture and workflow diagrams.
+
+**Dependencies**:
+- `jq` - JSON manipulation (required)
+- `python3` - Session discovery (required)
+- `fzf` - Enhanced picker (optional, gracefully falls back to select menu)
+
+**Storage**:
+- Metadata: `$PROJECT/.claude/sessions.json` (project-specific)
+- Sessions: `~/.claude/projects/` (read-only, managed by Claude)
+
 ## Installation
 
 ### Local Installation

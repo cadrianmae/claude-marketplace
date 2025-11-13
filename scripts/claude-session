@@ -1,0 +1,540 @@
+#!/bin/bash
+# claude-session - Enhanced Claude CLI session management
+# Version: 1.0.0
+# Dependencies: jq, python3, fzf (optional)
+
+set -euo pipefail
+
+# Constants
+SESSIONS_FILE=".claude/sessions.json"
+PROJECT_DIR="$(pwd)"
+CLAUDE_SESSIONS_DIR="$HOME/.claude/projects"
+
+# Colors for output
+COLOR_RESET="\033[0m"
+COLOR_GREEN="\033[32m"
+COLOR_YELLOW="\033[33m"
+COLOR_RED="\033[31m"
+COLOR_BLUE="\033[34m"
+COLOR_GRAY="\033[90m"
+
+# Helper: Print colored message
+msg() {
+    local color="$1"
+    shift
+    echo -e "${color}$*${COLOR_RESET}"
+}
+
+# Helper: Print error and exit
+die() {
+    msg "$COLOR_RED" "ERROR: $*" >&2
+    exit 1
+}
+
+# Helper: Check if command exists
+has_command() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Initialize sessions.json file if it doesn't exist
+init_sessions_file() {
+    local sessions_path="$PROJECT_DIR/$SESSIONS_FILE"
+
+    if [[ ! -f "$sessions_path" ]]; then
+        mkdir -p "$(dirname "$sessions_path")"
+        echo '{}' > "$sessions_path"
+        msg "$COLOR_GREEN" "✓ Initialized $SESSIONS_FILE"
+    fi
+}
+
+# Encode CWD path to match Claude's directory naming convention
+# Example: /home/user/project -> -home-user-project
+encode_path() {
+    local path="$1"
+    # Remove leading / and replace remaining / with -
+    echo "-${path#/}" | tr '/' '-'
+}
+
+# Get the Claude sessions directory for current project
+get_sessions_dir() {
+    local encoded_path=$(encode_path "$PROJECT_DIR")
+    echo "$CLAUDE_SESSIONS_DIR/$encoded_path"
+}
+
+# Discover all Claude sessions for current project using Python
+discover_sessions() {
+    local sessions_dir=$(get_sessions_dir)
+
+    if [[ ! -d "$sessions_dir" ]]; then
+        echo "[]"
+        return
+    fi
+
+    python3 - "$sessions_dir" << 'EOF'
+import json
+import glob
+import sys
+from datetime import datetime
+from pathlib import Path
+
+sessions_dir = sys.argv[1]
+sessions = []
+
+# Find all .jsonl files (exclude agent-*.jsonl)
+for jsonl_file in glob.glob(f"{sessions_dir}/*.jsonl"):
+    filename = Path(jsonl_file).name
+    if filename.startswith("agent-"):
+        continue
+
+    try:
+        with open(jsonl_file, 'r') as f:
+            # Read first few lines to find first user message
+            first_user_msg = None
+            session_id = None
+            timestamp = None
+            cwd = None
+
+            for line in f:
+                event = json.loads(line.strip())
+
+                # Extract session metadata from any event
+                if not session_id:
+                    session_id = event.get("sessionId")
+                    timestamp = event.get("timestamp")
+                    cwd = event.get("cwd")
+
+                # Find first user message for summary
+                if event.get("type") == "user" and not first_user_msg:
+                    msg_content = event.get("message", {}).get("content", "")
+                    # Take first 100 chars as summary
+                    first_user_msg = msg_content[:100].strip()
+                    if len(msg_content) > 100:
+                        first_user_msg += "..."
+                    break
+
+            if session_id:
+                sessions.append({
+                    "session_id": session_id,
+                    "timestamp": timestamp,
+                    "cwd": cwd,
+                    "default_summary": first_user_msg or "No summary available",
+                    "file": jsonl_file
+                })
+    except (json.JSONDecodeError, IOError) as e:
+        # Skip malformed files
+        continue
+
+# Sort by timestamp descending (most recent first)
+sessions.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+
+# Output as JSON
+print(json.dumps(sessions))
+EOF
+}
+
+# Get current session ID (most recent)
+get_current_session_id() {
+    local sessions=$(discover_sessions)
+    echo "$sessions" | jq -r '.[0].session_id // empty'
+}
+
+# Read metadata for a session from sessions.json
+get_metadata() {
+    local session_id="$1"
+    local sessions_path="$PROJECT_DIR/$SESSIONS_FILE"
+
+    if [[ ! -f "$sessions_path" ]]; then
+        echo '{}'
+        return
+    fi
+
+    jq -r --arg sid "$session_id" '.[$sid] // {}' "$sessions_path"
+}
+
+# Update metadata for a session in sessions.json
+update_metadata() {
+    local session_id="$1"
+    local key="$2"
+    local value="$3"
+    local sessions_path="$PROJECT_DIR/$SESSIONS_FILE"
+
+    init_sessions_file
+
+    # Create session entry if it doesn't exist
+    local temp_file=$(mktemp)
+    jq --arg sid "$session_id" \
+       --arg k "$key" \
+       --arg v "$value" \
+       '.[$sid] = (.[$sid] // {
+           "session_id": $sid,
+           "created_at": (now | todate),
+           "tags": [],
+           "notes": []
+       }) | .[$sid][$k] = $v | .[$sid].last_updated = (now | todate)' \
+       "$sessions_path" > "$temp_file"
+
+    mv "$temp_file" "$sessions_path"
+}
+
+# Append to array in metadata
+append_metadata() {
+    local session_id="$1"
+    local key="$2"
+    local value="$3"
+    local sessions_path="$PROJECT_DIR/$SESSIONS_FILE"
+
+    init_sessions_file
+
+    local temp_file=$(mktemp)
+    jq --arg sid "$session_id" \
+       --arg k "$key" \
+       --arg v "$value" \
+       '.[$sid] = (.[$sid] // {
+           "session_id": $sid,
+           "created_at": (now | todate),
+           "tags": [],
+           "notes": []
+       }) | .[$sid][$k] += [$v] | .[$sid].last_updated = (now | todate)' \
+       "$sessions_path" > "$temp_file"
+
+    mv "$temp_file" "$sessions_path"
+}
+
+# Command: Start new session
+cmd_start() {
+    msg "$COLOR_BLUE" "Starting new Claude session..."
+
+    # Start Claude normally and capture session ID
+    # Note: Claude CLI will handle the interactive session
+    claude --print '\clear' --output-format json > /tmp/claude-session-id.json 2>/dev/null || true
+
+    # Try to extract session ID
+    local session_id=$(jq -r '.session_id // empty' /tmp/claude-session-id.json 2>/dev/null || echo "")
+
+    if [[ -z "$session_id" ]]; then
+        # Fallback: start Claude normally and get most recent session afterward
+        claude
+        session_id=$(get_current_session_id)
+    fi
+
+    if [[ -n "$session_id" ]]; then
+        init_sessions_file
+        update_metadata "$session_id" "cwd" "$PROJECT_DIR"
+        msg "$COLOR_GREEN" "✓ Session initialized: $session_id"
+    fi
+}
+
+# Command: Resume session
+cmd_resume() {
+    local session_id="$1"
+
+    if [[ -z "$session_id" ]]; then
+        # Use enhanced picker or native picker
+        if has_command fzf; then
+            session_id=$(enhanced_picker)
+        else
+            msg "$COLOR_YELLOW" "Using native Claude picker (install fzf for enhanced picker)"
+            claude --resume
+            return
+        fi
+    fi
+
+    if [[ -n "$session_id" ]]; then
+        msg "$COLOR_BLUE" "Resuming session: $session_id"
+        update_metadata "$session_id" "last_resumed" "$(date -Iseconds)"
+        claude --resume "$session_id"
+    fi
+}
+
+# Command: Add tags to session (current or specified)
+cmd_tag() {
+    local session_id
+    local tags=()
+
+    # Check if first arg looks like a session ID (UUID format)
+    if [[ "$1" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
+        session_id="$1"
+        shift
+        tags=("$@")
+    else
+        session_id=$(get_current_session_id)
+        tags=("$@")
+    fi
+
+    if [[ -z "$session_id" ]]; then
+        die "No active session found. Provide a session ID or start/resume a session first."
+    fi
+
+    if [[ ${#tags[@]} -eq 0 ]]; then
+        die "Usage: claude-session tag [session-id] <tag1> [tag2] [...]"
+    fi
+
+    for tag in "${tags[@]}"; do
+        append_metadata "$session_id" "tags" "$tag"
+    done
+
+    msg "$COLOR_GREEN" "✓ Added tags to session $session_id: ${tags[*]}"
+}
+
+# Command: Add note to session (current or specified)
+cmd_note() {
+    local session_id
+    local note_text
+
+    # Check if first arg looks like a session ID (UUID format)
+    if [[ "$1" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
+        session_id="$1"
+        shift
+        note_text="$*"
+    else
+        session_id=$(get_current_session_id)
+        note_text="$*"
+    fi
+
+    if [[ -z "$session_id" ]]; then
+        die "No active session found. Provide a session ID or start/resume a session first."
+    fi
+
+    if [[ -z "$note_text" ]]; then
+        die "Usage: claude-session note [session-id] <note text>"
+    fi
+
+    local note="[$(date -Iseconds)] $note_text"
+    append_metadata "$session_id" "notes" "$note"
+
+    msg "$COLOR_GREEN" "✓ Added note to session $session_id"
+}
+
+# Command: Update summary for a session
+cmd_summary() {
+    local session_id="$1"
+    local summary="$2"
+
+    if [[ -z "$session_id" || -z "$summary" ]]; then
+        die "Usage: claude-session summary <session-id> <summary text>"
+    fi
+
+    update_metadata "$session_id" "summary" "$summary"
+    msg "$COLOR_GREEN" "✓ Updated summary for session $session_id"
+}
+
+# Command: List all sessions
+cmd_list() {
+    local sessions=$(discover_sessions)
+    local sessions_path="$PROJECT_DIR/$SESSIONS_FILE"
+
+    if [[ $(echo "$sessions" | jq 'length') -eq 0 ]]; then
+        msg "$COLOR_YELLOW" "No sessions found for this project."
+        return
+    fi
+
+    msg "$COLOR_BLUE" "Sessions for $(basename "$PROJECT_DIR"):"
+    echo
+
+    echo "$sessions" | jq -r '.[] | @json' | while IFS= read -r session_json; do
+        local sid=$(echo "$session_json" | jq -r '.session_id')
+        local timestamp=$(echo "$session_json" | jq -r '.timestamp')
+        local default_summary=$(echo "$session_json" | jq -r '.default_summary')
+
+        # Get metadata if exists
+        local metadata=$(get_metadata "$sid")
+        local custom_summary=$(echo "$metadata" | jq -r '.summary // empty')
+        local tags=$(echo "$metadata" | jq -r '.tags[]?' 2>/dev/null | tr '\n' ' ')
+
+        # Format timestamp
+        local formatted_date=$(date -d "$timestamp" '+%Y-%m-%d %H:%M' 2>/dev/null || echo "$timestamp")
+
+        # Print session
+        echo -e "${COLOR_GREEN}$sid${COLOR_RESET}"
+        echo -e "  ${COLOR_GRAY}Date: $formatted_date${COLOR_RESET}"
+
+        if [[ -n "$custom_summary" ]]; then
+            echo -e "  Summary: $custom_summary"
+        else
+            echo -e "  ${COLOR_GRAY}Summary: $default_summary${COLOR_RESET}"
+        fi
+
+        if [[ -n "$tags" ]]; then
+            echo -e "  ${COLOR_YELLOW}Tags: $tags${COLOR_RESET}"
+        fi
+
+        echo
+    done
+}
+
+# Command: Show statistics
+cmd_stats() {
+    local sessions=$(discover_sessions)
+    local sessions_path="$PROJECT_DIR/$SESSIONS_FILE"
+    local total_count=$(echo "$sessions" | jq 'length')
+
+    msg "$COLOR_BLUE" "Session Statistics for $(basename "$PROJECT_DIR"):"
+    echo
+    echo "Total sessions: $total_count"
+
+    if [[ -f "$sessions_path" ]]; then
+        local with_metadata=$(jq 'length' "$sessions_path")
+        echo "Sessions with metadata: $with_metadata"
+
+        # Count unique tags
+        local tags=$(jq -r '[.[].tags[]?] | unique | .[]' "$sessions_path" 2>/dev/null)
+        if [[ -n "$tags" ]]; then
+            echo
+            msg "$COLOR_YELLOW" "Tags used:"
+            echo "$tags" | sort | uniq -c | sort -rn
+        fi
+    fi
+
+    # Show most recent session
+    if [[ $total_count -gt 0 ]]; then
+        echo
+        local recent_id=$(echo "$sessions" | jq -r '.[0].session_id')
+        local recent_time=$(echo "$sessions" | jq -r '.[0].timestamp')
+        local formatted_time=$(date -d "$recent_time" '+%Y-%m-%d %H:%M' 2>/dev/null || echo "$recent_time")
+
+        msg "$COLOR_GREEN" "Most recent session:"
+        echo "  ID: $recent_id"
+        echo "  Date: $formatted_time"
+    fi
+}
+
+# Enhanced picker using fzf
+enhanced_picker() {
+    local sessions=$(discover_sessions)
+    local sessions_path="$PROJECT_DIR/$SESSIONS_FILE"
+
+    if [[ $(echo "$sessions" | jq 'length') -eq 0 ]]; then
+        die "No sessions found for this project."
+    fi
+
+    # Build enhanced list with metadata
+    local fzf_input=""
+    while IFS= read -r session_json; do
+        local sid=$(echo "$session_json" | jq -r '.session_id')
+        local timestamp=$(echo "$session_json" | jq -r '.timestamp')
+        local default_summary=$(echo "$session_json" | jq -r '.default_summary')
+
+        # Format timestamp
+        local formatted_date=$(date -d "$timestamp" '+%Y-%m-%d %H:%M' 2>/dev/null || echo "$timestamp")
+
+        # Get metadata
+        local metadata=$(get_metadata "$sid")
+        local custom_summary=$(echo "$metadata" | jq -r '.summary // empty')
+        local tags=$(echo "$metadata" | jq -r '.tags[]?' 2>/dev/null | tr '\n' ',' | sed 's/,$//')
+
+        # Use custom summary if available, otherwise default
+        local display_summary="${custom_summary:-$default_summary}"
+
+        # Build display line: date | summary | tags
+        local display_line="$formatted_date | ${display_summary:0:60}"
+        if [[ -n "$tags" ]]; then
+            display_line="$display_line | [$tags]"
+        fi
+
+        # Add to fzf input: session_id|display_line
+        fzf_input+="${sid}|${display_line}"$'\n'
+    done < <(echo "$sessions" | jq -c '.[]')
+
+    # Use fzf to select
+    local selected=$(echo -n "$fzf_input" | \
+        fzf --delimiter='|' \
+            --with-nth=2 \
+            --preview='echo {1}' \
+            --preview-window=up:1:wrap \
+            --height=60% \
+            --border \
+            --prompt="Select session: " \
+            --header="Date | Summary | [Tags]")
+
+    if [[ -n "$selected" ]]; then
+        echo "$selected" | cut -d'|' -f1
+    fi
+}
+
+# Show help
+show_help() {
+    cat << 'HELP'
+claude-session - Enhanced Claude CLI session management
+
+USAGE:
+    claude-session                         Start new session
+    claude-session -r [ID]                 Resume session (with picker if no ID)
+    claude-session tag [ID] <tags...>      Add tags to session
+    claude-session note [ID] <text>        Add note to session
+    claude-session summary <ID> <text>     Update session summary
+    claude-session list                    List all sessions
+    claude-session stats                   Show session statistics
+    claude-session --help                  Show this help
+
+EXAMPLES:
+    # Starting and resuming
+    claude-session                                      # Start new session
+    claude-session -r                                   # Resume with picker
+    claude-session -r abc123                            # Resume specific session
+
+    # Managing metadata
+    claude-session summary abc123 "Database migration"  # Update summary
+    claude-session tag abc123 bug-fix database          # Add tags to session
+    claude-session note abc123 "Fixed the login issue"  # Add note to session
+
+    # Viewing sessions
+    claude-session list                                 # List all sessions
+    claude-session stats                                # Show statistics
+
+NOTES:
+    - Session ID is optional for tag/note commands (uses current session if omitted)
+    - Session ID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (UUID)
+
+STORAGE:
+    Session metadata: .claude/sessions.json (project-specific)
+    Claude sessions: ~/.claude/projects/ (read-only)
+
+DEPENDENCIES:
+    Required: jq, python3
+    Optional: fzf (for enhanced session picker)
+HELP
+}
+
+# Main entry point
+main() {
+    # Check dependencies
+    has_command jq || die "Required dependency 'jq' not found. Install with: sudo dnf install jq"
+    has_command python3 || die "Required dependency 'python3' not found."
+
+    case "${1:-}" in
+        -r|--resume)
+            cmd_resume "${2:-}"
+            ;;
+        tag)
+            shift
+            cmd_tag "$@"
+            ;;
+        note)
+            shift
+            cmd_note "$@"
+            ;;
+        summary)
+            cmd_summary "${2:-}" "${3:-}"
+            ;;
+        list)
+            cmd_list
+            ;;
+        stats)
+            cmd_stats
+            ;;
+        --help|-h|help)
+            show_help
+            ;;
+        "")
+            cmd_start
+            ;;
+        *)
+            die "Unknown command: $1. Use --help for usage information."
+            ;;
+    esac
+}
+
+# Run main if not sourced
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi
