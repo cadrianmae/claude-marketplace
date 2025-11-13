@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Flat session management system with .current-session tracking. Adapted from iannuttall/claude-sessions.",
   "author": {
-    "name": "Mae Capacite",
+    "name": "Mae Capacite; Ian Nuttall (original)",
     "email": "cadrianmae@users.noreply.github.com"
   },
   "homepage": "https://github.com/cadrianmae/claude-marketplace",

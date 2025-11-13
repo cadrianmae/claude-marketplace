@@ -11,7 +11,7 @@
       "description": "Flat session management system with .current-session tracking. Adapted from iannuttall/claude-sessions. Includes commands for starting, ending, updating, listing, and resuming development sessions.",
       "version": "1.0.0",
       "author": {
-        "name": "Mae Capacite",
+        "name": "Mae Capacite; Ian Nuttall (original)",
         "email": "cadrianmae@users.noreply.github.com"
       },
       "license": "MIT",
