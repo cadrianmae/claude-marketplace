@@ -10,9 +10,10 @@
       "source": "./plugins/session-management",
       "description": "Flat session management system with .current-session tracking. Adapted from iannuttall/claude-sessions. Includes commands for starting, ending, updating, listing, and resuming development sessions.",
       "version": "1.0.0",
-      "author": "Mae Capacite",
-      "originalAuthor": "Ian Nuttall",
-      "originalRepo": "https://github.com/iannuttall/claude-sessions",
+      "author": {
+        "name": "Mae Capacite",
+        "email": "cadrianmae@users.noreply.github.com"
+      },
       "license": "MIT",
       "keywords": ["sessions", "workflow", "documentation", "development"]
     },
@@ -21,7 +22,10 @@
       "source": "./plugins/context-handoff",
       "description": "Generic hierarchical parent-child session context handoff system. Pass context between sessions using /ctx-to and /ctx-from commands.",
       "version": "1.0.0",
-      "author": "Mae Capacite",
+      "author": {
+        "name": "Mae Capacite",
+        "email": "cadrianmae@users.noreply.github.com"
+      },
       "keywords": ["context", "sessions", "hierarchy", "workflow"]
     },
     {
@@ -29,7 +33,10 @@
       "source": "./plugins/doc-tracking",
       "description": "Documentation tracking system for research sources and development prompts. Includes doc-tracker skill and commands for init/update/autotrack.",
       "version": "1.0.0",
-      "author": "Mae Capacite",
+      "author": {
+        "name": "Mae Capacite",
+        "email": "cadrianmae@users.noreply.github.com"
+      },
       "keywords": ["documentation", "tracking", "research", "citations"]
     }
   ]

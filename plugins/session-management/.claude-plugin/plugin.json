@@ -2,9 +2,10 @@
   "name": "session-management",
   "version": "1.0.0",
   "description": "Flat session management system with .current-session tracking. Adapted from iannuttall/claude-sessions.",
-  "author": "Mae Capacite",
-  "originalAuthor": "Ian Nuttall",
-  "originalRepo": "https://github.com/iannuttall/claude-sessions",
+  "author": {
+    "name": "Mae Capacite",
+    "email": "cadrianmae@users.noreply.github.com"
+  },
   "homepage": "https://github.com/cadrianmae/claude-marketplace",
   "repository": "https://github.com/cadrianmae/claude-sessions",
   "license": "MIT",
