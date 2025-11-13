@@ -39,6 +39,18 @@
       },
       "license": "MIT",
       "keywords": ["research", "academic", "tracking", "sources", "citations", "references", "documentation"]
+    },
+    {
+      "name": "datetime",
+      "source": "./plugins/datetime",
+      "description": "Natural language date/time parsing and calculations using native GNU date command. Parse expressions like 'tomorrow', 'next week', '3 days', calculate date differences, get current date/time. Zero dependencies. Includes auto-invoked skill for proactive temporal awareness.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Mae Capacite",
+        "email": "cadrianmae@users.noreply.github.com"
+      },
+      "license": "MIT",
+      "keywords": ["datetime", "date", "time", "parsing", "natural-language", "calendar", "temporal"]
     }
   ]
 }

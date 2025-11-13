@@ -52,6 +52,23 @@ Reference and research tracking for academic work and project documentation.
 **Skills:**
 - `ref-tracker` - Automatic tracking when enabled
 
+### datetime
+Natural language date/time parsing and calculations using native GNU date command.
+
+**Commands:**
+- `/datetime:now` - Get current date/time
+- `/datetime:parse` - Parse natural language expressions
+- `/datetime:calc` - Calculate date differences
+
+**Features:**
+- Zero dependencies (native `date` command)
+- Parse expressions: "tomorrow", "next week", "3 days", "next monday at 9am"
+- Date arithmetic and difference calculations
+- Custom output formatting
+
+**Skills:**
+- `datetime` - Auto-invoked for proactive temporal awareness
+
 ## Installation
 
 ### Local Installation
@@ -60,6 +77,7 @@ Reference and research tracking for academic work and project documentation.
 /plugin install session-management@cadrianmae-claude-marketplace
 /plugin install context-handoff@cadrianmae-claude-marketplace
 /plugin install ref-tracker@cadrianmae-claude-marketplace
+/plugin install datetime@cadrianmae-claude-marketplace
 ```
 
 ### From GitHub

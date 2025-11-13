@@ -1,0 +1,7 @@
+{
+  "name": "datetime",
+  "version": "1.0.0",
+  "description": "Natural language date/time parsing and calculations using native date command",
+  "author": "cadrianmae",
+  "license": "MIT"
+}
