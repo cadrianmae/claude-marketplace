@@ -73,13 +73,17 @@ Natural language date/time parsing and calculations using native GNU date comman
 
 ### claude-session
 
-Session management wrapper for Claude CLI with project-specific metadata.
+Session management wrapper for Claude CLI with AI-powered summaries and accurate timestamp tracking.
 
 **Features**:
-- Project-specific session metadata (tags, notes, summaries)
-- Enhanced fzf picker for session selection
-- Session statistics and organization
-- Non-invasive (doesn't modify Claude's native files)
+- **AI Summary Generation** - Use Haiku to create concise 1-sentence summaries
+- **Timestamp Tracking** - Track both created and last-modified times from session events
+- **Smart Ordering** - Sessions sorted by last activity (most recent first)
+- **Enhanced Display** - Show created/modified dates in list and picker
+- **Project-specific Metadata** - Tags, notes, and summaries per project
+- **Activity Warnings** - Alerts when summarizing recently active sessions
+- **Robust Discovery** - Handles paths with dots (e.g., `github.com`) and list-type content
+- **Non-invasive** - Doesn't modify Claude's native files
 
 **Installation**:
 ```bash
@@ -89,20 +93,45 @@ chmod +x ~/.local/bin/claude-session
 
 **Usage**:
 ```bash
+# Session management
 claude-session              # Start new session
-claude-session -r           # Resume with picker
-claude-session list         # List all sessions
+claude-session -r           # Resume with enhanced picker (shows tags/summaries)
+claude-session list         # List sessions with created/modified dates
 claude-session stats        # Show statistics
-claude-session tag <ID> <tags...>    # Add tags
-claude-session --help       # Show help
+
+# Metadata management
+claude-session tag <ID> <tags...>              # Add tags
+claude-session note <ID> <text>                # Add note
+claude-session summary <ID> <text>             # Manual summary
+
+# AI-powered summaries
+claude-session summary --generate              # Generate for current session
+claude-session summary --generate <ID>         # Generate for specific session
+claude-session summary --generate <ID> --force # Overwrite existing summary
+
+claude-session --help       # Show complete help
 ```
 
-**Documentation**: See `scripts/claude-session-visual-guide.md` for complete architecture and workflow diagrams.
+**Display Format**:
+```
+a3c7d3cb-6f04-47bf-8f82-c8acc9a5cef8
+  Created:  2025-11-13 14:45
+  Modified: 2025-11-13 19:15
+  Summary: Fixed fzf picker and added AI summaries
+  Tags: enhancement debugging
+```
+
+**Documentation**: See `scripts/claude-session-visual-guide.md` for complete architecture and workflow diagrams including:
+- AI Summary Generation Flow
+- Timestamp Tracking & Auto-Sync
+- Session Discovery Process
+- Enhanced Picker Flow
 
 **Dependencies**:
 - `jq` - JSON manipulation (required)
 - `python3` - Session discovery (required)
-- `fzf` - Enhanced picker (optional, gracefully falls back to select menu)
+- `timeout` - Command timeout handling (required)
+- `fzf` - Enhanced picker (optional, falls back to select menu)
 
 **Storage**:
 - Metadata: `$PROJECT/.claude/sessions.json` (project-specific)

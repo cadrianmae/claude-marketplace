@@ -460,9 +460,10 @@ flowchart TD
 classDiagram
     class SessionMetadata {
         +string session_id
-        +string created_at (ISO 8601)
-        +string last_updated (ISO 8601)
-        +string summary (custom)
+        +string created_at (ISO 8601, from first event)
+        +string modified_at (ISO 8601, from last event)
+        +string last_updated (ISO 8601, metadata changes)
+        +string summary (custom or AI-generated)
         +array~string~ tags
         +array~string~ notes
         +string last_resumed (optional)
@@ -470,7 +471,8 @@ classDiagram
 
     class CloudeSession {
         +string sessionId
-        +string timestamp
+        +string timestamp (first event)
+        +string last_modified (last event)
         +string cwd
         +array~Event~ events
         +string default_summary
@@ -482,6 +484,131 @@ classDiagram
 
     SessionMetadata "0..1" --o "1" CloudeSession : references
     sessions_json "1" *-- "*" SessionMetadata : contains
+```
+
+**Key Fields:**
+- `created_at`: From first event timestamp in .jsonl (never changes)
+- `modified_at`: From last event timestamp in .jsonl (session activity)
+- `last_updated`: When metadata was last manually updated (tags, notes, etc)
+- `summary`: Custom text or AI-generated summary (via Haiku)
+
+## AI Summary Generation Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Script as claude-session
+    participant Check as is_session_recently_modified()
+    participant Haiku as Claude Haiku
+    participant JSONL as Session .jsonl
+    participant Meta as sessions.json
+
+    User->>Script: summary --generate [ID]
+
+    alt No ID provided
+        Script->>Script: get_current_session_id()
+        Note over Script: Uses most recent session
+    end
+
+    Script->>Check: Check if modified < 5 min ago
+
+    alt Recently modified
+        Check-->>Script: true
+        Script-->>User: ⚠️ Warning: May be active session
+    end
+
+    Script->>Haiku: Resume session with prompt
+    Note over Haiku: timeout 30s<br/>Prompt: "Output ONLY a single<br/>short sentence (max 15 words)"
+
+    alt Session locked/timeout
+        Haiku--xScript: timeout (124)
+        Script-->>User: ERROR: Unable to resume. Try later.
+    else Success
+        Haiku-->>Script: Generated summary text
+        Script->>Script: Filter preamble lines
+        Note over Script: Remove "I'll", "Here", etc.
+        Script->>Meta: Update summary field
+        Script-->>User: ✓ Generated summary: [text]
+    end
+
+    style User fill:#e1f5ff
+    style Script fill:#fff4e1
+    style Haiku fill:#c8e6c9
+    style Meta fill:#fff4e1
+```
+
+**Key Features:**
+- **30-second timeout**: Prevents hanging on active sessions
+- **Warning system**: Alerts if session modified in last 5 minutes
+- **Preamble filtering**: Removes "I'll create...", "Here's...", etc.
+- **Force flag**: `--force` to overwrite existing summaries
+- **Content handling**: Gracefully handles list-type message content
+
+## Timestamp Tracking & Auto-Sync
+
+```mermaid
+flowchart TB
+    START[User runs command]
+
+    SYNC[sync_recent_sessions<br/>Auto-syncs 3 most recent]
+
+    DISCOVER[discover_sessions<br/>Reads all .jsonl files]
+
+    PARSE["Parse each session:<br/>• First event → created_at<br/>• Last event → modified_at"]
+
+    SORT["Sort by modified_at<br/>(most recent first)"]
+
+    TOP3[Get top 3 sessions]
+
+    UPDATE["Update sessions.json:<br/>• created_at from first event<br/>• modified_at from last event<br/>• Preserve existing metadata"]
+
+    DISPLAY[Display to user with dates]
+
+    START --> SYNC
+    SYNC --> DISCOVER
+    DISCOVER --> PARSE
+    PARSE --> SORT
+    SORT --> TOP3
+    TOP3 --> UPDATE
+    UPDATE --> DISPLAY
+
+    style START fill:#e1f5ff
+    style SYNC fill:#c8e6c9
+    style DISCOVER fill:#fff4e1
+    style DISPLAY fill:#a5d6a7
+```
+
+**Auto-Sync Triggers:**
+- `get_metadata()` - Before reading any metadata
+- `update_metadata()` - Before updating metadata
+- `append_metadata()` - Before appending to arrays
+- `cmd_list()` - When listing sessions
+- `cmd_stats()` - When showing statistics
+
+**Benefits:**
+- Always accurate timestamps from session files
+- No manual timestamp management needed
+- Sessions ordered by last activity (most useful)
+
+## Display Format: Created vs Modified
+
+**List Output:**
+```
+a3c7d3cb-6f04-47bf-8f82-c8acc9a5cef8
+  Created:  2025-11-13 14:45
+  Modified: 2025-11-13 19:15
+  Summary: Fixed fzf picker and added AI summaries
+  Tags: enhancement debugging
+```
+
+**Picker Output (Same Day):**
+```
+2025-11-13 14:45→19:15 | Fixed fzf picker | [enhancement,debugging]
+```
+
+**Picker Output (Multi-Day):**
+```
+C:2025-11-12 10:00 M:2025-11-13 15:00 | Database schema design | [backend]
 ```
 
 ## Tag Statistics Generation
@@ -624,8 +751,18 @@ graph TB
 The `claude-session` script works by:
 
 1. **Discovery**: Scanning Claude's native `.jsonl` files (read-only) to find sessions
-2. **Enhancement**: Adding project-specific metadata (tags, notes, summaries) in `.claude/sessions.json`
-3. **Display**: Merging both data sources to show rich, organized session information
-4. **Integration**: Working alongside Claude's native commands without modification
+2. **Timestamp Tracking**: Extracting created/modified times from first/last events
+3. **AI Summaries**: Using Claude Haiku to generate concise session descriptions
+4. **Enhancement**: Adding project-specific metadata (tags, notes, summaries) in `.claude/sessions.json`
+5. **Display**: Merging both data sources to show rich, organized session information
+6. **Integration**: Working alongside Claude's native commands without modification
+
+**New Features:**
+- **AI-powered summaries** - Generate concise descriptions with `--generate` flag
+- **Accurate timestamps** - Track both created and modified times from session events
+- **Smart ordering** - Sessions sorted by last activity (most recent first)
+- **Enhanced display** - Show both created/modified dates in list and picker
+- **Activity warnings** - Alerts when trying to summarize recently active sessions
+- **Robust handling** - Gracefully handles paths with dots and list-type content
 
 All while following ADHD-friendly design principles and your coding preferences!
