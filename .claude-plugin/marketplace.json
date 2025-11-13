@@ -29,15 +29,16 @@
       "keywords": ["context", "sessions", "hierarchy", "workflow", "handoff"]
     },
     {
-      "name": "doc-tracking",
-      "source": "./plugins/doc-tracking",
-      "description": "Documentation tracking system for research sources and development prompts. Includes doc-tracker skill and commands for init/update/autotrack.",
+      "name": "ref-tracker",
+      "source": "./plugins/ref-tracker",
+      "description": "Reference and research tracking for academic work. Automatically tracks WebSearch/WebFetch sources and major prompts to CLAUDE_SOURCES.md and CLAUDE_PROMPTS.md. Configurable verbosity, [User]/[Claude] attribution, toggle auto-tracking, managed via .claude/.ref-autotrack marker and .claude/.ref-config settings.",
       "version": "1.0.0",
       "author": {
         "name": "Mae Capacite",
         "email": "cadrianmae@users.noreply.github.com"
       },
-      "keywords": ["documentation", "tracking", "research", "citations"]
+      "license": "MIT",
+      "keywords": ["research", "academic", "tracking", "sources", "citations", "references", "documentation"]
     }
   ]
 }

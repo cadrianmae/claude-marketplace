@@ -33,16 +33,24 @@ Generic hierarchical parent-child session context handoff.
 - Parent to child: `/tmp/ctx-parent-to-child-{subject}.md`
 - Child to parent: `/tmp/ctx-child-to-parent-{subject}.md`
 
-### doc-tracking
-Documentation tracking for research sources and development prompts.
+### ref-tracker
+Reference and research tracking for academic work and project documentation.
 
 **Commands:**
-- `/tracking/init` - Setup tracking files and enable
-- `/tracking/update` - Retroactive scan of history
-- `/tracking/autotrack` - Enable continuous tracking
+- `/track:init` - Initialize tracking (run first)
+- `/track:update` - Retroactive scan of history
+- `/track:auto` - Toggle auto-tracking on/off
+- `/track:config` - View or update verbosity settings
+- `/track:help` - Show comprehensive help
+
+**Files created:**
+- `CLAUDE_SOURCES.md` - Research sources (KV format)
+- `CLAUDE_PROMPTS.md` - Major prompts and outcomes
+- `.claude/.ref-autotrack` - Auto-tracking marker
+- `.claude/.ref-config` - Verbosity configuration
 
 **Skills:**
-- `doc-tracker` - Automatic tracking when enabled
+- `ref-tracker` - Automatic tracking when enabled
 
 ## Installation
 
@@ -51,7 +59,7 @@ Documentation tracking for research sources and development prompts.
 /plugin marketplace add ~/.claude/marketplaces/cadrianmae-claude-marketplace
 /plugin install session-management@cadrianmae-claude-marketplace
 /plugin install context-handoff@cadrianmae-claude-marketplace
-/plugin install doc-tracking@cadrianmae-claude-marketplace
+/plugin install ref-tracker@cadrianmae-claude-marketplace
 ```
 
 ### From GitHub

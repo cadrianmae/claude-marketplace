@@ -1,0 +1,13 @@
+{
+  "name": "track",
+  "version": "1.0.0",
+  "description": "Reference and research tracking system for academic work. Tracks WebSearch/WebFetch sources and major prompts to CLAUDE_SOURCES.md and CLAUDE_PROMPTS.md with configurable verbosity.",
+  "author": {
+    "name": "Mae Capacite",
+    "email": "cadrianmae@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/cadrianmae/claude-marketplace",
+  "repository": "https://github.com/cadrianmae/claude-marketplace",
+  "license": "MIT",
+  "keywords": ["research", "academic", "tracking", "sources", "citations", "references"]
+}
