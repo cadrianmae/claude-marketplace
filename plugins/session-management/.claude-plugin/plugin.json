@@ -9,6 +9,5 @@
   "homepage": "https://github.com/cadrianmae/claude-marketplace",
   "repository": "https://github.com/cadrianmae/claude-sessions",
   "license": "MIT",
-  "keywords": ["sessions", "workflow", "documentation", "development", "tracking"],
-  "commands": "commands"
+  "keywords": ["sessions", "workflow", "documentation", "development", "tracking"]
 }
