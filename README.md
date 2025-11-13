@@ -4,17 +4,17 @@ Personal marketplace for Mae's custom Claude Code plugins.
 
 ## Available Plugins
 
-### session-management
+### session
 Flat session management system with `.current-session` tracking.
 
 **Commands:**
-- `/session-start` - Start new session
-- `/session-end` - End with comprehensive summary
-- `/session-update` - Add notes to current session
-- `/session-current` - Show current status
-- `/session-list` - List all sessions
-- `/session-resume` - Resume previous session
-- `/session-help` - Show help
+- `/session:start` - Start new session
+- `/session:end` - End with comprehensive summary
+- `/session:update` - Add notes to current session
+- `/session:current` - Show current status
+- `/session:list` - List all sessions
+- `/session:resume` - Resume previous session
+- `/session:help` - Show help
 
 ### context-handoff
 Generic hierarchical parent-child session context handoff.
@@ -39,7 +39,7 @@ Documentation tracking for research sources and development prompts.
 ### Local Installation
 ```bash
 /plugin marketplace add ~/.claude/marketplaces/cadrianmae-claude-marketplace
-/plugin install session-management@cadrianmae-claude-marketplace
+/plugin install session@cadrianmae-claude-marketplace
 /plugin install context-handoff@cadrianmae-claude-marketplace
 /plugin install doc-tracking@cadrianmae-claude-marketplace
 ```
@@ -47,7 +47,7 @@ Documentation tracking for research sources and development prompts.
 ### From GitHub (when pushed)
 ```bash
 /plugin marketplace add cadrianmae/claude-marketplace
-/plugin install session-management@cadrianmae-claude-marketplace
+/plugin install session@cadrianmae-claude-marketplace
 ```
 
 ## Plugin Sources
