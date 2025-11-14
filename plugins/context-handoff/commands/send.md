@@ -11,14 +11,14 @@ Create a context handoff file for transitioning between parent and child session
 
 Both subject and path are optional:
 - **subject**: Claude will infer from current conversation context if not provided
-- **path**: Defaults to `/tmp/` if not provided
+- **path**: Defaults to `/tmp/claude-ctx/` if not provided
 
 ## What it does
 
 1. Determines direction: parent-to-child or child-to-parent
 2. If subject provided, creates `{path}/ctx-{direction}-{subject}.md`
 3. If no subject, infers from current conversation context and creates file with inferred name
-4. Path defaults to `/tmp/` but can be customized
+4. Path defaults to `/tmp/claude-ctx/` but can be customized
 5. Uses `cat > filename.md << 'EOF'` to clear file and write context
 6. Includes:
    - Current situation and context
@@ -28,8 +28,8 @@ Both subject and path are optional:
 7. Shows clear "next steps" for user
 
 **File naming pattern:**
-- `/context:send child` → `/tmp/ctx-parent-to-child-{inferred-subject}.md`
-- `/context:send parent` → `/tmp/ctx-child-to-parent-{inferred-subject}.md`
+- `/context:send child` → `/tmp/claude-ctx/ctx-parent-to-child-{inferred-subject}.md`
+- `/context:send parent` → `/tmp/claude-ctx/ctx-child-to-parent-{inferred-subject}.md`
 
 ## Example: Sending to Child with Subject
 
@@ -37,11 +37,11 @@ Both subject and path are optional:
 /context:send child database-migration
 
 ✓ Context prepared for child session
-  File: /tmp/ctx-parent-to-child-database-migration.md
+  File: /tmp/claude-ctx/ctx-parent-to-child-database-migration.md
 
 Next steps:
 1. Start child session for focused work
-2. In new session, run: /context:fetch parent
+2. In new session, run: /context:receive parent
 ```
 
 ## Example: Sending to Parent (Subject Inferred)
@@ -50,12 +50,12 @@ Next steps:
 /context:send parent
 
 ✓ Context prepared for parent session
-  File: /tmp/ctx-child-to-parent-api-implementation.md
+  File: /tmp/claude-ctx/ctx-child-to-parent-api-implementation.md
 
 Next steps:
 1. Exit this session
 2. Resume parent session
-3. In parent session, run: /context:fetch child
+3. In parent session, run: /context:receive child
 ```
 
 ## Example: Custom Path
@@ -68,7 +68,7 @@ Next steps:
 
 Next steps:
 1. Start child session
-2. In new session, run: /context:fetch parent feature-work ~/Documents/context/
+2. In new session, run: /context:receive parent feature-work ~/Documents/context/
 ```
 
 ## Context File Contents
@@ -106,7 +106,7 @@ The context file should include:
 Use heredoc to write context file:
 
 ```bash
-cat > /tmp/ctx-parent-to-child-{subject}.md << 'EOF'
+cat > /tmp/claude-ctx/ctx-parent-to-child-{subject}.md << 'EOF'
 # Context: Parent → Child
 
 [Context content here]
@@ -124,4 +124,4 @@ This pattern clears the file first, preventing accumulation of old context.
 
 ## Related commands
 
-- `/context:fetch` - Receive context from parent/child session
+- `/context:receive` - Receive context from parent/child session

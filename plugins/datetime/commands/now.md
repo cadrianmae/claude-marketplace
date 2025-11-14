@@ -2,7 +2,19 @@
 
 Get the current date and time in a standardized format.
 
-## Usage
+## For Claude Code
+
+**If you are Claude**: DO NOT invoke this slash command. Use the `date` command directly via Bash tool:
+
+```bash
+date '+%Y-%m-%d %H:%M:%S (%A)'
+```
+
+See the Implementation section below for the exact command pattern.
+
+## For Users
+
+### Usage
 
 ```bash
 /datetime:now

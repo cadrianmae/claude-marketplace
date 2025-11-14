@@ -4,7 +4,7 @@ Hierarchical parent-child session context handoff system for Claude Code.
 
 ## Commands
 
-- `/context:fetch` - Receive context from parent or child session
+- `/context:receive` - Receive context from parent or child session
 - `/context:send` - Send context to parent or child session before switching
 
 ## Usage
@@ -18,27 +18,27 @@ Hierarchical parent-child session context handoff system for Claude Code.
 
 Both subject and path are optional:
 - **subject**: Claude will infer from conversation context if not provided
-- **path**: Defaults to `/tmp/` if not provided
+- **path**: Defaults to `/tmp/claude-ctx/` if not provided
 
-### Fetching Context
+### Receiving Context
 
 ```bash
-/context:fetch parent [subject] [path]
-/context:fetch child [subject] [path]
+/context:receive parent [subject] [path]
+/context:receive child [subject] [path]
 ```
 
 Both subject and path are optional:
 - **subject**: Uses wildcard matching if not provided
-- **path**: Defaults to `/tmp/` if not provided
+- **path**: Defaults to `/tmp/claude-ctx/` if not provided
 
 ## File Naming Pattern
 
-- Parent to child: `/tmp/ctx-parent-to-child-{subject}.md`
-- Child to parent: `/tmp/ctx-child-to-parent-{subject}.md`
+- Parent to child: `/tmp/claude-ctx/ctx-parent-to-child-{subject}.md`
+- Child to parent: `/tmp/claude-ctx/ctx-child-to-parent-{subject}.md`
 
 Without subject:
 - Send: Claude infers subject from conversation
-- Fetch: Uses wildcard `ctx-{direction}-*.md`
+- Receive: Uses wildcard `ctx-{direction}-*.md`
 
 ## Example Workflow
 
@@ -50,7 +50,7 @@ Without subject:
 
 **In child session:**
 ```bash
-/context:fetch parent
+/context:receive parent
 # Do focused work
 /context:send parent
 # Exit child session
@@ -58,7 +58,7 @@ Without subject:
 
 **Back in parent session:**
 ```bash
-/context:fetch child
+/context:receive child
 # Continue with context from child
 ```
 

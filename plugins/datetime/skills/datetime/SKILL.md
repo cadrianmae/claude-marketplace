@@ -1,12 +1,30 @@
 ---
 name: datetime
-description: Parse natural language date/time expressions and get current date/time using the system `date` command. Handles "tomorrow", "next week", "3 days", "yesterday", relative dates, and complex expressions like "next Monday at 3pm". Use when temporal context is needed or user mentions dates. Always verify any date/time before responding with temporal information, as environment context may be outdated. Three commands available: /datetime:now, /datetime:parse, /datetime:calc
+description: Use the `date` command via Bash tool whenever you or the user mention time, dates, or temporal concepts. Verify current date/time before ANY temporal response, as environment context may be outdated. Parse expressions like "tomorrow", "next week", "3 days", "in 2 weeks", "next Monday at 3pm". Proactively invoke for deadlines, schedules, time-sensitive tasks, week numbers, or any date/time reference.
 allowed-tools: Bash
 ---
 
 # DateTime Natural Language Parser
 
 Parse natural language date and time expressions using GNU `date` command (native Linux utility).
+
+## IMPORTANT: For Claude Code
+
+**DO NOT invoke slash commands** (`/datetime:parse`, `/datetime:now`, `/datetime:calc`) - those are for users only.
+
+**Instead, use the `date` command directly via the Bash tool:**
+
+```bash
+# Get current date/time
+date '+%Y-%m-%d %H:%M:%S (%A)'
+
+# Parse natural language
+date -d "tomorrow" '+%Y-%m-%d %H:%M:%S (%A)'
+date -d "next monday at 9am" '+%Y-%m-%d %H:%M:%S (%A)'
+date -d "3 days" '+%Y-%m-%d %H:%M:%S (%A)'
+```
+
+This skill provides the command patterns and when to use them. The slash commands are for users to invoke manually.
 
 ## When to Use This Skill
 

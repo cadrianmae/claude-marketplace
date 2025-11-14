@@ -2,7 +2,22 @@
 
 Calculate the difference between two dates or times using natural language expressions.
 
-## Usage
+## For Claude Code
+
+**If you are Claude**: DO NOT invoke this slash command. Use unix timestamp arithmetic via Bash tool:
+
+```bash
+date1=$(date -d "first date" +%s)
+date2=$(date -d "second date" +%s)
+diff=$((date2 - date1))
+echo "Difference: $diff seconds"
+```
+
+See the Implementation section below for the full calculation pattern.
+
+## For Users
+
+### Usage
 
 ```bash
 /datetime:calc

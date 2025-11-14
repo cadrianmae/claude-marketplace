@@ -71,6 +71,11 @@ The datetime skill automatically activates when:
 - User references deadlines or time-sensitive tasks
 - Environment context shows incorrect dates
 
+**How it works:**
+- **Users** invoke via slash commands (`/datetime:parse "tomorrow"`)
+- **Claude** uses the underlying `date` command directly via Bash tool
+- The skill provides patterns and instructions, not interactive commands for Claude
+
 Claude will proactively use the native `date` command to verify temporal information.
 
 ## Usage Examples

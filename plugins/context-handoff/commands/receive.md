@@ -1,24 +1,24 @@
-# fetch - Receive context from parent or child session
+# receive - Receive context from parent or child session
 
 Read and integrate context from a parent or child session handoff file.
 
 ## Usage
 
 ```
-/context:fetch parent [subject] [path]
-/context:fetch child [subject] [path]
+/context:receive parent [subject] [path]
+/context:receive child [subject] [path]
 ```
 
 Both subject and path are optional:
 - **subject**: Claude will infer from context if not provided
-- **path**: Defaults to `/tmp/` if not provided
+- **path**: Defaults to `/tmp/claude-ctx/` if not provided
 
 ## What it does
 
 1. Determines direction: parent-to-child or child-to-parent
 2. If subject provided, looks for `{path}/ctx-{direction}-{subject}.md`
 3. If no subject, uses wildcard: `{path}/ctx-{direction}-*.md` **sorted by newest first**
-4. Path defaults to `/tmp/` but can be customized
+4. Path defaults to `/tmp/claude-ctx/` but can be customized
 5. Reads and displays context file
 6. Integrates context into current session understanding
 
@@ -27,10 +27,10 @@ Both subject and path are optional:
 ## Example: Receiving from Parent (Wildcard)
 
 ```
-/context:fetch parent
+/context:receive parent
 
-✓ Searching for context files: /tmp/ctx-parent-to-child-*.md (newest first)
-✓ Found: /tmp/ctx-parent-to-child-database-migration.md (modified 2 minutes ago)
+✓ Searching for context files: /tmp/claude-ctx/ctx-parent-to-child-*.md (newest first)
+✓ Found: /tmp/claude-ctx/ctx-parent-to-child-database-migration.md (modified 2 minutes ago)
 
 [Context displayed with parent session details]
 
@@ -40,10 +40,10 @@ Ready to begin focused work based on parent's context!
 ## Example: Receiving from Child with Subject
 
 ```
-/context:fetch child api-implementation
+/context:receive child api-implementation
 
 ✓ Context received from child session
-  File: /tmp/ctx-child-to-parent-api-implementation.md
+  File: /tmp/claude-ctx/ctx-child-to-parent-api-implementation.md
 
 [Context displayed with completed work summary]
 
@@ -53,7 +53,7 @@ Child session completed. Integrating results back.
 ## Example: Custom Path
 
 ```
-/context:fetch parent database-work ~/Documents/context/
+/context:receive parent database-work ~/Documents/context/
 
 ✓ Context received from parent session
   File: ~/Documents/context/ctx-parent-to-child-database-work.md

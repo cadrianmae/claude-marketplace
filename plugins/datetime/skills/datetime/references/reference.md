@@ -1,5 +1,14 @@
 # DateTime Natural - Technical Reference
 
+## For Claude Code
+
+**This reference is for technical details only.** When you need to work with dates/times:
+
+1. **DO NOT** invoke slash commands (`/datetime:parse`, `/datetime:now`, `/datetime:calc`)
+2. **DO** use the `date` command directly via Bash tool as shown in examples below
+
+The slash commands are for users only. This reference provides the command patterns you should use directly.
+
 ## GNU date Command Reference
 
 The `date` command is a native Linux utility that parses natural language date/time expressions without requiring external dependencies.
