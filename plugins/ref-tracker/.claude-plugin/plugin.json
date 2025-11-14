@@ -1,6 +1,6 @@
 {
   "name": "track",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Reference and research tracking system for academic work. Tracks WebSearch/WebFetch sources and major prompts to CLAUDE_SOURCES.md and CLAUDE_PROMPTS.md with configurable verbosity.",
   "author": {
     "name": "Mae Capacite",

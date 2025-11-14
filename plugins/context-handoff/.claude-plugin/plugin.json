@@ -1,7 +1,7 @@
 {
   "name": "context",
-  "version": "1.0.0",
-  "description": "Hierarchical parent-child session context handoff system. Pass context between sessions using /context:send and /context:fetch.",
+  "version": "1.1.0",
+  "description": "Hierarchical parent-child session context handoff system. Pass context between sessions using /context:send and /context:receive.",
   "author": {
     "name": "Mae Capacite",
     "email": "cadrianmae@users.noreply.github.com"
