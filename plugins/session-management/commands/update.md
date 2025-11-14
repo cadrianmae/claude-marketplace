@@ -1,3 +1,9 @@
+---
+description: Update the current development session with progress notes
+argument-hint: [notes]
+allowed-tools: Bash, Read, Write
+---
+
 Update the current development session by:
 
 1. Check if `.claude/sessions/.current-session` exists to find the active session

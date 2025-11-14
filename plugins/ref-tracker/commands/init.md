@@ -1,3 +1,8 @@
+---
+description: Initialize reference tracking for the current project
+allowed-tools: Bash, Write
+---
+
 # init - Initialize reference tracking
 
 Initialize reference and research tracking for the current project.

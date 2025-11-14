@@ -1,3 +1,9 @@
+---
+description: Receive context from parent or child session
+argument-hint: <direction> [subject] [path]
+allowed-tools: Bash, Read
+---
+
 # receive - Receive context from parent or child session
 
 Read and integrate context from a parent or child session handoff file.

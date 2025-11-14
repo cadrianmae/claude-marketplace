@@ -1,3 +1,9 @@
+---
+description: View or update tracking verbosity configuration
+argument-hint: [prompts=all|major|off] [sources=all|off]
+allowed-tools: Bash, Read, Write
+---
+
 # config - View or update verbosity settings
 
 View or update tracking verbosity configuration.

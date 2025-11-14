@@ -1,3 +1,10 @@
+---
+description: Parse natural language date/time expressions (Claude should use date command directly)
+argument-hint: <expression> [format]
+allowed-tools: Bash
+disable-model-invocation: true
+---
+
 # parse - Parse natural language date/time expressions
 
 Parse natural language date and time expressions into standardized format.

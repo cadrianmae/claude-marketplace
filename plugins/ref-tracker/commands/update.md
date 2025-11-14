@@ -1,3 +1,8 @@
+---
+description: Scan recent conversation history and add missing tracking entries
+allowed-tools: Read, Write
+---
+
 # update - Retroactive tracking scan
 
 Scan recent conversation history and add missing tracking entries.

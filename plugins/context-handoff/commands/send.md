@@ -1,3 +1,9 @@
+---
+description: Send context to parent or child session before switching
+argument-hint: <direction> [subject] [path]
+allowed-tools: Bash, Write
+---
+
 # send - Send context to child or parent session
 
 Create a context handoff file for transitioning between parent and child sessions.

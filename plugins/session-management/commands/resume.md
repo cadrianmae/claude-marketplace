@@ -1,3 +1,9 @@
+---
+description: Resume a previous development session
+argument-hint: <filename>
+allowed-tools: Bash, Read, Write
+---
+
 Resume a previous development session by:
 
 1. Check if $ARGUMENTS contains a session filename

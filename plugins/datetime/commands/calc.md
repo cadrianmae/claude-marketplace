@@ -1,3 +1,9 @@
+---
+description: Calculate date/time differences (Claude should use date command directly)
+allowed-tools: Bash
+disable-model-invocation: true
+---
+
 # calc - Calculate date/time differences
 
 Calculate the difference between two dates or times using natural language expressions.

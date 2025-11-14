@@ -1,3 +1,8 @@
+---
+description: Display help for the session management system
+disable-model-invocation: true
+---
+
 Show help for the session management system:
 
 ## Session Management Commands

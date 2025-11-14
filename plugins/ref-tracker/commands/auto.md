@@ -1,3 +1,9 @@
+---
+description: Toggle or set automatic reference tracking on/off
+argument-hint: [on|off]
+allowed-tools: Bash, Write
+---
+
 # auto - Control auto-tracking on/off
 
 Toggle or explicitly set automatic reference tracking state.

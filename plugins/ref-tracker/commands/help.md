@@ -1,3 +1,8 @@
+---
+description: Display comprehensive help for the ref-tracker system
+disable-model-invocation: true
+---
+
 # help - Reference tracking system help
 
 Comprehensive help for the ref-tracker system.

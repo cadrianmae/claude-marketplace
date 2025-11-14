@@ -1,3 +1,8 @@
+---
+description: Show the current session status
+allowed-tools: Bash, Read
+---
+
 Show the current session status by:
 
 1. Check if `.claude/sessions/.current-session` exists

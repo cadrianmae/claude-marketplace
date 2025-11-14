@@ -1,3 +1,8 @@
+---
+description: End the current development session with summary
+allowed-tools: Bash, Read, Write
+---
+
 End the current development session by:
 
 1. Check `.claude/sessions/.current-session` for the active session

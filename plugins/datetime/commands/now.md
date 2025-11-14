@@ -1,3 +1,10 @@
+---
+description: Get current date and time (Claude should use date command directly)
+argument-hint: [format]
+allowed-tools: Bash
+disable-model-invocation: true
+---
+
 # now - Get current date and time
 
 Get the current date and time in a standardized format.
