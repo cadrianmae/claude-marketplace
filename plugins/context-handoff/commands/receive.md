@@ -15,12 +15,19 @@ Both subject and path are optional:
 
 ## What it does
 
-1. Determines direction: parent-to-child or child-to-parent
-2. If subject provided, looks for `{path}/ctx-{direction}-{subject}.md`
-3. If no subject, uses wildcard: `{path}/ctx-{direction}-*.md` **sorted by newest first**
-4. Path defaults to `/tmp/claude-ctx/` but can be customized
-5. Reads and displays context file
-6. Integrates context into current session understanding
+1. Creates `/tmp/claude-ctx/` directory if it doesn't exist
+2. If creating directory, generates minimal README.md:
+   ```markdown
+   # Claude Context Handoff Directory
+
+   This is an **ephemeral directory** for Claude Code session context handoff. Created by claude slash commands. '/context:send' and '/context:receive'.
+   ```
+3. Determines direction: parent-to-child or child-to-parent
+4. If subject provided, looks for `{path}/ctx-{direction}-{subject}.md`
+5. If no subject, uses wildcard: `{path}/ctx-{direction}-*.md` **sorted by newest first**
+6. Path defaults to `/tmp/claude-ctx/` but can be customized
+7. Reads and displays context file
+8. Integrates context into current session understanding
 
 **Important:** When using wildcard (no subject), files are sorted by modification time with **newest first**, ensuring you get the most recent context.
 

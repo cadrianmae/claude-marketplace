@@ -15,17 +15,24 @@ Both subject and path are optional:
 
 ## What it does
 
-1. Determines direction: parent-to-child or child-to-parent
-2. If subject provided, creates `{path}/ctx-{direction}-{subject}.md`
-3. If no subject, infers from current conversation context and creates file with inferred name
-4. Path defaults to `/tmp/claude-ctx/` but can be customized
-5. Uses `cat > filename.md << 'EOF'` to clear file and write context
-6. Includes:
+1. Creates `/tmp/claude-ctx/` directory if it doesn't exist
+2. If creating directory, generates minimal README.md:
+   ```markdown
+   # Claude Context Handoff Directory
+
+   This is an **ephemeral directory** for Claude Code session context handoff. Created by claude slash commands. '/context:send' and '/context:receive'.
+   ```
+3. Determines direction: parent-to-child or child-to-parent
+4. If subject provided, creates `{path}/ctx-{direction}-{subject}.md`
+5. If no subject, infers from current conversation context and creates file with inferred name
+6. Path defaults to `/tmp/claude-ctx/` but can be customized
+7. Uses `cat > filename.md << 'EOF'` to clear file and write context
+8. Includes:
    - Current situation and context
    - Decisions made and work completed
    - Blockers and next actions
    - Files modified
-7. Shows clear "next steps" for user
+9. Shows clear "next steps" for user
 
 **File naming pattern:**
 - `/context:send child` → `/tmp/claude-ctx/ctx-parent-to-child-{inferred-subject}.md`
@@ -101,7 +108,23 @@ The context file should include:
 - Specific tasks for the receiving session
 - Dependencies or prerequisites
 
-## File Creation Pattern
+## Implementation Pattern
+
+**Create directory if needed:**
+
+```bash
+# Create /tmp/claude-ctx/ if it doesn't exist
+if [[ ! -d /tmp/claude-ctx ]]; then
+    mkdir -p /tmp/claude-ctx
+    cat > /tmp/claude-ctx/README.md << 'EOF'
+# Claude Context Handoff Directory
+
+This is an **ephemeral directory** for Claude Code session context handoff. Created by claude slash commands. '/context:send' and '/context:receive'.
+EOF
+fi
+```
+
+**Write context file:**
 
 Use heredoc to write context file:
 
