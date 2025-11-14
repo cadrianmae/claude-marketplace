@@ -6,7 +6,7 @@ Personal marketplace for Mae's custom Claude Code plugins.
 
 **Supported:** Linux, macOS, Windows (via Git Bash)
 
-**Note for Windows users:** Context files default to `/tmp/` which maps to your Git Bash temp directory. You can specify a custom path using the optional path parameter if needed (e.g., `/context:send child subject /c/Temp/`).
+**Note for Windows users:** Context files default to `/tmp/claude-ctx/` which maps to your Git Bash temp directory. You can specify a custom path using the optional path parameter if needed (e.g., `/context:send child subject /c/Temp/`).
 
 ## Available Plugins
 
@@ -26,12 +26,17 @@ Flat session management system with `.current-session` tracking.
 Generic hierarchical parent-child session context handoff.
 
 **Commands:**
-- `/context:fetch` - Receive context from parent/child session
+- `/context:receive` - Receive context from parent/child session
 - `/context:send` - Send context before switching sessions
 
 **File pattern:**
-- Parent to child: `/tmp/ctx-parent-to-child-{subject}.md`
-- Child to parent: `/tmp/ctx-child-to-parent-{subject}.md`
+- Parent to child: `/tmp/claude-ctx/ctx-parent-to-child-{subject}.md`
+- Child to parent: `/tmp/claude-ctx/ctx-child-to-parent-{subject}.md`
+
+**Features:**
+- Auto-creates `/tmp/claude-ctx/` directory with minimal README
+- Ephemeral storage (cleared on reboot)
+- Wildcard matching for context discovery
 
 ### ref-tracker
 Reference and research tracking for academic work and project documentation.
@@ -68,6 +73,28 @@ Natural language date/time parsing and calculations using native GNU date comman
 
 **Skills:**
 - `datetime` - Auto-invoked for proactive temporal awareness
+
+### code-pointer
+Claude-only skill that opens files in VSCode at specific line and column positions.
+
+**Auto-invoked when:**
+- Explaining code at specific lines
+- Debugging errors at particular locations
+- Pointing to TODO sections or task markers
+- Guiding through code reviews
+- Referencing config files or documentation sections
+
+**Features:**
+- Precise line and column positioning
+- Automatic path validation and conversion
+- Window control options
+- Progressive disclosure with focused reference files
+
+**Skills:**
+- `code-pointer` - Auto-invoked when Claude needs to show exact file locations
+
+**Requirements:**
+- VSCode with `code` CLI installed in PATH
 
 ## Scripts
 
