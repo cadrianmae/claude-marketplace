@@ -21,8 +21,9 @@ Both subject and path are optional:
 
 ## What it does
 
-1. Creates `/tmp/claude-ctx/` directory if it doesn't exist
-2. If creating directory, generates minimal README.md:
+1. Checks if `/tmp/claude-ctx/` directory exists using test command
+2. Creates directory only if it doesn't exist
+3. If creating directory, generates minimal README.md:
    ```markdown
    # Claude Context Handoff Directory
 
@@ -119,15 +120,15 @@ The context file should include:
 **Create directory if needed:**
 
 ```bash
-# Create /tmp/claude-ctx/ if it doesn't exist
-if [[ ! -d /tmp/claude-ctx ]]; then
+# Check if directory exists, create only if needed
+[[ -d /tmp/claude-ctx ]] || {
     mkdir -p /tmp/claude-ctx
     cat > /tmp/claude-ctx/README.md << 'EOF'
 # Claude Context Handoff Directory
 
 This is an **ephemeral directory** for Claude Code session context handoff. Created by claude slash commands. '/context:send' and '/context:receive'.
 EOF
-fi
+}
 ```
 
 **Write context file:**

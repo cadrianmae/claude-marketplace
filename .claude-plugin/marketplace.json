@@ -63,6 +63,18 @@
       },
       "license": "MIT",
       "keywords": ["vscode", "code", "navigation", "editor", "debugging", "code-review", "line-number", "goto"]
+    },
+    {
+      "name": "semantic-search",
+      "source": "./plugins/semantic-search",
+      "description": "Natural language semantic search for codebases and notes using odino CLI with BGE embeddings. Auto-invoked skill for conceptual queries ('where is...', 'how does... work'). Slash commands (/semq:search, /semq:index, /semq:status, /semq:here) with automatic directory traversal. Fully local, 100% offline after setup.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Mae Capacite",
+        "email": "cadrianmae@users.noreply.github.com"
+      },
+      "license": "MIT",
+      "keywords": ["search", "semantic", "embeddings", "codebase", "natural-language", "ml", "odino"]
     }
   ]
 }

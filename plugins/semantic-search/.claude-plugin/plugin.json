@@ -1,0 +1,13 @@
+{
+  "name": "semantic-search",
+  "version": "1.0.0",
+  "description": "Natural language semantic search for codebases and notes using odino CLI with BGE embeddings. Commands for indexing and searching with automatic directory traversal.",
+  "author": {
+    "name": "Mae Capacite",
+    "email": "cadrianmae@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/cadrianmae/claude-marketplace",
+  "repository": "https://github.com/cadrianmae/claude-marketplace",
+  "license": "MIT",
+  "keywords": ["search", "semantic", "embeddings", "codebase", "natural-language", "ml", "odino"]
+}

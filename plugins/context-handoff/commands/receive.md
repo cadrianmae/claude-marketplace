@@ -21,8 +21,9 @@ Both subject and path are optional:
 
 ## What it does
 
-1. Creates `/tmp/claude-ctx/` directory if it doesn't exist
-2. If creating directory, generates minimal README.md:
+1. Checks if `/tmp/claude-ctx/` directory exists using test command
+2. Creates directory only if it doesn't exist
+3. If creating directory, generates minimal README.md:
    ```markdown
    # Claude Context Handoff Directory
 
