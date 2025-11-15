@@ -2,6 +2,7 @@
 description: Search from current directory upward to find indexed codebase
 argument-hint: <query>
 allowed-tools: Bash, Read
+disable-model-invocation: true
 ---
 
 # here - Semantic search with directory traversal

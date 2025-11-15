@@ -2,6 +2,7 @@
 description: Index directory for semantic search
 argument-hint: [path] [--force]
 allowed-tools: Bash
+disable-model-invocation: true
 ---
 
 # index - Create semantic search index

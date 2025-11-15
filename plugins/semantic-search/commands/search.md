@@ -2,6 +2,7 @@
 description: Search indexed codebase using natural language semantic search
 argument-hint: <query>
 allowed-tools: Bash, Read
+disable-model-invocation: true
 ---
 
 # search - Semantic search in current directory

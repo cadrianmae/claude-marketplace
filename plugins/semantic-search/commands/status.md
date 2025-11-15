@@ -2,6 +2,7 @@
 description: Show semantic search index status and statistics
 argument-hint: [path]
 allowed-tools: Bash
+disable-model-invocation: true
 ---
 
 # status - Check semantic search index status
