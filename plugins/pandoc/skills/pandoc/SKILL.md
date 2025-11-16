@@ -211,6 +211,70 @@ fi
 
 **Note:** Plugin includes Harvard, APA, and IEEE styles. For other styles, download from https://github.com/citation-style-language/styles
 
+### 6. Restyle Document to Match Template
+
+**User asks:** "Transform this document to match academic paper format"
+
+**Workflow using tools directly:**
+
+```bash
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+INPUT_FILE="document.md"
+TARGET_STYLE="academic-paper"  # or thesis, article, etc.
+
+# 1. Backup original
+cp "$INPUT_FILE" "${INPUT_FILE}.bak"
+echo "Backed up to ${INPUT_FILE}.bak"
+
+# 2. Read current frontmatter
+echo "Current frontmatter:"
+sed -n '/^---$/,/^---$/p' "$INPUT_FILE"
+
+# 3. Get target template
+TEMPLATE="$PLUGIN_DIR/skills/pandoc/assets/templates/${TARGET_STYLE}.yaml"
+
+if [[ -f "$TEMPLATE" ]]; then
+    # 4. Extract content (everything after second ---)
+    CONTENT=$(sed -n '/^---$/,/^---$/{/^---$/d;p};/^---$/,$p' "$INPUT_FILE" | tail -n +2)
+
+    # 5. Combine template frontmatter + content
+    {
+        cat "$TEMPLATE"
+        echo ""
+        echo "$CONTENT"
+    } > "${INPUT_FILE}.tmp"
+
+    # 6. Replace original
+    mv "${INPUT_FILE}.tmp" "$INPUT_FILE"
+
+    echo "✅ Restyled to $TARGET_STYLE format"
+    echo ""
+    echo "Next steps:"
+    echo "  1. Edit frontmatter fields (author, title, etc.)"
+    echo "  2. Validate: Check document is ready"
+    echo "  3. Convert: Generate output"
+else
+    echo "❌ Template not found: $TARGET_STYLE"
+    echo "Available: academic-paper, thesis, article, presentation-beamer, presentation-reveal"
+fi
+```
+
+**Common use cases:**
+
+1. **OCR/PDF → Academic:**
+   - Remove: `processed_date`, `ocr_model`, `source_type`
+   - Add: `author`, `bibliography`, `documentclass`
+
+2. **Draft → Thesis:**
+   - Add: `supervisor`, `institution`, `department`
+   - Add: `toc`, `lof`, `lot`
+
+3. **Blog → Paper:**
+   - Add: `bibliography`, `csl`, `numbersections`
+   - Update: `documentclass` to `report`
+
+**Suggest to user:** "Or use: `/pandoc:restyle document.md academic-paper`"
+
 ## Error Diagnosis
 
 ### Common Errors and Fixes
@@ -292,6 +356,7 @@ The plugin provides these slash commands for users:
 - `/pandoc:validate <file>` - Validate frontmatter and dependencies
 - `/pandoc:convert <input> <output> [options]` - Convert with smart defaults
 - `/pandoc:frontmatter <file> [type]` - Add/update frontmatter
+- `/pandoc:restyle <input> <target-style>` - Transform document to match template style
 - `/pandoc:defaults <format> [file]` - Generate defaults file
 
 **As the skill:** Use the underlying tools (scripts, pandoc CLI) directly via Bash. Mention these commands as suggestions for the user.
