@@ -30,9 +30,6 @@ toc-depth: 3
 lof: true  # List of figures
 lot: true  # List of tables
 
-# Custom Title Page
-title-page: true
-
 # LaTeX Packages
 header-includes: |
   \usepackage{graphicx}
