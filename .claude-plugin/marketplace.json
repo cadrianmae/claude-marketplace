@@ -75,6 +75,18 @@
       },
       "license": "MIT",
       "keywords": ["search", "semantic", "embeddings", "codebase", "natural-language", "ml", "odino"]
+    },
+    {
+      "name": "pandoc",
+      "source": "./plugins/pandoc",
+      "description": "Document conversion toolkit for Pandoc with templates, validation, and format-specific helpers. Convert markdown to PDF, DOCX, HTML, and presentations with smart defaults and YAML frontmatter validation. Includes academic paper templates, BibTeX examples, and Makefile for automation.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Mae Capacite",
+        "email": "cadrianmae@users.noreply.github.com"
+      },
+      "license": "MIT",
+      "keywords": ["pandoc", "markdown", "pdf", "conversion", "academic", "documents", "latex", "citations", "bibliography"]
     }
   ]
 }

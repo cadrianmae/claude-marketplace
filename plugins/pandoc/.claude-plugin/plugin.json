@@ -1,0 +1,23 @@
+{
+  "name": "pandoc",
+  "version": "1.0.0",
+  "description": "Document conversion toolkit for Pandoc with templates, validation, and format-specific helpers. Convert markdown to PDF, DOCX, HTML, and presentations with smart defaults and YAML frontmatter validation.",
+  "author": {
+    "name": "Mae Capacite",
+    "email": "cadrianmae@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/cadrianmae/claude-marketplace",
+  "repository": "https://github.com/cadrianmae/claude-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "pandoc",
+    "markdown",
+    "pdf",
+    "conversion",
+    "academic",
+    "documents",
+    "latex",
+    "citations",
+    "bibliography"
+  ]
+}
