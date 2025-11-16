@@ -78,7 +78,7 @@ How to use and customize Pandoc document templates.
 ### Method 1: Copy to New File
 
 ```bash
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 cp "$PLUGIN_DIR/skills/pandoc/assets/templates/academic-paper.yaml" paper.md
 ```
 
@@ -153,7 +153,7 @@ header-includes: |
 ### Step 1: Start from Existing
 
 ```bash
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 
 # Copy closest match
 cp "$PLUGIN_DIR/skills/pandoc/assets/templates/academic-paper.yaml" my-template.yaml
@@ -370,7 +370,7 @@ linestretch: 1.5         # Standard spacing
 
 **Validate:**
 ```bash
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 python3 "$PLUGIN_DIR/skills/pandoc/scripts/validate.py" template.md
 ```
 

@@ -4,7 +4,7 @@
 # Configuration
 PANDOC = pandoc
 PYTHON = python3
-PLUGIN_DIR = /home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc
+PLUGIN_DIR = ~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc
 VALIDATE = $(PYTHON) $(PLUGIN_DIR)/skills/pandoc/scripts/validate.py
 
 # Project files

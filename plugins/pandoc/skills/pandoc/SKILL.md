@@ -39,6 +39,14 @@ Automatically invoke this skill when the user:
 - `article-simple.yaml` - Simple article format
 - `defaults-pdf.yaml` - Reusable PDF defaults file
 - `references.bib` - BibTeX bibliography template
+- `Makefile` - Project automation template
+
+### Citation Styles (in assets/csl/)
+- `harvard.csl` - Harvard Cite Them Right style
+- `apa.csl` - APA 7th edition style
+- `ieee.csl` - IEEE style
+
+Users can copy these to their project without downloading separately.
 
 ### References
 - `references/conversion_guide.md` - Format-specific instructions
@@ -56,7 +64,7 @@ Automatically invoke this skill when the user:
 
 ```bash
 # Path to validation script
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 VALIDATE_SCRIPT="$PLUGIN_DIR/skills/pandoc/scripts/validate.py"
 
 # Run validation
@@ -73,7 +81,7 @@ python3 "$VALIDATE_SCRIPT" document.md
 
 ```bash
 # Path to templates
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 TEMPLATE="$PLUGIN_DIR/skills/pandoc/assets/templates/academic-paper.yaml"
 
 # Copy template to user's file
@@ -98,7 +106,7 @@ echo "  - bibliography: Path to your .bib file"
 
 ```bash
 # Validate first
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 python3 "$PLUGIN_DIR/skills/pandoc/scripts/validate.py" document.md
 
 if [[ $? -eq 0 ]]; then
@@ -134,7 +142,7 @@ fi
 
 ```bash
 FILE="document.md"
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 TEMPLATE="$PLUGIN_DIR/skills/pandoc/assets/templates/academic-paper.yaml"
 
 # Check if already has frontmatter
@@ -170,14 +178,24 @@ fi
 
 1. **Create bibliography file:**
    ```bash
-   PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+   PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
    BIB_TEMPLATE="$PLUGIN_DIR/skills/pandoc/assets/templates/references.bib"
 
    cp "$BIB_TEMPLATE" references.bib
    echo "Created references.bib - edit to add your sources"
    ```
 
-2. **Update frontmatter:**
+2. **Copy CSL file (bundled with plugin):**
+   ```bash
+   PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+
+   # Choose one:
+   cp "$PLUGIN_DIR/skills/pandoc/assets/csl/harvard.csl" .
+   cp "$PLUGIN_DIR/skills/pandoc/assets/csl/apa.csl" .
+   cp "$PLUGIN_DIR/skills/pandoc/assets/csl/ieee.csl" .
+   ```
+
+3. **Update frontmatter:**
    Use Edit tool to add to document:
    ```yaml
    bibliography: references.bib
@@ -185,14 +203,13 @@ fi
    link-citations: true
    ```
 
-3. **Explain citation syntax:**
+4. **Explain citation syntax:**
    ```markdown
    Use [@citekey] for citations
    Use @citekey for in-text citations
    ```
 
-4. **Download CSL if needed:**
-   Suggest: "Download citation style from https://github.com/citation-style-language/styles"
+**Note:** Plugin includes Harvard, APA, and IEEE styles. For other styles, download from https://github.com/citation-style-language/styles
 
 ## Error Diagnosis
 
@@ -292,7 +309,7 @@ Load these when needed for detailed information:
 
 **Plugin directory:**
 ```bash
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 ```
 
 **Validation:**

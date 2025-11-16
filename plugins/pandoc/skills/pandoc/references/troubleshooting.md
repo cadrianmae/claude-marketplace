@@ -43,7 +43,7 @@ Error: YAML syntax error: mapping values are not allowed here
 
 **Fix:** Use validation to find exact error
 ```bash
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 python3 "$PLUGIN_DIR/skills/pandoc/scripts/validate.py" document.md
 ```
 
@@ -77,7 +77,7 @@ Error: Bibliography file not found: references.bib
 
 1. **Create bibliography file:**
    ```bash
-   PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+   PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
    cp "$PLUGIN_DIR/skills/pandoc/assets/templates/references.bib" references.bib
    ```
 
@@ -433,7 +433,7 @@ df -h .  # Check disk space
 
 **Validate:**
 ```bash
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 python3 "$PLUGIN_DIR/skills/pandoc/scripts/validate.py" document.md
 ```
 
@@ -469,7 +469,7 @@ curl -o style.csl https://raw.githubusercontent.com/citation-style-language/styl
 
 1. **Validate first:**
    ```bash
-   PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+   PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
    python3 "$PLUGIN_DIR/skills/pandoc/scripts/validate.py" document.md
    ```
 
@@ -519,7 +519,7 @@ curl -o style.csl https://raw.githubusercontent.com/citation-style-language/styl
 
 ### Validation Tool
 ```bash
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 python3 "$PLUGIN_DIR/skills/pandoc/scripts/validate.py" document.md
 ```
 

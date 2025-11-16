@@ -326,7 +326,7 @@ done
 ### With Validation
 
 ```bash
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 
 for file in *.md; do
     if python3 "$PLUGIN_DIR/skills/pandoc/scripts/validate.py" "$file"; then

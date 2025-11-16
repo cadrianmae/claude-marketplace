@@ -6,7 +6,7 @@ Copy-paste ready commands for common Pandoc operations.
 
 ```bash
 # Validate document
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 python3 "$PLUGIN_DIR/skills/pandoc/scripts/validate.py" document.md
 ```
 
@@ -92,7 +92,7 @@ pandoc slides.md -o slides.pdf \
 
 ```bash
 # Copy template
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 cp "$PLUGIN_DIR/skills/pandoc/assets/templates/academic-paper.yaml" paper.md
 
 # Copy bibliography template
@@ -106,7 +106,7 @@ cp "$PLUGIN_DIR/skills/pandoc/assets/templates/Makefile" Makefile
 
 ```bash
 # Create defaults file
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 cp "$PLUGIN_DIR/skills/pandoc/assets/templates/defaults-pdf.yaml" defaults.yaml
 
 # Use defaults
@@ -124,7 +124,7 @@ mkdir -p project/{images,.pandoc}
 cd project
 
 # Copy templates
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 cp "$PLUGIN_DIR/skills/pandoc/assets/templates/academic-paper.yaml" paper.md
 cp "$PLUGIN_DIR/skills/pandoc/assets/templates/references.bib" references.bib
 cp "$PLUGIN_DIR/skills/pandoc/assets/templates/defaults-pdf.yaml" .pandoc/defaults.yaml
@@ -146,7 +146,7 @@ for file in *.md; do
 done
 
 # With validation
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 for file in *.md; do
     if python3 "$PLUGIN_DIR/skills/pandoc/scripts/validate.py" "$file"; then
         pandoc "$file" -o "${file%.md}.pdf"
@@ -192,7 +192,7 @@ pandoc doc.md -o doc.pdf --verbose
 
 ```bash
 # Set plugin directory
-export PANDOC_PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+export PANDOC_PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 
 # Use in commands
 python3 "$PANDOC_PLUGIN_DIR/skills/pandoc/scripts/validate.py" document.md
@@ -205,7 +205,7 @@ python3 "$PANDOC_PLUGIN_DIR/skills/pandoc/scripts/validate.py" document.md
 
 # Validate and convert
 pandoc-convert() {
-    PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+    PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
     python3 "$PLUGIN_DIR/skills/pandoc/scripts/validate.py" "$1" && \
     pandoc "$1" -o "$2" --pdf-engine=pdflatex --citeproc --number-sections
 }
@@ -214,7 +214,7 @@ pandoc-convert() {
 
 # Quick validate
 pandoc-validate() {
-    PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+    PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
     python3 "$PLUGIN_DIR/skills/pandoc/scripts/validate.py" "$1"
 }
 
@@ -282,7 +282,7 @@ jobs:
 
 ```bash
 # Academic paper workflow
-PLUGIN_DIR="/home/cadrianmae/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
 cp "$PLUGIN_DIR/skills/pandoc/assets/templates/academic-paper.yaml" paper.md
 # Edit paper.md
 python3 "$PLUGIN_DIR/skills/pandoc/scripts/validate.py" paper.md
