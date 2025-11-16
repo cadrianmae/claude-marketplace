@@ -39,7 +39,6 @@ header-includes: |
   \usepackage{float}
   \usepackage{hyperref}
   \usepackage{setspace}
-
   % Custom title page
   \renewcommand{\maketitle}{
     \begin{titlepage}

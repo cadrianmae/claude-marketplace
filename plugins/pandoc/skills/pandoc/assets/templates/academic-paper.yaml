@@ -21,9 +21,9 @@ toc-depth: 3                 # TOC depth (1-5)
 
 # LaTeX Packages (optional)
 header-includes: |
-  \usepackage{graphicx}      # For images
-  \usepackage{float}         # For figure placement
-  \usepackage{hyperref}      # For hyperlinks
+  \usepackage{graphicx}
+  \usepackage{float}
+  \usepackage{hyperref}
 ---
 
 # Introduction
