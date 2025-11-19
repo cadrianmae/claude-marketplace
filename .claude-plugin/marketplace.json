@@ -87,6 +87,18 @@
       },
       "license": "MIT",
       "keywords": ["pandoc", "markdown", "pdf", "conversion", "academic", "documents", "latex", "citations", "bibliography"]
+    },
+    {
+      "name": "cadrianmae-integration",
+      "source": "./plugins/cadrianmae-integration",
+      "description": "Integrate marketplace plugins into CLAUDE.md using @ imports. Scans installed plugins, generates documentation with skills and commands, creates marketplace-plugins.md, and adds import to user-level or project-level CLAUDE.md. Uses /integrate command with scope selection.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Mae Capacite",
+        "email": "cadrianmae@users.noreply.github.com"
+      },
+      "license": "MIT",
+      "keywords": ["integration", "documentation", "marketplace", "plugins", "CLAUDE.md", "imports"]
     }
   ]
 }
