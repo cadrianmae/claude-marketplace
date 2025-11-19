@@ -86,18 +86,160 @@ fi
 
 ### Parse and Present Results
 
-Odino returns results in this format:
+Odino returns results in a formatted table:
 ```
-Score: 0.85 | Path: src/auth/middleware.js
-Score: 0.78 | Path: src/auth/tokens.js
-...
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ File                            ┃ Score    ┃ Content                         ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ knowledge/Search Algorithms.md  │ 0.361    │    1 ---                        │
+│                                 │          │    2 tags: [todo/stub]          │
+│                                 │          │    3 module: CMPU 4010          │
+│                                 │          │   ...                           │
+│                                 │          │    7 # Search Algorithms in AI  │
+│                                 │          │   ...                           │
+└─────────────────────────────────┴──────────┴─────────────────────────────────┘
+Found 2 results
 ```
 
-**Present results clearly:**
-1. Show file paths with scores
-2. Optionally read top results and summarize
-3. Suggest using code-pointer to open files at specific lines
-4. Mention related files for context
+**Enhanced workflow:**
+1. Parse table to extract file paths, scores, and content previews
+2. Read top 2-3 results (score > 0.3) for full context
+3. Summarize findings with explanations
+4. Use code-pointer to open most relevant file
+5. Suggest follow-up queries or related concepts
+
+## Query Inference
+
+Transform user requests into better semantic queries with realistic output examples.
+
+### Example 1: Conceptual Query
+
+**User asks:** "error handling"
+**Inferred query:** `error handling exception management try catch validation`
+**Sample odino output:**
+```
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ File                            ┃ Score    ┃ Content                         ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ knowledge/Error Handling.md     │ 0.876    │    1 ---                        │
+│                                 │          │    2 tags: [software-eng, best- │
+│                                 │          │    3 ---                        │
+│                                 │          │    4 # Error Handling           │
+│                                 │          │    5                            │
+│                                 │          │    6 Error handling is the proc │
+│                                 │          │    7 runtime errors gracefully  │
+│                                 │          │    8 system stability.          │
+│                                 │          │    9                            │
+│                                 │          │   10 ## Key Concepts            │
+│                                 │          │   11 - Try-catch blocks for syn │
+│                                 │          │   12 - Promise rejection handli │
+│                                 │          │   13 - Input validation to prev │
+│                                 │          │   14 - Logging errors for debug │
+│                                 │          │   15 - User-friendly error mess │
+│                                 │          │   16                            │
+│                                 │          │   17 ## Best Practices          │
+│                                 │          │   18 1. Fail fast - validate ea │
+│                                 │          │   19 2. Log with context - incl │
+│                                 │          │   20 3. Don't swallow errors -  │
+└─────────────────────────────────┴──────────┴─────────────────────────────────┘
+```
+
+### Example 2: Code Query
+
+**User asks:** "DB connection code"
+**Inferred query:**
+```
+database connection pooling setup
+import mysql.connector
+pool = mysql.connector.pooling.MySQLConnectionPool(
+    pool_name="mypool",
+    pool_size=5,
+    host="localhost",
+    database="mydb"
+)
+connection = pool.get_connection()
+```
+**Sample odino output:**
+```
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ File                            ┃ Score    ┃ Content                         ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ src/db/connection.js            │ 0.924    │    1 const mysql = require('mys │
+│                                 │          │    2                            │
+│                                 │          │    3 // Create connection pool  │
+│                                 │          │    4 const pool = mysql.createP │
+│                                 │          │    5   host: process.env.DB_HOS │
+│                                 │          │    6   user: process.env.DB_USE │
+│                                 │          │    7   password: process.env.DB │
+│                                 │          │    8   database: process.env.DB │
+│                                 │          │    9   waitForConnections: true │
+│                                 │          │   10   connectionLimit: 10,     │
+│                                 │          │   11   queueLimit: 0            │
+│                                 │          │   12 });                        │
+│                                 │          │   13                            │
+│                                 │          │   14 // Test connection         │
+│                                 │          │   15 pool.getConnection((err, c │
+│                                 │          │   16   if (err) {               │
+│                                 │          │   17     console.error('DB conn │
+│                                 │          │   18     process.exit(1);       │
+│                                 │          │   19   }                        │
+│                                 │          │   20   console.log('Connected t │
+└─────────────────────────────────┴──────────┴─────────────────────────────────┘
+```
+
+### Example 3: Algorithm Query (with code)
+
+**User asks:** "BFS algorithm in Python"
+**Inferred query:**
+```
+breadth first search BFS graph traversal queue
+def bfs(graph, start):
+    visited = set()
+    queue = [start]
+    while queue:
+        node = queue.pop(0)
+        if node not in visited:
+            visited.add(node)
+            queue.extend(graph[node])
+    return visited
+```
+**Sample odino output:**
+```
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ File                            ┃ Score    ┃ Content                         ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ knowledge/Search Algorithms.md  │ 0.891    │    1 ---                        │
+│                                 │          │    2 tags: [ai, algorithms]     │
+│                                 │          │    3 module: CMPU 4010 AI       │
+│                                 │          │    4 ---                        │
+│                                 │          │    5 # Search Algorithms in AI  │
+│                                 │          │    6                            │
+│                                 │          │    7 Algorithms for finding sol │
+│                                 │          │    8 problem spaces. Used in pa │
+│                                 │          │    9 game AI, and optimization. │
+│                                 │          │   10                            │
+│                                 │          │   11 ## Types                   │
+│                                 │          │   12                            │
+│                                 │          │   13 ### Uninformed Search      │
+│                                 │          │   14 - **BFS**: Explores level  │
+│                                 │          │   15 - **DFS**: Explores deeply │
+│                                 │          │   16 - **Uniform Cost**: Expand │
+│                                 │          │   17                            │
+│                                 │          │   18 ### Informed Search        │
+│                                 │          │   19 - **A***: Uses heuristic + │
+│                                 │          │   20 - **Greedy**: Only conside │
+│                                 │          │   21 - **Hill Climbing**: Local │
+└─────────────────────────────────┴──────────┴─────────────────────────────────┘
+```
+
+### Inference Patterns
+
+- **Expand abbreviations:** DB → database, auth → authentication
+- **Code queries include sample code:** User asks "connection pooling" → Query includes Python example with `pool.get_connection()`
+- **Use specified language:** User mentions "JavaScript" → Use JavaScript syntax in query
+- **Default to Python:** No language specified → Use Python code examples
+- **Add related concepts:** "search" → include BFS, DFS, A* terminology
+- **Add context words:** "handling", "management", "setup", "configuration"
 
 ## Core Capabilities
 

@@ -28,19 +28,80 @@ Search the current directory's semantic index using natural language queries.
 
 ## Examples
 
-**Find authentication code:**
+**Find error handling (conceptual):**
 ```
-/semq:search authentication middleware
+User: /semq:search error handling
+
+Claude infers: "error handling exception management try catch validation"
+
+Results:
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┓
+┃ File                            ┃ Score    ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━┩
+│ knowledge/Error Handling.md     │ 0.876    │
+│ → "Error handling is the process of..."
+│ → Shows: Key Concepts, Best Practices
+│
+│ middleware/errorHandler.js      │ 0.745    │
+│ → Shows: Global error handler implementation
+└─────────────────────────────────┴──────────┘
+
+Claude reads top result and summarizes key concepts.
 ```
 
-**Find database logic:**
+**Find database code:**
 ```
-/semq:search database connection handling
+User: /semq:search DB connection code
+
+Claude infers query with Python example:
+"database connection pooling setup
+import mysql.connector
+pool = mysql.connector.pooling.MySQLConnectionPool(
+    pool_name='mypool',
+    pool_size=5,
+    host='localhost'
+)
+connection = pool.get_connection()"
+
+Results:
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┓
+┃ File                            ┃ Score    ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━┩
+│ src/db/connection.js            │ 0.924    │
+│ → const pool = mysql.createPool({...})
+│ → Shows: Connection pooling config with env vars
+│ → Includes: Error handling and testing
+└─────────────────────────────────┴──────────┘
+
+Claude shows code snippet and explains pooling strategy.
 ```
 
-**Find error handling:**
+**Find algorithms:**
 ```
-/semq:search error handling patterns
+User: /semq:search BFS algorithm Python
+
+Claude infers query with code:
+"breadth first search BFS graph traversal
+def bfs(graph, start):
+    visited = set()
+    queue = [start]
+    while queue:
+        node = queue.pop(0)
+        if node not in visited:
+            visited.add(node)
+            queue.extend(graph[node])"
+
+Results:
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┓
+┃ File                            ┃ Score    ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━┩
+│ knowledge/Search Algorithms.md  │ 0.891    │
+│ → Types: Uninformed (BFS, DFS) vs Informed (A*, Greedy)
+│ → When to use each algorithm
+│ → Includes mermaid diagram
+└─────────────────────────────────┴──────────┘
+
+Claude reads note and explains algorithm categories.
 ```
 
 ## Implementation
