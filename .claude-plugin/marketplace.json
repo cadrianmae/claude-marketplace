@@ -111,6 +111,18 @@
       },
       "license": "MIT",
       "keywords": ["feedback", "bugs", "features", "tracking", "marketplace", "issues"]
+    },
+    {
+      "name": "gencast",
+      "source": "./plugins/gencast",
+      "description": "Auto-invoke gencast to generate podcasts from documents. Always uses --minimal flag. Supports all CLI options: planning, styles, audiences, voices, dialogue/plan saving.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Mae Capacite",
+        "email": "cadrianmae@users.noreply.github.com"
+      },
+      "license": "MIT",
+      "keywords": ["podcast", "audio", "gencast", "dialogue", "lecture", "conversation", "educational"]
     }
   ]
 }

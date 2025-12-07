@@ -1,0 +1,13 @@
+{
+  "name": "gencast",
+  "description": "Auto-invoke gencast to generate podcasts from documents. Always uses --minimal flag. Supports all CLI options: planning, styles, audiences, voices, dialogue/plan saving.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Mae Capacite",
+    "email": "cadrianmae@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/cadrianmae/claude-marketplace",
+  "repository": "https://github.com/cadrianmae/claude-marketplace",
+  "license": "MIT",
+  "keywords": ["podcast", "audio", "gencast", "dialogue", "lecture", "conversation", "educational"]
+}
