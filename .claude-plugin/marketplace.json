@@ -99,6 +99,18 @@
       },
       "license": "MIT",
       "keywords": ["integration", "documentation", "marketplace", "plugins", "CLAUDE.md", "imports"]
+    },
+    {
+      "name": "feedback",
+      "source": "./plugins/feedback",
+      "description": "Track bugs and feature requests for cadrianmae-claude-marketplace plugins. Use /feedback:bug and /feedback:feature to append timestamped entries to the marketplace's FEEDBACK.md.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Mae Capacite",
+        "email": "cadrianmae@users.noreply.github.com"
+      },
+      "license": "MIT",
+      "keywords": ["feedback", "bugs", "features", "tracking", "marketplace", "issues"]
     }
   ]
 }
