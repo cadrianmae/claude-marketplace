@@ -1,50 +1,19 @@
 ---
-description: "Log a bug report for the marketplace"
-allowed-tools: Bash, Read, Write, Edit
+description: "Log a bug report for the marketplace (logging only - implementation happens in dedicated sessions)"
+allowed-tools: Bash
 ---
 
 # /feedback:bug - Log a Marketplace Bug
 
-Log a bug for cadrianmae-claude-marketplace plugins to FEEDBACK.md.
+IMPORTANT: This command logs bugs for LATER review and implementation in a dedicated marketplace development session. Do NOT attempt to implement fixes in this session. You may ask clarifying questions to better understand the bug, then log it and continue with the user's current work.
 
-## Usage
+## Workflow
 
-```
-/feedback:bug <description>
-```
+1. If the description is unclear, ask clarifying questions
+2. Log the bug to FEEDBACK.md with the script below
+3. Confirm it's logged and return to the user's work - DO NOT implement
 
-## Arguments
-
-- `description` - Brief description of the bug (required)
-
-## Behavior
-
-1. **Check for FEEDBACK.md** - Create in marketplace root if doesn't exist
-2. **Get current date** - Use `date '+%Y-%m-%d'`
-3. **Append bug entry** - Add to Bugs section
-
-## FEEDBACK.md Location
-
-`~/.claude/marketplaces/cadrianmae-claude-marketplace/FEEDBACK.md`
-
-## FEEDBACK.md Format
-
-```markdown
-# Marketplace Feedback
-
-Bugs and feature requests for cadrianmae-claude-marketplace plugins.
-
-## Bugs
-
-- [ ] [2025-12-07] pandoc: Template validation fails on empty frontmatter
-- [ ] [2025-12-06] semantic-search: Index command hangs on large repos
-
-## Features
-
-- [ ] [2025-12-05] Add export to PDF for session notes
-```
-
-## Implementation
+## Script to Execute
 
 ```bash
 MARKETPLACE_DIR=~/.claude/marketplaces/cadrianmae-claude-marketplace
@@ -70,20 +39,8 @@ fi
 sed -i "/^## Bugs$/a - [ ] [$DATE] $DESCRIPTION" "$FEEDBACK_FILE"
 ```
 
-## Output
+## After Logging
 
-```
-[OK] Bug logged to marketplace FEEDBACK.md
+Respond with: "Bug logged to marketplace FEEDBACK.md for later review. Continuing with your current work."
 
-  - [ ] [2025-12-07] pandoc: restyle command fails on thesis template
-
-View feedback: cat ~/.claude/marketplaces/cadrianmae-claude-marketplace/FEEDBACK.md
-```
-
-## Examples
-
-```
-/feedback:bug "pandoc: LaTeX comments break compilation"
-/feedback:bug "semantic-search: Query inference misses Go code"
-/feedback:bug "datetime: Parsing 'next month' returns wrong date"
-```
+Then return focus to whatever the user was working on before this command.

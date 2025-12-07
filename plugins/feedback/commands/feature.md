@@ -1,50 +1,19 @@
 ---
-description: "Log a feature request for the marketplace"
-allowed-tools: Bash, Read, Write, Edit
+description: "Log a feature request for the marketplace (logging only - implementation happens in dedicated sessions)"
+allowed-tools: Bash
 ---
 
 # /feedback:feature - Log a Marketplace Feature Request
 
-Log a feature request for cadrianmae-claude-marketplace plugins to FEEDBACK.md.
+IMPORTANT: This command logs feature requests for LATER review and implementation in a dedicated marketplace development session. Do NOT attempt to implement features in this session. You may ask clarifying questions to better understand the request, then log it and continue with the user's current work.
 
-## Usage
+## Workflow
 
-```
-/feedback:feature <description>
-```
+1. If the description is unclear, ask clarifying questions
+2. Log the feature to FEEDBACK.md with the script below
+3. Confirm it's logged and return to the user's work - DO NOT implement
 
-## Arguments
-
-- `description` - Brief description of the feature (required)
-
-## Behavior
-
-1. **Check for FEEDBACK.md** - Create in marketplace root if doesn't exist
-2. **Get current date** - Use `date '+%Y-%m-%d'`
-3. **Append feature entry** - Add to Features section
-
-## FEEDBACK.md Location
-
-`~/.claude/marketplaces/cadrianmae-claude-marketplace/FEEDBACK.md`
-
-## FEEDBACK.md Format
-
-```markdown
-# Marketplace Feedback
-
-Bugs and feature requests for cadrianmae-claude-marketplace plugins.
-
-## Bugs
-
-- [ ] [2025-12-07] Bug description here
-
-## Features
-
-- [ ] [2025-12-07] pandoc: Add beamer presentation template
-- [ ] [2025-12-06] semantic-search: Support multiple index profiles
-```
-
-## Implementation
+## Script to Execute
 
 ```bash
 MARKETPLACE_DIR=~/.claude/marketplaces/cadrianmae-claude-marketplace
@@ -70,20 +39,8 @@ fi
 sed -i "/^## Features$/a - [ ] [$DATE] $DESCRIPTION" "$FEEDBACK_FILE"
 ```
 
-## Output
+## After Logging
 
-```
-[OK] Feature logged to marketplace FEEDBACK.md
+Respond with: "Feature request logged to marketplace FEEDBACK.md for later review. Continuing with your current work."
 
-  - [ ] [2025-12-07] Add obsidian-style callout blocks to pandoc
-
-View feedback: cat ~/.claude/marketplaces/cadrianmae-claude-marketplace/FEEDBACK.md
-```
-
-## Examples
-
-```
-/feedback:feature "pandoc: Add IEEE citation style template"
-/feedback:feature "semantic-search: Add file type filtering"
-/feedback:feature "session-management: Export session to markdown"
-```
+Then return focus to whatever the user was working on before this command.
