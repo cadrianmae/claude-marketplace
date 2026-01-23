@@ -128,7 +128,7 @@
       "name": "tool-docs",
       "source": "./plugins/tool-docs",
       "description": "Documentation agents for command-line tools (pandoc, postgres, git, docker). Provides pandoc-guide agent for expert documentation lookup with WebFetch integration and tool-lookup skill for offline quick references. Auto-triggers on tool queries.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "Mae",
         "email": "cadrianmae@users.noreply.github.com"
