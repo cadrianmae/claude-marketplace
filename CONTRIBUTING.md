@@ -307,6 +307,33 @@ Follow [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
 - **MINOR**: New features, backward compatible
 - **PATCH**: Bug fixes, backward compatible
 
+### Marketplace vs Plugin Versioning
+
+**Two separate version numbers**:
+
+1. **Marketplace Version** (Git Tags: v1.3.0, v1.4.0, etc.)
+   - Represents a release of the marketplace collection
+   - Tags mark snapshots of the entire marketplace
+   - Can include multiple plugins at different versions
+   - Example: `v1.3.0` = Marketplace release that includes skills migration
+
+2. **Plugin Version** (plugin.json: "version": "1.3.0")
+   - Represents individual plugin releases
+   - Each plugin has its own semantic version
+   - Plugins can have different versions from marketplace tags
+   - Example: session-management v1.3.0, datetime v2.1.0
+
+**Important**: Marketplace tags don't need to match plugin versions. A marketplace release v1.4.0 could include:
+- session-management v1.3.0 (unchanged)
+- context-handoff v1.3.0 (unchanged)
+- datetime v2.2.0 (updated)
+- new-plugin v1.0.0 (added)
+
+When contributing:
+- Update individual plugin versions in their plugin.json files
+- Marketplace maintainers handle marketplace release tags
+- Document plugin version changes in plugin-specific CHANGELOG.md
+
 ### Version Bump Guidelines
 
 **PATCH (1.0.0 → 1.0.1)**:
