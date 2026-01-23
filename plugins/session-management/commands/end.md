@@ -3,6 +3,17 @@ description: End the current development session with summary
 allowed-tools: Bash, Read, Write
 ---
 
+## Session End Context
+
+**End Time**: !`date '+%Y-%m-%d %H:%M:%S'`
+**Active Session**: !`cat .claude/sessions/.current-session 2>/dev/null || echo "None"`
+
+**Final Git Status**: !`git status --short 2>/dev/null || echo "Not in git repo"`
+
+**TODO Summary**: !`cat TODO.md 2>/dev/null || echo "No TODO.md"`
+
+---
+
 End the current development session by:
 
 1. Check `.claude/sessions/.current-session` for the active session

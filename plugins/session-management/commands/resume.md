@@ -4,6 +4,14 @@ argument-hint: <filename>
 allowed-tools: Bash, Read, Write
 ---
 
+## Current Context
+
+**Current Time**: !`date '+%Y-%m-%d %H:%M:%S'`
+**Active Session**: !`cat .claude/sessions/.current-session 2>/dev/null || echo "None"`
+**Available Sessions**: !`ls -1 .claude/sessions/*.md 2>/dev/null | wc -l || echo "0"` sessions
+
+---
+
 Resume a previous development session by:
 
 1. Check if $ARGUMENTS contains a session filename

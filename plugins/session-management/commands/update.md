@@ -4,6 +4,20 @@ argument-hint: [notes]
 allowed-tools: Bash, Read, Write
 ---
 
+## Update Context
+
+**Timestamp**: !`date '+%Y-%m-%d %H:%M:%S'`
+**Active Session**: !`cat .claude/sessions/.current-session 2>/dev/null || echo "None"`
+
+**Git Snapshot**:
+- Changes: !`git status --porcelain 2>/dev/null | wc -l || echo "0"` files
+- Branch: !`git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "Not in git repo"`
+- Last commit: !`git log -1 --oneline 2>/dev/null || echo "No commits"`
+
+**TODO Progress**: !`cat TODO.md 2>/dev/null | grep -c '^\- \[x\]' || echo "0"` completed
+
+---
+
 Update the current development session by:
 
 1. Check if `.claude/sessions/.current-session` exists to find the active session
