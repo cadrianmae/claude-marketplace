@@ -307,32 +307,44 @@ Follow [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
 - **MINOR**: New features, backward compatible
 - **PATCH**: Bug fixes, backward compatible
 
-### Marketplace vs Plugin Versioning
+### Plugin Versioning
 
-**Two separate version numbers**:
+**Plugin-specific releases only**:
 
-1. **Marketplace Version** (Git Tags: v1.3.0, v1.4.0, etc.)
-   - Represents a release of the marketplace collection
-   - Tags mark snapshots of the entire marketplace
-   - Can include multiple plugins at different versions
-   - Example: `v1.3.0` = Marketplace release that includes skills migration
+Each plugin maintains its own independent version and git tags.
 
-2. **Plugin Version** (plugin.json: "version": "1.3.0")
-   - Represents individual plugin releases
-   - Each plugin has its own semantic version
-   - Plugins can have different versions from marketplace tags
-   - Example: session-management v1.3.0, datetime v2.1.0
+**Tag Format**: `{plugin-name}-vX.X.X`
 
-**Important**: Marketplace tags don't need to match plugin versions. A marketplace release v1.4.0 could include:
-- session-management v1.3.0 (unchanged)
-- context-handoff v1.3.0 (unchanged)
-- datetime v2.2.0 (updated)
-- new-plugin v1.0.0 (added)
+Examples:
+- `session-v1.3.0` - Session management plugin v1.3.0
+- `datetime-v2.1.0` - Datetime plugin v2.1.0
+- `tool-docs-v1.0.1` - Tool docs plugin v1.0.1
 
-When contributing:
+**Release Workflow**:
+
+1. Update version in plugin's `plugin.json`
+2. Update plugin's CHANGELOG.md (if exists)
+3. Commit changes
+4. Create git tag: `git tag -a {plugin}-vX.X.X -m "Release {plugin} vX.X.X"`
+5. Push tag: `git push origin {plugin}-vX.X.X`
+
+**Example**:
+```bash
+# Update feedback plugin from 1.0.1 to 1.0.2
+# Edit plugins/feedback/.claude-plugin/plugin.json
+
+git add plugins/feedback/.claude-plugin/plugin.json
+git commit -m "feedback: Release v1.0.2 - Add README documentation"
+git tag -a feedback-v1.0.2 -m "Release feedback v1.0.2"
+git push origin main
+git push origin feedback-v1.0.2
+```
+
+**When contributing**:
 - Update individual plugin versions in their plugin.json files
-- Marketplace maintainers handle marketplace release tags
+- Create plugin-specific tags for releases
 - Document plugin version changes in plugin-specific CHANGELOG.md
+- Each plugin can be released independently
 
 ### Version Bump Guidelines
 

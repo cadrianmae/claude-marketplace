@@ -2,131 +2,25 @@
 
 This document explains the versioning scheme for the Claude Code Marketplace.
 
-## Two Version Systems
+## Plugin-Only Versioning
 
-### 1. Marketplace Versions (Git Tags)
+This marketplace uses **plugin-specific versioning and releases only**. Each plugin maintains its own independent version number and git tags.
 
-**Format**: `vMAJOR.MINOR.PATCH` (e.g., v1.3.0, v1.4.0)
+**No marketplace-wide version tags** are created. Plugins evolve independently.
 
-**What they represent**: Release snapshots of the entire marketplace collection
+## Tag Format
 
-**Examples**:
-- `v1.2.0` - Marketplace release with dynamic context injection
-- `v1.3.0` - Marketplace release with commands-to-skills migration
-- `v1.4.0` - Future marketplace release
-
-**Purpose**:
-- Mark significant milestones in marketplace development
-- Provide stable snapshots users can reference
-- Track overall marketplace evolution
-
-**Who manages**: Marketplace maintainers
-
-### 2. Plugin Versions (plugin.json)
-
-**Format**: `"version": "MAJOR.MINOR.PATCH"` in plugin.json
-
-**What they represent**: Individual plugin releases following semantic versioning
+**Pattern**: `{plugin-name}-vMAJOR.MINOR.PATCH`
 
 **Examples**:
-```json
-// session-management/plugin.json
-{
-  "name": "session",
-  "version": "1.3.0"
-}
+- `session-v1.3.0` - Session management plugin v1.3.0
+- `datetime-v2.1.0` - Datetime plugin v2.1.0
+- `tool-docs-v1.0.1` - Tool docs plugin v1.0.1
+- `feedback-v1.0.2` - Feedback plugin v1.0.2
 
-// datetime/plugin.json
-{
-  "name": "datetime",
-  "version": "2.1.0"
-}
-```
+## Semantic Versioning
 
-**Purpose**:
-- Track individual plugin development
-- Signal breaking changes to plugin users
-- Independent plugin evolution
-
-**Who manages**: Plugin authors/contributors
-
-## Current State
-
-### Marketplace Releases
-
-| Tag | Date | Description |
-|-----|------|-------------|
-| v1.3.0 | 2026-01-23 | Commands to skills migration |
-| v1.2.0 | 2026-01-23 | Dynamic context injection |
-
-### Plugin Versions (as of v1.3.0)
-
-| Plugin | Version | Status |
-|--------|---------|--------|
-| session-management | 1.3.0 | Skills migrated |
-| context-handoff | 1.3.0 | Skills migrated |
-| datetime | (varies) | Commands only |
-| code-pointer | (varies) | Commands only |
-| semantic-search | (varies) | Commands only |
-| pandoc | (varies) | Commands only |
-| ref-tracker | (varies) | Commands only |
-
-## Version Independence
-
-**Key Principle**: Marketplace tags ≠ Plugin versions
-
-A marketplace release can include plugins at any version:
-
-**Example: Marketplace v1.4.0 could contain**:
-- session-management v1.3.0 (unchanged from v1.3.0)
-- context-handoff v1.3.0 (unchanged from v1.3.0)
-- datetime v2.2.0 (updated from 2.1.0)
-- new-plugin v1.0.0 (newly added)
-
-This allows:
-- Independent plugin development cycles
-- Targeted updates to specific plugins
-- Marketplace snapshots at any point
-- Flexible release scheduling
-
-## When to Update Versions
-
-### Update Marketplace Version (Git Tag)
-
-Create new marketplace release when:
-- Multiple plugins updated
-- Significant marketplace-wide changes
-- Major documentation updates
-- Breaking changes across plugins
-- New plugin additions
-- Coordinated feature releases
-
-**Process**:
-1. Update affected plugin versions in their plugin.json files
-2. Update CHANGELOG.md
-3. Commit all changes
-4. Create annotated tag: `git tag -a vX.Y.Z -m "Release description"`
-5. Push: `git push origin main && git push origin vX.Y.Z`
-
-### Update Plugin Version (plugin.json)
-
-Update individual plugin version when:
-- New features added to plugin
-- Bug fixes in plugin
-- Breaking changes in plugin
-- Skills/commands added/removed
-
-**Process**:
-1. Update version in plugin.json
-2. Update plugin CHANGELOG.md (if exists)
-3. Commit changes
-4. Marketplace tag created separately (at maintainer's discretion)
-
-## Semantic Versioning Rules
-
-Both marketplace and plugin versions follow [Semantic Versioning](https://semver.org/):
-
-**MAJOR.MINOR.PATCH**
+All plugins follow [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
 
 - **MAJOR**: Breaking changes, incompatible API changes
 - **MINOR**: New features, backward compatible
@@ -134,107 +28,237 @@ Both marketplace and plugin versions follow [Semantic Versioning](https://semver
 
 **Examples**:
 
-| Change | Marketplace | Plugin |
-|--------|-------------|--------|
-| Add new plugin | MINOR | N/A |
-| Remove plugin | MAJOR | N/A |
-| Update docs | PATCH | N/A |
-| Add new skill | N/A | MINOR |
-| Breaking skill change | N/A | MAJOR |
-| Bug fix in skill | N/A | PATCH |
-| Coordinated breaking changes | MAJOR | MAJOR (affected plugins) |
+| Change | Version Bump |
+|--------|--------------|
+| Add new skill | MINOR |
+| Breaking skill change | MAJOR |
+| Bug fix in skill | PATCH |
+| Documentation update | PATCH |
+| Remove command/skill | MAJOR |
+| Deprecate with backward compatibility | MINOR |
+
+## Release Workflow
+
+### 1. Update Plugin Version
+
+Edit `plugins/{plugin}/.claude-plugin/plugin.json`:
+
+```json
+{
+  "name": "plugin-name",
+  "version": "1.2.0"
+}
+```
+
+### 2. Update Changelog (Optional)
+
+If the plugin has a `CHANGELOG.md`, document changes:
+
+```markdown
+## [1.2.0] - 2026-01-26
+
+### Added
+- New skill: `/skill-name` for doing X
+
+### Fixed
+- Bug where Y didn't work in Z scenario
+```
+
+### 3. Commit Changes
+
+```bash
+git add plugins/{plugin}/.claude-plugin/plugin.json
+git commit -m "{plugin}: Release v1.2.0 - Brief description
+
+- Change 1
+- Change 2
+- Change 3"
+```
+
+### 4. Create Git Tag
+
+```bash
+git tag -a {plugin}-v1.2.0 -m "Release {plugin} v1.2.0"
+```
+
+### 5. Push to GitHub
+
+```bash
+git push origin main
+git push origin {plugin}-v1.2.0
+```
+
+### 6. Create GitHub Release (Optional)
+
+```bash
+# Using GitHub CLI
+gh release create {plugin}-v1.2.0 \
+  --title "{plugin} v1.2.0" \
+  --notes "Release notes here"
+
+# Or via GitHub web interface
+```
+
+## Current Plugin Versions
+
+| Plugin | Version | Last Updated |
+|--------|---------|--------------|
+| cadrianmae-integration | 1.0.1 | 2026-01-26 |
+| code-pointer | 1.0.0 | - |
+| context | 1.3.0 | 2026-01-23 |
+| datetime | 1.1.0 | - |
+| feedback | 1.0.2 | 2026-01-26 |
+| gencast | 1.0.0 | - |
+| pandoc | 1.0.0 | - |
+| semantic-search | 1.0.0 | - |
+| session | 1.3.0 | 2026-01-23 |
+| tool-docs | 1.0.1 | 2026-01-24 |
+| track | 1.1.0 | - |
+
+## Recent Releases
+
+### cadrianmae-integration v1.0.1 (2026-01-26)
+- Added README.md documentation
+- Fixed plugin validation issues
+
+### feedback v1.0.2 (2026-01-26)
+- Added README.md documentation
+- Fixed plugin validation issues
+
+### tool-docs v1.0.1 (2026-01-24)
+- Simplified agent prompt to fix WebFetch invocation
+- Moved agent to user agents directory as workaround
+
+### tool-docs v1.0.0 (2026-01-24)
+- Initial release with pandoc-guide agent
+- Comprehensive documentation specialist
+
+### session v1.3.0 (2026-01-23)
+- Commands → Skills migration
+- Added 7 SKILL.md files with invocation control
+- Preserved dynamic context injection
+- Backward compatible (commands still work)
+
+### context v1.3.0 (2026-01-23)
+- Commands → Skills migration
+- Added 2 SKILL.md files with invocation control
+- Preserved dynamic context injection
+- Backward compatible (commands still work)
+
+## Migration Notes
+
+### Historical Tags
+
+This marketplace previously used marketplace-wide tags (`v1.2.0`, `v1.3.0`). These are now deprecated:
+
+- `v1.3.0` (2026-01-23) - Last marketplace-wide release
+- `v1.2.0` (2026-01-23) - Deprecated
+
+**Going forward**: Only plugin-specific tags (`{plugin}-vX.X.X`) will be created.
 
 ## Contributing Guidelines
 
-### For Plugin Contributors
+### For Contributors
 
-When contributing to an existing plugin:
+When contributing to a plugin:
 
-1. Update plugin version in plugin.json
-2. Follow semantic versioning for the plugin
-3. Document changes in plugin CHANGELOG.md
+1. Update version in plugin's `plugin.json`
+2. Follow semantic versioning rules
+3. Document changes in plugin's CHANGELOG.md (if exists)
 4. Test thoroughly (see TESTING.md)
 5. Submit PR with version change
+6. Maintainer will create git tag after merge
 
 **Don't**:
-- Create marketplace tags (maintainer responsibility)
+- Create git tags yourself (maintainer handles this)
 - Update other plugin versions
 - Change marketplace-level files without discussion
 
-### For Marketplace Maintainers
+### For Maintainers
 
-When creating marketplace releases:
+When merging plugin updates:
 
-1. Review all pending plugin updates
-2. Decide on marketplace version bump
-3. Update VERSION.md (this file)
-4. Update CHANGELOG.md
-5. Create annotated git tag
-6. Push tag to remote
-
-**Consider**:
-- Coordinating plugin updates
-- Documenting plugin version changes
-- Testing cross-plugin compatibility
-- Communicating breaking changes
-
-## Release History
-
-### v1.3.0 (2026-01-23) - Skills Migration
-
-**Marketplace Changes**:
-- Commands → Skills migration infrastructure
-- Added TESTING.md
-- Added CONTRIBUTING.md
-- Added VERSION.md
-
-**Plugin Updates**:
-- session-management: 1.2.0 → 1.3.0
-- context-handoff: 1.2.0 → 1.3.0
-
-**Details**:
-- 9 new SKILL.md files created
-- Invocation control added
-- All dynamic context injection preserved
-- Backward compatible
-
-### v1.2.0 (2026-01-23) - Dynamic Context Injection
-
-**Marketplace Changes**:
-- Dynamic context injection framework
-
-**Plugin Updates**:
-- session-management: 1.1.0 → 1.2.0
-- context-handoff: 1.1.0 → 1.2.0
-
-**Details**:
-- Added `!`command`` syntax
-- Live git status, timestamps, memory
-- Graceful fallbacks for non-git repos
-- Bug fix: session:resume path resolution
+1. Review version bump follows semantic versioning
+2. Verify CHANGELOG.md updated (if exists)
+3. Merge PR to main
+4. Create plugin-specific tag: `git tag -a {plugin}-vX.X.X -m "Release {plugin} vX.X.X"`
+5. Push tag: `git push origin {plugin}-vX.X.X`
+6. Optionally create GitHub release with notes
 
 ## FAQ
 
-**Q: Why separate marketplace and plugin versions?**
-A: Allows independent plugin development while maintaining stable marketplace snapshots.
+**Q: Why plugin-only versioning?**
+A: Allows independent plugin development without coordinating marketplace-wide releases.
 
-**Q: Can plugin versions exceed marketplace versions?**
-A: Yes! A plugin at v2.5.0 can exist in marketplace v1.4.0.
+**Q: How do I know what versions are compatible?**
+A: Check individual plugin.json files. Plugins don't have cross-dependencies.
 
-**Q: Should plugin versions match across releases?**
-A: No. Each plugin evolves independently based on its own changes.
+**Q: Can I install specific plugin versions?**
+A: Yes, use git tags to checkout specific plugin versions if needed.
 
-**Q: How do I know what plugin versions are in a marketplace release?**
-A: Check the plugin.json files at the tagged commit, or see VERSION.md release notes.
+**Q: What happened to marketplace v1.x.x tags?**
+A: Deprecated. The marketplace now uses plugin-specific tags only.
 
-**Q: What if I only update one plugin?**
-A: Update plugin version, commit. Marketplace tag created when maintainer deems appropriate.
+**Q: Do all plugins need to be released together?**
+A: No. Each plugin releases independently when it has changes.
 
-**Q: Can I create a marketplace tag?**
-A: Only marketplace maintainers create tags. Contributors update plugin versions.
+**Q: How do I see plugin release history?**
+A: Use `git tag --list {plugin}-v*` to see all releases for a specific plugin.
+
+**Q: Can plugins have different major versions?**
+A: Yes! Plugin versions are independent. One plugin can be at v3.0.0 while another is at v1.2.0.
+
+## Examples
+
+### View All Releases
+
+```bash
+# All tags (all plugins)
+git tag --list
+
+# Specific plugin releases
+git tag --list session-v*
+git tag --list datetime-v*
+
+# Recent releases
+git tag --list --sort=-creatordate | head -10
+```
+
+### Checkout Specific Version
+
+```bash
+# Checkout specific plugin version
+git checkout tags/session-v1.3.0
+
+# Return to latest
+git checkout main
+```
+
+### Release Multiple Plugins
+
+If multiple plugins are updated in the same commit:
+
+```bash
+# Commit all changes
+git add .
+git commit -m "Multiple plugin updates
+
+- session: v1.3.1 - Bug fix
+- datetime: v2.0.0 - Breaking change
+- feedback: v1.0.3 - Documentation"
+
+git push origin main
+
+# Create tags for each updated plugin
+git tag -a session-v1.3.1 -m "Release session v1.3.1"
+git tag -a datetime-v2.0.0 -m "Release datetime v2.0.0"
+git tag -a feedback-v1.0.3 -m "Release feedback v1.0.3"
+
+# Push all tags
+git push origin --tags
+```
 
 ---
 
-**Last Updated**: 2026-01-23
-**Current Marketplace Version**: v1.3.0
+**Last Updated**: 2026-01-26
 **Maintained By**: Mae Capacite

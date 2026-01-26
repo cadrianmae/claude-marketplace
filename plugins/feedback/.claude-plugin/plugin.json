@@ -1,7 +1,7 @@
 {
   "name": "feedback",
   "description": "Track bugs and feature requests for cadrianmae-claude-marketplace plugins. Use /feedback:bug and /feedback:feature to append timestamped entries to the marketplace's FEEDBACK.md.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": {
     "name": "Mae Capacite",
     "email": "cadrianmae@users.noreply.github.com"
