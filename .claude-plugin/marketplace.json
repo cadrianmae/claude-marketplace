@@ -6,10 +6,10 @@
   },
   "plugins": [
     {
-      "name": "session-management",
-      "source": "./plugins/session-management",
+      "name": "session",
+      "source": "./plugins/session",
       "description": "Flat session management system with .current-session tracking. Adapted from iannuttall/claude-sessions. Includes commands for starting, ending, updating, listing, and resuming development sessions.",
-      "version": "1.1.0",
+      "version": "1.3.0",
       "author": {
         "name": "Mae Capacite; Ian Nuttall (original)",
         "email": "cadrianmae@users.noreply.github.com"
@@ -18,10 +18,10 @@
       "keywords": ["sessions", "workflow", "documentation", "development"]
     },
     {
-      "name": "context-handoff",
-      "source": "./plugins/context-handoff",
+      "name": "context",
+      "source": "./plugins/context",
       "description": "Hierarchical parent-child session context handoff system. Pass context between sessions using /context:send and /context:receive. Auto-creates /tmp/claude-ctx/ directory. Supports optional subject and custom paths. Files use pattern: /tmp/claude-ctx/ctx-{direction}-{subject}.md",
-      "version": "1.1.0",
+      "version": "1.3.0",
       "author": {
         "name": "Mae Capacite",
         "email": "cadrianmae@users.noreply.github.com"
@@ -29,8 +29,8 @@
       "keywords": ["context", "sessions", "hierarchy", "workflow", "handoff"]
     },
     {
-      "name": "ref-tracker",
-      "source": "./plugins/ref-tracker",
+      "name": "track",
+      "source": "./plugins/track",
       "description": "Reference and research tracking for academic work. Automatically tracks WebSearch/WebFetch sources and major prompts to CLAUDE_SOURCES.md and CLAUDE_PROMPTS.md. Configurable verbosity, [User]/[Claude] attribution, toggle auto-tracking, managed via .claude/.ref-autotrack marker and .claude/.ref-config settings.",
       "version": "1.1.0",
       "author": {
@@ -92,7 +92,7 @@
       "name": "cadrianmae-integration",
       "source": "./plugins/cadrianmae-integration",
       "description": "Integrate marketplace plugins into CLAUDE.md using @ imports. Scans installed plugins, generates documentation with skills and commands, creates marketplace-plugins.md, and adds import to user-level or project-level CLAUDE.md. Uses /integrate command with scope selection.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "Mae Capacite",
         "email": "cadrianmae@users.noreply.github.com"
@@ -104,7 +104,7 @@
       "name": "feedback",
       "source": "./plugins/feedback",
       "description": "Track bugs and feature requests for cadrianmae-claude-marketplace plugins. Use /feedback:bug and /feedback:feature to append timestamped entries to the marketplace's FEEDBACK.md.",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": {
         "name": "Mae Capacite",
         "email": "cadrianmae@users.noreply.github.com"
