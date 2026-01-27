@@ -6,6 +6,13 @@ allowed-tools: Bash
 
 # Code Pointer
 
+## Quick Example
+
+```bash
+code -g src/publisher.py:36
+# Opens publisher.py at line 36 in VSCode
+```
+
 ## Overview
 
 Open files in VSCode at precise line (and optionally column) positions using the `code` CLI. Use this skill whenever pointing users to specific locations in code, configuration files, documentation, or any text file.

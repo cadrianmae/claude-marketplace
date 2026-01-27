@@ -1,12 +1,19 @@
 {
   "name": "tool-docs",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Documentation agents for command-line tools and frameworks (starting with pandoc)",
   "author": {
     "name": "Mae",
     "email": "cadrianmae@users.noreply.github.com"
   },
   "homepage": "https://github.com/cadrianmae/claude-marketplace",
+  "repository": "https://github.com/cadrianmae/claude-marketplace",
   "license": "MIT",
-  "keywords": ["documentation", "pandoc", "reference", "tools", "command-line"]
+  "keywords": [
+    "documentation",
+    "pandoc",
+    "reference",
+    "tools",
+    "command-line"
+  ]
 }

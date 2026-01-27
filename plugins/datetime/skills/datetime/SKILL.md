@@ -26,6 +26,13 @@ date -d "3 days" '+%Y-%m-%d %H:%M:%S (%A)'
 
 This skill provides the command patterns and when to use them. The slash commands are for users to invoke manually.
 
+## Quick Example
+
+```bash
+date -d "next Friday" '+%Y-%m-%d %H:%M:%S (%A)'
+# 2026-02-06 00:00:00 (Friday)
+```
+
 ## When to Use This Skill
 
 Automatically invoke when:

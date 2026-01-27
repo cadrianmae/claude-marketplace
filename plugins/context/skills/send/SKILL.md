@@ -30,6 +30,16 @@ EOF
 
 ---
 
+## Quick Example
+
+```bash
+/context:send parent
+# ✓ Context prepared for parent session
+#   File: /tmp/claude-ctx/ctx-child-to-parent-bug-fix.md
+```
+
+---
+
 # send - Send context to child, parent, or sibling session
 
 Create a context handoff file for transitioning between sessions.

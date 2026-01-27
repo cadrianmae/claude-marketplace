@@ -5,6 +5,14 @@ argument-hint: [name]
 allowed-tools: Bash, Write, AskUserQuestion, Read
 ---
 
+## Quick Example
+
+```bash
+/session:start ml-assignment-review
+# Session created: 2026-01-27-0945-ml-assignment-review.md
+# Active session set to: .claude/sessions/2026-01-27-0945-ml-assignment-review.md
+```
+
 ## Current Project State
 
 **Working Directory**: !`pwd`

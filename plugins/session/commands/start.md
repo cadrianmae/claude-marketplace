@@ -4,6 +4,14 @@ argument-hint: [name]
 allowed-tools: Bash, Write, AskUserQuestion, Read
 ---
 
+## Quick Example
+
+```bash
+/session:start fix-auth-bug
+# Session created: 2026-01-27-1430-fix-auth-bug.md
+# Active session set to: .claude/sessions/2026-01-27-1430-fix-auth-bug.md
+```
+
 ## Current Project State
 
 **Working Directory**: !`pwd`

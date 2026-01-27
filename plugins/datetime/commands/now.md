@@ -5,6 +5,19 @@ allowed-tools: Bash
 disable-model-invocation: true
 ---
 
+## Current System Time (Auto-Captured)
+
+**Current Time**: !`date '+%Y-%m-%d %H:%M:%S %Z'`
+**Week Number**: !`date '+%V'`
+**Timezone**: !`date '+%Z (UTC%:z)'`
+
+## Quick Example
+
+```bash
+/datetime:now
+# 2026-01-27 14:30:15 (Monday)
+```
+
 # now - Get current date and time
 
 Get the current date and time in a standardized format.

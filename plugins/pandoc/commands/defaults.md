@@ -5,6 +5,20 @@ allowed-tools: Bash, Write
 disable-model-invocation: true
 ---
 
+## Environment Check (Auto-Captured)
+
+**Pandoc**: !`command -v pandoc >/dev/null && pandoc --version | head -1 || echo "✗ Not installed"`
+**XeLaTeX**: !`command -v xelatex >/dev/null && echo "✓ Available" || echo "✗ Not found"`
+**Current Directory**: !`pwd`
+
+## Quick Example
+
+```bash
+/pandoc:defaults pdf defaults.yaml
+# ✅ defaults.yaml created with PDF settings
+# Use: pandoc doc.md --defaults=defaults.yaml -o output.pdf
+```
+
 # /pandoc:defaults - Defaults File
 
 Ask Claude to create a defaults file for project-wide settings.

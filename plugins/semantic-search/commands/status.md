@@ -5,6 +5,24 @@ allowed-tools: Bash
 disable-model-invocation: true
 ---
 
+## Index Status (Auto-Captured)
+
+**Index Location**: !`odino status 2>/dev/null | grep "Index path:" | cut -d: -f2- | xargs || echo "Not initialized"`
+**Total Files**: !`odino status 2>/dev/null | grep "Indexed files:" | cut -d: -f2 | xargs || echo "0"`
+**Last Updated**: !`[ -d .odino ] && stat -c %y .odino 2>/dev/null | cut -d'.' -f1 || echo "Never"`
+
+## Quick Example
+
+```bash
+/semq:status
+# Output:
+# Index found at: /home/user/project
+# Indexed files: 63
+# Total chunks: 142 (529.5 KB)
+# Model: BAAI/bge-small-en-v1.5
+# Last updated: 2025-11-15 22:30:45
+```
+
 # status - Check semantic search index status
 
 Show indexing status, statistics, and configuration for current or specified directory.

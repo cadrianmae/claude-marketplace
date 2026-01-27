@@ -3,6 +3,17 @@ description: Show the current session status
 allowed-tools: Bash, Read
 ---
 
+## Quick Example
+
+```bash
+/session:current
+# Output:
+# Session: 2026-01-27-1430-fyp-interim-report
+# Duration: 2h 15m
+# Files Modified: 3
+# Completed Tasks: 5/8
+```
+
 ## Live Project Status
 
 **Current Time**: !`date '+%H:%M:%S'`

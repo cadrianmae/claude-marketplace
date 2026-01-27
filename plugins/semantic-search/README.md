@@ -1,3 +1,6 @@
+[![Version](https://img.shields.io/badge/version-1.1.1-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 # Semantic Search Plugin
 
 Natural language semantic search for codebases and notes using [odino](https://github.com/andthattoo/odino) CLI with BGE embeddings.
@@ -117,3 +120,7 @@ The plugin includes built-in directory traversal logic (like git), so you can ru
 
 - [odino GitHub](https://github.com/andthattoo/odino)
 - [BGE Model](https://huggingface.co/BAAI/bge-small-en-v1.5)
+
+## License
+
+MIT License - see [LICENSE](./LICENSE) for details.

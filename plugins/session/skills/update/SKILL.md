@@ -6,6 +6,14 @@ allowed-tools: Bash, Read, Write
 disable-model-invocation: true
 ---
 
+## Quick Example
+
+```bash
+/session:update Completed all database schema validations and created migration scripts
+# Session updated at 2026-01-27 14:45:10
+# Active session: 2026-01-27-0945-ml-assignment-review.md
+```
+
 ## Update Context
 
 **Timestamp**: !`date '+%Y-%m-%d %H:%M:%S'`

@@ -26,6 +26,17 @@ Search the current directory's semantic index using natural language queries.
 4. Optionally reads top results for context
 5. Suggests using code-pointer to open relevant files
 
+## Quick Example
+
+```bash
+/semq:search validation functions
+# Output:
+# Searching in: /home/user/project
+# Score: 0.87 | Path: src/utils/validation.js
+# Score: 0.81 | Path: src/middleware/validate.js
+# Score: 0.74 | Path: src/schemas/user.js
+```
+
 ## Examples
 
 **Find error handling (conceptual):**

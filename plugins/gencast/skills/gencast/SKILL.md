@@ -6,6 +6,13 @@ allowed-tools: Bash, Read
 
 # gencast - Podcast Generation from Documents
 
+## Quick Example
+
+```bash
+gencast chapter.md --minimal --style interview --audience technical -o chapter.mp3
+# Generates chapter.mp3 with interview style for technical audience
+```
+
 Generate conversational podcasts from documents using gencast CLI. ALWAYS uses `--minimal` flag to reduce context usage.
 
 ## When to Use This Skill

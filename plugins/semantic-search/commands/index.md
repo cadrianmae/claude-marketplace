@@ -5,6 +5,24 @@ allowed-tools: Bash
 disable-model-invocation: true
 ---
 
+## Index Status (Auto-Captured)
+
+**Index Location**: !`odino status 2>/dev/null | grep "Index path:" | cut -d: -f2- | xargs || echo "Not initialized"`
+**Total Files**: !`odino status 2>/dev/null | grep "Indexed files:" | cut -d: -f2 | xargs || echo "0"`
+**Last Updated**: !`[ -d .odino ] && stat -c %y .odino 2>/dev/null | cut -d'.' -f1 || echo "Never"`
+
+## Quick Example
+
+```bash
+/semq:index
+# Output:
+# Indexing directory: /home/user/project
+# Created .odinoignore file
+# Indexed 63 files
+# Generated 142 chunks (529.5 KB)
+# ✅ Indexing complete!
+```
+
 # index - Create semantic search index
 
 Index a directory for semantic search using odino with BGE embeddings.

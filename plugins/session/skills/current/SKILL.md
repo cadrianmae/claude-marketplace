@@ -4,6 +4,17 @@ description: Show the current session status
 allowed-tools: Bash, Read
 ---
 
+## Quick Example
+
+```bash
+/skill:session:current
+# Output:
+# Active Session: 2026-01-27-1430-fyp-interim-report
+# Current Time: 16:52:30
+# Files Modified: 3 files changed
+# TODO Status: 12 items
+```
+
 ## Live Project Status
 
 **Current Time**: !`date '+%H:%M:%S'`

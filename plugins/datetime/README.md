@@ -1,3 +1,6 @@
+[![Version](https://img.shields.io/badge/version-1.2.1-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 # datetime Plugin
 
 Natural language date/time parsing and calculations using native GNU date command.

@@ -1,6 +1,6 @@
 {
   "name": "code-pointer",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Enables Claude to open files at specific lines in VSCode when explaining code, debugging, or referencing specific locations. Auto-invoked skill that uses the `code` CLI to point users to exact file positions.",
   "author": {
     "name": "Mae Capacite",
@@ -9,5 +9,14 @@
   "homepage": "https://github.com/cadrianmae/claude-marketplace",
   "repository": "https://github.com/cadrianmae/claude-marketplace",
   "license": "MIT",
-  "keywords": ["vscode", "code", "navigation", "editor", "debugging", "code-review", "line-number", "goto"]
+  "keywords": [
+    "vscode",
+    "code",
+    "navigation",
+    "editor",
+    "debugging",
+    "code-review",
+    "line-number",
+    "goto"
+  ]
 }

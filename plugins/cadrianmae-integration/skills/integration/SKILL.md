@@ -8,6 +8,14 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
 
 Generate documentation for installed marketplace plugins and add to CLAUDE.md.
 
+## Quick Example
+
+```bash
+# Scans ~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/
+# Generates marketplace-plugins.md with skills and commands from each plugin
+# Adds import to ~/.claude/CLAUDE.md
+```
+
 ## Overview
 
 This skill helps integrate marketplace plugins into your workflow by:

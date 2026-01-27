@@ -4,6 +4,16 @@ description: Use this skill if /track:init is called OR you notice the project c
 allowed-tools: Read, Edit, Write
 ---
 
+## Quick Example
+
+After auto-tracking is enabled, when you search for PostgreSQL documentation:
+```
+WebSearch("PostgreSQL JSON query functions") triggered
+→ skill detects .ref-autotrack exists
+→ appends to CLAUDE_SOURCES.md:
+   [Claude] WebSearch("PostgreSQL JSON query functions"): https://postgresql.org/docs/current/functions-json.html
+```
+
 # Reference Tracker Skill
 
 Automatically track research sources and major prompts for academic and project documentation.

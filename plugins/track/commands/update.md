@@ -3,6 +3,23 @@ description: Scan recent conversation history and add missing tracking entries
 allowed-tools: Read, Write
 ---
 
+## Tracking Status (Auto-Captured)
+
+**Auto-Track**: !`[ -f .claude/.ref-autotrack ] && echo "✓ Enabled" || echo "✗ Disabled"`
+**Sources Tracked**: !`wc -l < CLAUDE_SOURCES.md 2>/dev/null || echo "0"`
+**Prompts Tracked**: !`grep -c "^Prompt:" CLAUDE_PROMPTS.md 2>/dev/null || echo "0"`
+**Git Status**: !`git rev-parse --is-inside-work-tree &>/dev/null && echo "✓ Git repo" || echo "✗ Not a git repo"`
+
+## Quick Example
+
+```bash
+/track:update
+# Scans last 20 messages
+# Adds 3 sources to CLAUDE_SOURCES.md
+# Adds 1 prompt to CLAUDE_PROMPTS.md
+# Done! Research tracked retroactively.
+```
+
 # update - Retroactive tracking scan
 
 Scan recent conversation history and add missing tracking entries.

@@ -15,6 +15,14 @@ Generate documentation for installed cadrianmae marketplace plugins and add to C
 
 No arguments needed - Claude will ask you where to add the documentation.
 
+## Quick Example
+
+```bash
+/integrate
+# Where should I add the marketplace plugin documentation?
+# → User-level (~/.claude/CLAUDE.md)
+```
+
 ## What It Does
 
 1. **Asks for scope** - User-level (~/.claude/CLAUDE.md) or Project-level (./CLAUDE.md)

@@ -4,7 +4,20 @@ argument-hint: <input-files...> [--style STYLE] [--audience AUDIENCE] [--with-pl
 allowed-tools: Bash, Read
 ---
 
+## Current Context (Auto-Captured)
+
+**Working Directory**: !`pwd`
+**Git Branch**: !`git branch --show-current 2>/dev/null || echo "Not in git repo"`
+**Recent Files**: !`ls -1t | head -3 | tr '\n' ', ' | sed 's/,$//'`
+
 # /gencast:podcast - Generate Podcast from Documents
+
+## Quick Example
+
+```bash
+/gencast:podcast lecture_notes.md --style educational --audience general -o lecture.mp3
+# Generates lecture.mp3 with educational tone for general audience
+```
 
 Generate conversational podcasts from documents using gencast CLI with full control over options.
 

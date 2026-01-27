@@ -5,6 +5,17 @@ argument-hint: <filename>
 allowed-tools: Bash, Read, Write
 ---
 
+## Quick Example
+
+```bash
+/skill:session:resume 2026-01-25-1100-prolog-lab-setup
+# Output:
+# Resuming: 2026-01-25-1100-prolog-lab-setup
+# Start Time: 2026-01-25 11:00:00
+# Elapsed: 42h 52m
+# Last Update: Configured Neovim LSP for Prolog
+```
+
 ## Current Context
 
 **Current Time**: !`date '+%Y-%m-%d %H:%M:%S'`

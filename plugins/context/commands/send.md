@@ -28,6 +28,16 @@ EOF
 
 ---
 
+## Quick Example
+
+```bash
+/context:send child feature-work
+# ✓ Context prepared for child session
+#   File: /tmp/claude-ctx/ctx-parent-to-child-feature-work.md
+```
+
+---
+
 # send - Send context to child, parent, or sibling session
 
 Create a context handoff file for transitioning between sessions.

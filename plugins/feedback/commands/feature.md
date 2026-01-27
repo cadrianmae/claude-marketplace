@@ -5,6 +5,13 @@ allowed-tools: Bash
 
 # /feedback:feature - Log a Marketplace Feature Request
 
+## Quick Example
+
+```bash
+/feedback:feature Add --dry-run flag to all context commands to preview changes
+# Logs the feature request to FEEDBACK.md for later review
+```
+
 IMPORTANT: This command logs feature requests for LATER review and implementation in a dedicated marketplace development session. Do NOT attempt to implement features in this session. You may ask clarifying questions to better understand the request, then log it and continue with the user's current work.
 
 ## Workflow

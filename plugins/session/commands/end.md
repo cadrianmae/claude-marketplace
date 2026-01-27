@@ -3,6 +3,18 @@ description: End the current development session with summary
 allowed-tools: Bash, Read, Write
 ---
 
+## Quick Example
+
+```bash
+/session:end
+# Output:
+# Session ended: 2026-01-27-1430-fyp-interim-report
+# Duration: 2h 42m
+# Files changed: 8 (5 modified, 2 added, 1 deleted)
+# Commits: 3
+# Summary saved to session file
+```
+
 ## Session End Context
 
 **End Time**: !`date '+%Y-%m-%d %H:%M:%S'`

@@ -1,10 +1,18 @@
 ---
 name: Tool Documentation Quick Reference
 description: This skill should be used when the user asks for "quick reference", "show me examples for [tool]", "common commands for pandoc", "how do I use pandoc", "pandoc cheatsheet", "show pandoc examples", "tool-lookup", or needs fast offline access to command-line tool commands without detailed explanations. Load when user wants working examples at a glance, not troubleshooting or in-depth documentation.
+allowed-tools: Read
 version: 1.0.0
 ---
 
 # Tool Documentation Quick Reference
+
+## Quick Example
+
+```bash
+/tool-lookup pandoc
+# Shows pandoc conversions, common flags, and troubleshooting quick fixes
+```
 
 Fast access to common command-line tool commands and options without requiring internet access.
 

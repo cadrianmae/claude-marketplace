@@ -4,6 +4,16 @@ description: Use semantic search to find relevant code and documentation when us
 allowed-tools: Bash, Read
 ---
 
+## Quick Example
+
+```bash
+odino query -q "error handling exceptions"
+# Output shows files ranked by relevance:
+# knowledge/Error Handling.md (0.876)
+# middleware/errorHandler.js (0.745)
+# schemas/validation.js (0.689)
+```
+
 # Semantic Search
 
 ## Overview

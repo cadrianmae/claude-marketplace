@@ -3,6 +3,17 @@ description: List all development sessions
 allowed-tools: Bash, Read
 ---
 
+## Quick Example
+
+```bash
+/session:list
+# Output:
+# 2026-01-27-1430-fyp-interim-report (active)
+# 2026-01-26-0945-ml-assignment-review
+# 2026-01-25-1100-prolog-lab-setup
+# [Total: 12 sessions]
+```
+
 List all development sessions by:
 
 1. Check if `.claude/sessions/` directory exists

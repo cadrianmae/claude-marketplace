@@ -4,6 +4,21 @@ allowed-tools: Bash
 disable-model-invocation: true
 ---
 
+## Current System Time (Auto-Captured)
+
+**Current Time**: !`date '+%Y-%m-%d %H:%M:%S %Z'`
+**Week Number**: !`date '+%V'`
+**Timezone**: !`date '+%Z (UTC%:z)'`
+
+## Quick Example
+
+```bash
+/datetime:calc
+# First date/time: today
+# Second date/time: 2026-03-15
+# Difference: 47d 0h 0m 0s
+```
+
 # calc - Calculate date/time differences
 
 Calculate the difference between two dates or times using natural language expressions.

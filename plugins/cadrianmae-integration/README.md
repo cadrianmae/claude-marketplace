@@ -1,3 +1,6 @@
+[![Version](https://img.shields.io/badge/version-1.0.3-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 # cadrianmae-integration
 
 Integrate marketplace plugins into CLAUDE.md with user/project scope selection.
@@ -51,3 +54,7 @@ cadrianmae
 ## Keywords
 
 integration, documentation, marketplace, plugins, CLAUDE.md
+
+## License
+
+MIT License - see [LICENSE](./LICENSE) for details.

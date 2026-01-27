@@ -30,6 +30,16 @@ Search from current directory upward to find and search the nearest semantic ind
 - `/semq:search` - Assumes you know where the index is
 - `/semq:here` - Explicitly shows index location (useful from subdirectories)
 
+## Quick Example
+
+```bash
+/semq:here authentication middleware
+# Output:
+# ✓ Index found at: ../..
+# Score: 0.89 | Path: src/auth/middleware.js
+# Score: 0.82 | Path: src/auth/jwt.js
+```
+
 ## Examples
 
 **Search from subdirectory:**

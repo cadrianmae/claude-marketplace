@@ -1,6 +1,6 @@
 {
   "name": "datetime",
-  "version": "1.1.0",
+  "version": "1.2.1",
   "description": "Natural language date/time parsing and calculations using native date command",
   "author": {
     "name": "Mae Capacite",
@@ -9,5 +9,13 @@
   "homepage": "https://github.com/cadrianmae/claude-marketplace",
   "repository": "https://github.com/cadrianmae/claude-marketplace",
   "license": "MIT",
-  "keywords": ["datetime", "date", "time", "parsing", "natural-language", "calendar", "temporal"]
+  "keywords": [
+    "datetime",
+    "date",
+    "time",
+    "parsing",
+    "natural-language",
+    "calendar",
+    "temporal"
+  ]
 }

@@ -5,6 +5,20 @@ allowed-tools: Bash, Read, Write
 disable-model-invocation: true
 ---
 
+## Environment Check (Auto-Captured)
+
+**Pandoc**: !`command -v pandoc >/dev/null && pandoc --version | head -1 || echo "✗ Not installed"`
+**XeLaTeX**: !`command -v xelatex >/dev/null && echo "✓ Available" || echo "✗ Not found"`
+**Current Directory**: !`pwd`
+
+## Quick Example
+
+```bash
+/pandoc:frontmatter thesis.md academic-paper
+# ✅ Frontmatter added to thesis.md
+# Fields to customize: title, author, date, bibliography
+```
+
 # /pandoc:frontmatter - Add Frontmatter
 
 Ask Claude to add or update YAML frontmatter in your markdown file.

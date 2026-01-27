@@ -1,7 +1,16 @@
 ---
 description: Display comprehensive help for the ref-tracker system
+allowed-tools: Read
 disable-model-invocation: true
 ---
+
+## Quick Example
+
+```bash
+/track:help
+# Displays comprehensive reference tracking documentation
+# Commands, file formats, verbosity settings, and workflow examples
+```
 
 # help - Reference tracking system help
 

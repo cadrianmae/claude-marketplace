@@ -1,6 +1,6 @@
 {
   "name": "pandoc",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "Document conversion toolkit for Pandoc with templates, validation, and format-specific helpers. Convert markdown to PDF, DOCX, HTML, and presentations with smart defaults and YAML frontmatter validation.",
   "author": {
     "name": "Mae Capacite",

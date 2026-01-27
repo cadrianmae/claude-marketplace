@@ -4,6 +4,16 @@ argument-hint: <filename>
 allowed-tools: Bash, Read, Write
 ---
 
+## Quick Example
+
+```bash
+/session:resume 2026-01-26-0945-ml-assignment-review
+# Output:
+# Resumed: 2026-01-26-0945-ml-assignment-review
+# Last update: Fixed notebook validation issues
+# Elapsed time since start: 18h 45m
+```
+
 ## Current Context
 
 **Current Time**: !`date '+%Y-%m-%d %H:%M:%S'`

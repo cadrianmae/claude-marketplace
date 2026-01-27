@@ -1,3 +1,6 @@
+[![Version](https://img.shields.io/badge/version-1.3.3-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 # context-handoff Plugin
 
 Hierarchical parent-child session context handoff system for Claude Code.

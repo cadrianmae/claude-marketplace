@@ -5,6 +5,19 @@ allowed-tools: Bash, Read
 disable-model-invocation: true
 ---
 
+## Environment Check (Auto-Captured)
+
+**Pandoc**: !`command -v pandoc >/dev/null && pandoc --version | head -1 || echo "✗ Not installed"`
+**XeLaTeX**: !`command -v xelatex >/dev/null && echo "✓ Available" || echo "✗ Not found"`
+**Current Directory**: !`pwd`
+
+## Quick Example
+
+```bash
+/pandoc:convert research.md research.pdf
+# ✅ research.pdf created successfully
+```
+
 # /pandoc:convert - Convert Document
 
 Ask Claude to validate and convert your markdown file.

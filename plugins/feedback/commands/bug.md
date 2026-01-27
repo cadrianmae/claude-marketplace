@@ -5,6 +5,13 @@ allowed-tools: Bash
 
 # /feedback:bug - Log a Marketplace Bug
 
+## Quick Example
+
+```bash
+/feedback:bug Context handoff breaks when context file exceeds 50KB
+# Logs the bug to FEEDBACK.md for later review
+```
+
 IMPORTANT: This command logs bugs for LATER review and implementation in a dedicated marketplace development session. Do NOT attempt to implement fixes in this session. You may ask clarifying questions to better understand the bug, then log it and continue with the user's current work.
 
 ## Workflow

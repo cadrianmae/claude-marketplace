@@ -4,6 +4,22 @@ argument-hint: [prompts=all|major|off] [sources=all|off]
 allowed-tools: Bash, Read, Write
 ---
 
+## Tracking Status (Auto-Captured)
+
+**Auto-Track**: !`[ -f .claude/.ref-autotrack ] && echo "✓ Enabled" || echo "✗ Disabled"`
+**Sources Tracked**: !`wc -l < CLAUDE_SOURCES.md 2>/dev/null || echo "0"`
+**Prompts Tracked**: !`grep -c "^Prompt:" CLAUDE_PROMPTS.md 2>/dev/null || echo "0"`
+**Git Status**: !`git rev-parse --is-inside-work-tree &>/dev/null && echo "✓ Git repo" || echo "✗ Not a git repo"`
+
+## Quick Example
+
+```bash
+/track:config prompts=all sources=all
+# ✓ Configuration updated
+# PROMPTS_VERBOSITY: major → all (all requests tracked)
+# SOURCES_VERBOSITY: all (unchanged)
+```
+
 # config - View or update verbosity settings
 
 View or update tracking verbosity configuration.

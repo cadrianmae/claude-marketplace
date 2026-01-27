@@ -4,6 +4,22 @@ argument-hint: [on|off]
 allowed-tools: Bash, Write
 ---
 
+## Tracking Status (Auto-Captured)
+
+**Auto-Track**: !`[ -f .claude/.ref-autotrack ] && echo "✓ Enabled" || echo "✗ Disabled"`
+**Sources Tracked**: !`wc -l < CLAUDE_SOURCES.md 2>/dev/null || echo "0"`
+**Prompts Tracked**: !`grep -c "^Prompt:" CLAUDE_PROMPTS.md 2>/dev/null || echo "0"`
+**Git Status**: !`git rev-parse --is-inside-work-tree &>/dev/null && echo "✓ Git repo" || echo "✗ Not a git repo"`
+
+## Quick Example
+
+```bash
+/track:auto on
+# ✓ Auto-tracking enabled
+# Sources tracked: WebSearch/WebFetch → CLAUDE_SOURCES.md
+# Prompts tracked: Major requests → CLAUDE_PROMPTS.md
+```
+
 # auto - Control auto-tracking on/off
 
 Toggle or explicitly set automatic reference tracking state.

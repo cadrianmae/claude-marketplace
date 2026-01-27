@@ -5,6 +5,20 @@ allowed-tools: Bash, Read, Write
 disable-model-invocation: true
 ---
 
+## Environment Check (Auto-Captured)
+
+**Pandoc**: !`command -v pandoc >/dev/null && pandoc --version | head -1 || echo "✗ Not installed"`
+**XeLaTeX**: !`command -v xelatex >/dev/null && echo "✓ Available" || echo "✗ Not found"`
+**Current Directory**: !`pwd`
+
+## Quick Example
+
+```bash
+/pandoc:restyle draft.md thesis
+# ✅ draft.md restyled to thesis format
+# Added: supervisor, institution, department, toc, lof, lot
+```
+
 # /pandoc:restyle - Restyle Document
 
 Ask Claude to transform a document's frontmatter and structure to match a target template style.

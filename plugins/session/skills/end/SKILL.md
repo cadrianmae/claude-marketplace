@@ -5,6 +5,18 @@ allowed-tools: Bash, Read, Write
 disable-model-invocation: true
 ---
 
+## Quick Example
+
+```bash
+/skill:session:end
+# Output:
+# Session: 2026-01-27-1430-fyp-interim-report
+# Duration: 2h 45m
+# Git changes: 3 files, 2 commits
+# Tasks completed: 6/8
+# Session archived
+```
+
 ## Session End Context
 
 **End Time**: !`date '+%Y-%m-%d %H:%M:%S'`

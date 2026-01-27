@@ -23,6 +23,16 @@ EOF
 
 ---
 
+## Quick Example
+
+```bash
+/context:receive parent
+# ✓ Context received from parent session
+#   File: /tmp/claude-ctx/ctx-parent-to-child-feature-work.md
+```
+
+---
+
 # receive - Receive context from parent, child, or sibling session
 
 Read and integrate context from session handoff file.

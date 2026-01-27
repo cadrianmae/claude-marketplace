@@ -25,6 +25,16 @@ EOF
 
 ---
 
+## Quick Example
+
+```bash
+/context:receive child api-implementation
+# ✓ Context received from child session
+#   File: /tmp/claude-ctx/ctx-child-to-parent-api-implementation.md
+```
+
+---
+
 # receive - Receive context from parent, child, or sibling session
 
 Read and integrate context from session handoff file.

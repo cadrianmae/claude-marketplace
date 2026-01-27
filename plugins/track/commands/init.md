@@ -3,6 +3,23 @@ description: Initialize reference tracking for the current project
 allowed-tools: Bash, Write
 ---
 
+## Tracking Status (Auto-Captured)
+
+**Auto-Track**: !`[ -f .claude/.ref-autotrack ] && echo "✓ Enabled" || echo "✗ Disabled"`
+**Sources Tracked**: !`wc -l < CLAUDE_SOURCES.md 2>/dev/null || echo "0"`
+**Prompts Tracked**: !`grep -c "^Prompt:" CLAUDE_PROMPTS.md 2>/dev/null || echo "0"`
+**Git Status**: !`git rev-parse --is-inside-work-tree &>/dev/null && echo "✓ Git repo" || echo "✗ Not a git repo"`
+
+## Quick Example
+
+```bash
+/track:init
+# Creates: CLAUDE_SOURCES.md (empty)
+#          CLAUDE_PROMPTS.md (with header)
+#          .claude/.ref-config (with default settings)
+# Auto-tracking: Disabled (use /track:auto to enable)
+```
+
 # init - Initialize reference tracking
 
 Initialize reference and research tracking for the current project.

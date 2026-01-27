@@ -5,6 +5,21 @@ allowed-tools: Bash
 disable-model-invocation: true
 ---
 
+## Environment Check (Auto-Captured)
+
+**Pandoc**: !`command -v pandoc >/dev/null && pandoc --version | head -1 || echo "✗ Not installed"`
+**XeLaTeX**: !`command -v xelatex >/dev/null && echo "✓ Available" || echo "✗ Not found"`
+**Current Directory**: !`pwd`
+
+## Quick Example
+
+```bash
+/pandoc:validate document.md
+# ✅ YAML frontmatter valid (spaces, no tabs)
+# ✅ bibliography.bib exists
+# ✅ Ready to convert
+```
+
 # /pandoc:validate - Validate Document
 
 Ask Claude to check your document for errors before converting.

@@ -1,6 +1,6 @@
 {
   "name": "session",
-  "version": "1.3.0",
+  "version": "1.3.2",
   "description": "Flat session management system with .current-session tracking. Adapted from iannuttall/claude-sessions.",
   "author": {
     "name": "Mae Capacite; Ian Nuttall (original)",
@@ -9,5 +9,11 @@
   "homepage": "https://github.com/cadrianmae/claude-marketplace",
   "repository": "https://github.com/cadrianmae/claude-sessions",
   "license": "MIT",
-  "keywords": ["sessions", "workflow", "documentation", "development", "tracking"]
+  "keywords": [
+    "sessions",
+    "workflow",
+    "documentation",
+    "development",
+    "tracking"
+  ]
 }

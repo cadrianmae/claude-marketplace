@@ -1,3 +1,6 @@
+[![Version](https://img.shields.io/badge/version-1.1.1-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 # Pandoc Document Conversion Plugin
 
 Comprehensive Pandoc toolkit for converting markdown to PDF, DOCX, HTML, and presentations with smart defaults, template library, and YAML frontmatter validation.

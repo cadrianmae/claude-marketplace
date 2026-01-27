@@ -5,6 +5,19 @@ allowed-tools: Bash
 disable-model-invocation: true
 ---
 
+## Current System Time (Auto-Captured)
+
+**Current Time**: !`date '+%Y-%m-%d %H:%M:%S %Z'`
+**Week Number**: !`date '+%V'`
+**Timezone**: !`date '+%Z (UTC%:z)'`
+
+## Quick Example
+
+```bash
+/datetime:parse "next Friday"
+# 2026-02-06 00:00:00 (Friday)
+```
+
 # parse - Parse natural language date/time expressions
 
 Parse natural language date and time expressions into standardized format.

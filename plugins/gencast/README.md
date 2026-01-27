@@ -1,3 +1,6 @@
+[![Version](https://img.shields.io/badge/version-1.1.1-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 # gencast Plugin for Claude Code
 
 Auto-invoke gencast to generate conversational podcasts from documents. Always uses `--minimal` flag for clean context management.

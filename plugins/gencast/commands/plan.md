@@ -4,7 +4,20 @@ argument-hint: <input-file>
 allowed-tools: Bash, Read
 ---
 
+## Current Context (Auto-Captured)
+
+**Working Directory**: !`pwd`
+**Git Branch**: !`git branch --show-current 2>/dev/null || echo "Not in git repo"`
+**Recent Files**: !`ls -1t | head -3 | tr '\n' ', ' | sed 's/,$//'`
+
 # /gencast:plan - Generate Podcast Planning Document
+
+## Quick Example
+
+```bash
+/gencast:plan lecture_notes.md
+# Generates lecture_notes_plan.txt with document structure, key topics, and conversational flow
+```
 
 Generate a comprehensive planning document for a podcast without creating the audio file. Useful for reviewing coverage before committing to audio synthesis.
 

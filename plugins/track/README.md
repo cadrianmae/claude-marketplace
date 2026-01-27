@@ -1,3 +1,6 @@
+[![Version](https://img.shields.io/badge/version-1.2.1-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 # ref-tracker Plugin
 
 Reference and research tracking system for academic work and project documentation.

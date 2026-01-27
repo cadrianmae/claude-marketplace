@@ -1,10 +1,19 @@
 {
   "name": "feedback",
   "description": "Track bugs and feature requests for cadrianmae-claude-marketplace plugins. Use /feedback:bug and /feedback:feature to append timestamped entries to the marketplace's FEEDBACK.md.",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "author": {
     "name": "Mae Capacite",
     "email": "cadrianmae@users.noreply.github.com"
   },
-  "license": "MIT"
+  "homepage": "https://github.com/cadrianmae/claude-marketplace",
+  "repository": "https://github.com/cadrianmae/claude-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "feedback",
+    "bugs",
+    "features",
+    "tracking",
+    "marketplace"
+  ]
 }

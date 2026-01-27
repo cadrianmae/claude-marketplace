@@ -6,6 +6,17 @@ allowed-tools: Bash, Read, Write
 
 # Pandoc Document Conversion
 
+## Quick Example
+
+```bash
+# User: "Convert my thesis to PDF with citations"
+# Skill assists by:
+# 1. Validating YAML frontmatter (spaces, required fields)
+# 2. Checking bibliography.bib and harvard.csl exist
+# 3. Running: pandoc thesis.md -o thesis.pdf --citeproc --number-sections
+# 4. ✅ Output: thesis.pdf created successfully
+```
+
 ## Overview
 
 Provide expert assistance for converting markdown documents to PDF, DOCX, HTML, and presentations using Pandoc. Handle YAML frontmatter validation, bibliography setup, template generation, and format-specific conversion guidance.

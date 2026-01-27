@@ -5,6 +5,20 @@ allowed-tools: Bash, Read
 disable-model-invocation: true
 ---
 
+## Environment Check (Auto-Captured)
+
+**Pandoc**: !`command -v pandoc >/dev/null && pandoc --version | head -1 || echo "✗ Not installed"`
+**XeLaTeX**: !`command -v xelatex >/dev/null && echo "✓ Available" || echo "✗ Not found"`
+**Current Directory**: !`pwd`
+
+## Quick Example
+
+```bash
+/pandoc:template academic-paper paper.md
+# ✅ paper.md created from academic-paper template
+# Ready to customize title, author, bibliography
+```
+
 # /pandoc:template - Document Templates
 
 Ask Claude to create a document from template.

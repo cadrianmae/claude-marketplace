@@ -1,3 +1,6 @@
+[![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 # code-pointer Plugin
 
 Enables Claude to open files at specific lines in VSCode when explaining code, debugging, or guiding users to exact locations.

@@ -1,7 +1,15 @@
 ---
 description: Display help for the session management system
+allowed-tools: Read
 disable-model-invocation: true
 ---
+
+## Quick Example
+
+```bash
+/session:help
+# Displays all available session commands with descriptions
+```
 
 Show help for the session management system:
 

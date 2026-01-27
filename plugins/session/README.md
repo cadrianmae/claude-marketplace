@@ -1,3 +1,6 @@
+[![Version](https://img.shields.io/badge/version-1.3.2-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 # Session Management Plugin
 
 Flat session management system for Claude Code development workflows using `.current-session` file tracking.

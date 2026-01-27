@@ -1,7 +1,22 @@
 ---
 description: "Get help with the Pandoc plugin - available commands and quick start guide"
+allowed-tools: Read
 disable-model-invocation: true
 ---
+
+## Environment Check (Auto-Captured)
+
+**Pandoc**: !`command -v pandoc >/dev/null && pandoc --version | head -1 || echo "✗ Not installed"`
+**XeLaTeX**: !`command -v xelatex >/dev/null && echo "✓ Available" || echo "✗ Not found"`
+**Current Directory**: !`pwd`
+
+## Quick Example
+
+```bash
+/pandoc:help
+# Displays all available commands with quick start guide
+# Use: /pandoc:convert, /pandoc:validate, /pandoc:template, etc.
+```
 
 # Pandoc Plugin Help
 

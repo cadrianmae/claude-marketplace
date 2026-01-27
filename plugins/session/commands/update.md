@@ -4,6 +4,14 @@ argument-hint: [notes]
 allowed-tools: Bash, Read, Write
 ---
 
+## Quick Example
+
+```bash
+/session:update Implemented email verification in auth middleware
+# Session updated at 2026-01-27 14:35:22
+# Active session: 2026-01-27-1430-fix-auth-bug.md
+```
+
 ## Update Context
 
 **Timestamp**: !`date '+%Y-%m-%d %H:%M:%S'`
