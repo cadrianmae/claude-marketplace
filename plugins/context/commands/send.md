@@ -12,7 +12,7 @@ allowed-tools: Bash, Write
 **Git Status**: !`git status --short 2>/dev/null | head -10 || echo "No changes"`
 **Last Commit**: !`git log -1 --oneline 2>/dev/null || echo "No commits"`
 
-**Context Directory**: !`[[ -d /tmp/claude-ctx ]] && echo "Exists" || echo "Does not exist - will create"`
+**Context Directory**: !`[ -d /tmp/claude-ctx ] && echo "Exists" || echo "Does not exist - will create"`
 
 ---
 
@@ -177,7 +177,7 @@ The context file should include:
 
 ```bash
 # Check if directory exists, create only if needed
-[[ -d /tmp/claude-ctx ]] || {
+[ -d /tmp/claude-ctx ] || {
     mkdir -p /tmp/claude-ctx
     cat > /tmp/claude-ctx/README.md << 'EOF'
 # Claude Context Handoff Directory

@@ -7,7 +7,7 @@ allowed-tools: Bash, Read
 ## Receiving Context
 
 **Received At**: !`date '+%Y-%m-%d %H:%M:%S'`
-**Context Directory**: !`[[ -d /tmp/claude-ctx ]] && echo "Exists" || echo "Does not exist - will create"`
+**Context Directory**: !`[ -d /tmp/claude-ctx ] && echo "Exists" || echo "Does not exist - will create"`
 
 ---
 
