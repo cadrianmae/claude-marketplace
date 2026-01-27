@@ -17,5 +17,7 @@
     "natural-language",
     "ml",
     "odino"
-  ]
+  ],
+  "commands": "./commands/",
+  "skills": "./skills/"
 }

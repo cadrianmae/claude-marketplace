@@ -17,5 +17,7 @@
     "lecture",
     "conversation",
     "educational"
-  ]
+  ],
+  "commands": "./commands/",
+  "skills": "./skills/"
 }

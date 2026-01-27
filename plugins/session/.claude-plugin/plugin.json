@@ -15,5 +15,7 @@
     "documentation",
     "development",
     "tracking"
-  ]
+  ],
+  "commands": "./commands/",
+  "skills": "./skills/"
 }

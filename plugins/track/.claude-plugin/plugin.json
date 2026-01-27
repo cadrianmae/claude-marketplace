@@ -16,5 +16,7 @@
     "sources",
     "citations",
     "references"
-  ]
+  ],
+  "commands": "./commands/",
+  "skills": "./skills/"
 }

@@ -19,5 +19,7 @@
     "latex",
     "citations",
     "bibliography"
-  ]
+  ],
+  "commands": "./commands/",
+  "skills": "./skills/"
 }

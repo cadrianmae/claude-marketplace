@@ -15,5 +15,7 @@
     "hierarchy",
     "workflow",
     "handoff"
-  ]
+  ],
+  "commands": "./commands/",
+  "skills": "./skills/"
 }

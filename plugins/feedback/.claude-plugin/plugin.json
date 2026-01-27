@@ -15,5 +15,6 @@
     "features",
     "tracking",
     "marketplace"
-  ]
+  ],
+  "commands": "./commands/"
 }

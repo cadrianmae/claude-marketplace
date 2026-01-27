@@ -17,5 +17,7 @@
     "natural-language",
     "calendar",
     "temporal"
-  ]
+  ],
+  "commands": "./commands/",
+  "skills": "./skills/"
 }

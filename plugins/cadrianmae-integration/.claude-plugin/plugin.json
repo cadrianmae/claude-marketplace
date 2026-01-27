@@ -12,5 +12,7 @@
     "marketplace",
     "plugins",
     "CLAUDE.md"
-  ]
+  ],
+  "commands": "./commands/",
+  "skills": "./skills/"
 }
