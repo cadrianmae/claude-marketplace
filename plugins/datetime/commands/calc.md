@@ -7,6 +7,7 @@ disable-model-invocation: true
 ## Current System Time (Auto-Captured)
 
 **Current Time**: !`date '+%Y-%m-%d %H:%M:%S %Z'`
+**Day of Week**: !`date '+%A'`
 **Week Number**: !`date '+%V'`
 **Timezone**: !`date '+%Z (UTC%:z)'`
 
