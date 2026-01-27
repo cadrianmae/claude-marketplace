@@ -9,132 +9,214 @@
       "name": "session",
       "source": "./plugins/session",
       "description": "Flat session management system with .current-session tracking. Adapted from iannuttall/claude-sessions. Includes commands for starting, ending, updating, listing, and resuming development sessions.",
-      "version": "1.3.0",
+      "version": "1.3.2",
       "author": {
         "name": "Mae Capacite; Ian Nuttall (original)",
         "email": "cadrianmae@users.noreply.github.com"
       },
       "license": "MIT",
-      "keywords": ["sessions", "workflow", "documentation", "development"]
+      "keywords": [
+        "sessions",
+        "workflow",
+        "documentation",
+        "development"
+      ]
     },
     {
       "name": "context",
       "source": "./plugins/context",
       "description": "Hierarchical parent-child session context handoff system. Pass context between sessions using /context:send and /context:receive. Auto-creates /tmp/claude-ctx/ directory. Supports optional subject and custom paths. Files use pattern: /tmp/claude-ctx/ctx-{direction}-{subject}.md",
-      "version": "1.3.1",
+      "version": "1.3.3",
       "author": {
         "name": "Mae Capacite",
         "email": "cadrianmae@users.noreply.github.com"
       },
-      "keywords": ["context", "sessions", "hierarchy", "workflow", "handoff"]
+      "keywords": [
+        "context",
+        "sessions",
+        "hierarchy",
+        "workflow",
+        "handoff"
+      ]
     },
     {
       "name": "track",
       "source": "./plugins/track",
       "description": "Reference and research tracking for academic work. Automatically tracks WebSearch/WebFetch sources and major prompts to CLAUDE_SOURCES.md and CLAUDE_PROMPTS.md. Configurable verbosity, [User]/[Claude] attribution, toggle auto-tracking, managed via .claude/.ref-autotrack marker and .claude/.ref-config settings.",
-      "version": "1.1.0",
+      "version": "1.2.1",
       "author": {
         "name": "Mae Capacite",
         "email": "cadrianmae@users.noreply.github.com"
       },
       "license": "MIT",
-      "keywords": ["research", "academic", "tracking", "sources", "citations", "references", "documentation"]
+      "keywords": [
+        "research",
+        "academic",
+        "tracking",
+        "sources",
+        "citations",
+        "references",
+        "documentation"
+      ]
     },
     {
       "name": "datetime",
       "source": "./plugins/datetime",
       "description": "Natural language date/time parsing and calculations using native GNU date command. Parse expressions like 'tomorrow', 'next week', '3 days', calculate date differences, get current date/time. Zero dependencies. Includes auto-invoked skill for proactive temporal awareness.",
-      "version": "1.1.0",
+      "version": "1.2.1",
       "author": {
         "name": "Mae Capacite",
         "email": "cadrianmae@users.noreply.github.com"
       },
       "license": "MIT",
-      "keywords": ["datetime", "date", "time", "parsing", "natural-language", "calendar", "temporal"]
+      "keywords": [
+        "datetime",
+        "date",
+        "time",
+        "parsing",
+        "natural-language",
+        "calendar",
+        "temporal"
+      ]
     },
     {
       "name": "code-pointer",
       "source": "./plugins/code-pointer",
       "description": "Claude-only skill that opens files in VSCode at specific line and column positions. Auto-invoked when explaining code, debugging, pointing to TODOs, or guiding users to exact file locations. Uses VSCode CLI with progressive disclosure reference docs.",
-      "version": "1.0.0",
-      "author": {
-        "name": "Mae Capacite",
-        "email": "cadrianmae@users.noreply.github.com"
-      },
-      "license": "MIT",
-      "keywords": ["vscode", "code", "navigation", "editor", "debugging", "code-review", "line-number", "goto"]
-    },
-    {
-      "name": "semantic-search",
-      "source": "./plugins/semantic-search",
-      "description": "Natural language semantic search for codebases and notes using odino CLI with BGE embeddings. Auto-invoked skill for conceptual queries ('where is...', 'how does... work'). Slash commands (/semq:search, /semq:index, /semq:status, /semq:here) with automatic directory traversal. Fully local, 100% offline after setup.",
-      "version": "1.0.0",
-      "author": {
-        "name": "Mae Capacite",
-        "email": "cadrianmae@users.noreply.github.com"
-      },
-      "license": "MIT",
-      "keywords": ["search", "semantic", "embeddings", "codebase", "natural-language", "ml", "odino"]
-    },
-    {
-      "name": "pandoc",
-      "source": "./plugins/pandoc",
-      "description": "Document conversion toolkit for Pandoc with templates, validation, and format-specific helpers. Convert markdown to PDF, DOCX, HTML, and presentations with smart defaults and YAML frontmatter validation. Includes academic paper templates, BibTeX examples, and Makefile for automation.",
-      "version": "1.0.0",
-      "author": {
-        "name": "Mae Capacite",
-        "email": "cadrianmae@users.noreply.github.com"
-      },
-      "license": "MIT",
-      "keywords": ["pandoc", "markdown", "pdf", "conversion", "academic", "documents", "latex", "citations", "bibliography"]
-    },
-    {
-      "name": "cadrianmae-integration",
-      "source": "./plugins/cadrianmae-integration",
-      "description": "Integrate marketplace plugins into CLAUDE.md using @ imports. Scans installed plugins, generates documentation with skills and commands, creates marketplace-plugins.md, and adds import to user-level or project-level CLAUDE.md. Uses /integrate command with scope selection.",
-      "version": "1.0.1",
-      "author": {
-        "name": "Mae Capacite",
-        "email": "cadrianmae@users.noreply.github.com"
-      },
-      "license": "MIT",
-      "keywords": ["integration", "documentation", "marketplace", "plugins", "CLAUDE.md", "imports"]
-    },
-    {
-      "name": "feedback",
-      "source": "./plugins/feedback",
-      "description": "Track bugs and feature requests for cadrianmae-claude-marketplace plugins. Use /feedback:bug and /feedback:feature to append timestamped entries to the marketplace's FEEDBACK.md.",
       "version": "1.0.2",
       "author": {
         "name": "Mae Capacite",
         "email": "cadrianmae@users.noreply.github.com"
       },
       "license": "MIT",
-      "keywords": ["feedback", "bugs", "features", "tracking", "marketplace", "issues"]
+      "keywords": [
+        "vscode",
+        "code",
+        "navigation",
+        "editor",
+        "debugging",
+        "code-review",
+        "line-number",
+        "goto"
+      ]
     },
     {
-      "name": "gencast",
-      "source": "./plugins/gencast",
-      "description": "Auto-invoke gencast to generate podcasts from documents. Always uses --minimal flag. Supports all CLI options: planning, styles, audiences, voices, dialogue/plan saving.",
-      "version": "1.0.0",
+      "name": "semantic-search",
+      "source": "./plugins/semantic-search",
+      "description": "Natural language semantic search for codebases and notes using odino CLI with BGE embeddings. Auto-invoked skill for conceptual queries ('where is...', 'how does... work'). Slash commands (/semq:search, /semq:index, /semq:status, /semq:here) with automatic directory traversal. Fully local, 100% offline after setup.",
+      "version": "1.1.1",
       "author": {
         "name": "Mae Capacite",
         "email": "cadrianmae@users.noreply.github.com"
       },
       "license": "MIT",
-      "keywords": ["podcast", "audio", "gencast", "dialogue", "lecture", "conversation", "educational"]
+      "keywords": [
+        "search",
+        "semantic",
+        "embeddings",
+        "codebase",
+        "natural-language",
+        "ml",
+        "odino"
+      ]
+    },
+    {
+      "name": "pandoc",
+      "source": "./plugins/pandoc",
+      "description": "Document conversion toolkit for Pandoc with templates, validation, and format-specific helpers. Convert markdown to PDF, DOCX, HTML, and presentations with smart defaults and YAML frontmatter validation. Includes academic paper templates, BibTeX examples, and Makefile for automation.",
+      "version": "1.1.1",
+      "author": {
+        "name": "Mae Capacite",
+        "email": "cadrianmae@users.noreply.github.com"
+      },
+      "license": "MIT",
+      "keywords": [
+        "pandoc",
+        "markdown",
+        "pdf",
+        "conversion",
+        "academic",
+        "documents",
+        "latex",
+        "citations",
+        "bibliography"
+      ]
+    },
+    {
+      "name": "cadrianmae-integration",
+      "source": "./plugins/cadrianmae-integration",
+      "description": "Integrate marketplace plugins into CLAUDE.md using @ imports. Scans installed plugins, generates documentation with skills and commands, creates marketplace-plugins.md, and adds import to user-level or project-level CLAUDE.md. Uses /integrate command with scope selection.",
+      "version": "1.0.3",
+      "author": {
+        "name": "Mae Capacite",
+        "email": "cadrianmae@users.noreply.github.com"
+      },
+      "license": "MIT",
+      "keywords": [
+        "integration",
+        "documentation",
+        "marketplace",
+        "plugins",
+        "CLAUDE.md",
+        "imports"
+      ]
+    },
+    {
+      "name": "feedback",
+      "source": "./plugins/feedback",
+      "description": "Track bugs and feature requests for cadrianmae-claude-marketplace plugins. Use /feedback:bug and /feedback:feature to append timestamped entries to the marketplace's FEEDBACK.md.",
+      "version": "1.0.4",
+      "author": {
+        "name": "Mae Capacite",
+        "email": "cadrianmae@users.noreply.github.com"
+      },
+      "license": "MIT",
+      "keywords": [
+        "feedback",
+        "bugs",
+        "features",
+        "tracking",
+        "marketplace",
+        "issues"
+      ]
+    },
+    {
+      "name": "gencast",
+      "source": "./plugins/gencast",
+      "description": "Auto-invoke gencast to generate podcasts from documents. Always uses --minimal flag. Supports all CLI options: planning, styles, audiences, voices, dialogue/plan saving.",
+      "version": "1.1.1",
+      "author": {
+        "name": "Mae Capacite",
+        "email": "cadrianmae@users.noreply.github.com"
+      },
+      "license": "MIT",
+      "keywords": [
+        "podcast",
+        "audio",
+        "gencast",
+        "dialogue",
+        "lecture",
+        "conversation",
+        "educational"
+      ]
     },
     {
       "name": "tool-docs",
       "source": "./plugins/tool-docs",
       "description": "Documentation agents for command-line tools (pandoc, postgres, git, docker). Provides pandoc-guide agent for expert documentation lookup with WebFetch integration and tool-lookup skill for offline quick references. Auto-triggers on tool queries.",
-      "version": "1.0.1",
+      "version": "1.0.3",
       "author": {
         "name": "Mae",
         "email": "cadrianmae@users.noreply.github.com"
       },
       "license": "MIT",
-      "keywords": ["documentation", "pandoc", "reference", "tools", "command-line"]
+      "keywords": [
+        "documentation",
+        "pandoc",
+        "reference",
+        "tools",
+        "command-line"
+      ]
     }
   ]
 }
