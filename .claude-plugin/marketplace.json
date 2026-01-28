@@ -44,7 +44,7 @@
       "name": "track",
       "source": "./plugins/track",
       "description": "Automatic reference and prompt tracking via hooks for academic work. Tracks WebSearch/WebFetch/Read/Grep sources and major prompts to claude_usage/ directory. Hooks-based automation (PostToolUse, SessionEnd). Export to bibliography, methodology, BibTeX, timeline. Configurable verbosity, [User]/[Claude] attribution.",
-      "version": "2.0.3",
+      "version": "2.0.4",
       "author": {
         "name": "Mae",
         "email": "45900436+cadrianmae@users.noreply.github.com"

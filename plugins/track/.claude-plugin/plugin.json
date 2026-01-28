@@ -1,6 +1,6 @@
 {
   "name": "track",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Automatic reference and prompt tracking via hooks. Tracks WebSearch/WebFetch/Read/Grep sources and major prompts to claude_usage/ directory with configurable verbosity. Supports export to bibliography, methodology, BibTeX, and timeline formats.",
   "author": {
     "name": "Mae Capacite",

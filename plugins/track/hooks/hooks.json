@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash {{pluginDir}}/hooks/post-tool-use.sh"
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/post-tool-use.sh"
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash {{pluginDir}}/hooks/user-prompt-submit.sh"
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-submit.sh"
           }
         ]
       }
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash {{pluginDir}}/hooks/session-end.sh"
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/session-end.sh"
           }
         ]
       }
