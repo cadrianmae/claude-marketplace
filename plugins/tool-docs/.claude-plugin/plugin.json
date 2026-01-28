@@ -1,6 +1,6 @@
 {
   "name": "tool-docs",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Documentation agents for command-line tools and frameworks (starting with pandoc)",
   "author": {
     "name": "Mae",
@@ -16,5 +16,6 @@
     "tools",
     "command-line"
   ],
+  "commands": "./commands/",
   "skills": "./skills/"
 }

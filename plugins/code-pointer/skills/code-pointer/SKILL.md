@@ -2,6 +2,7 @@
 name: code-pointer
 description: Use the VSCode CLI to open files at specific line and column positions when explaining code, debugging, pointing to TODOs, or guiding users to specific locations in files. Automatically invoked when Claude needs to show users exactly where in a file to look.
 allowed-tools: Bash
+user-invocable: false
 ---
 
 # Code Pointer

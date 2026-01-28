@@ -1,6 +1,6 @@
 {
   "name": "code-pointer",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Enables Claude to open files at specific lines in VSCode when explaining code, debugging, or referencing specific locations. Auto-invoked skill that uses the `code` CLI to point users to exact file positions.",
   "author": {
     "name": "Mae Capacite",
