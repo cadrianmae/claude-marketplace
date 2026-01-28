@@ -1,7 +1,9 @@
 ---
+name: help
 description: This skill should be used when the user asks for help with tracking, how to use the track plugin, tracking documentation, what tracking commands are available, how hooks-based tracking works, track plugin overview, or explanation of verbosity settings. Displays comprehensive documentation covering commands, file formats, verbosity settings, academic workflow examples, v2.0 architecture, and migration from v1.x.
 allowed-tools: Read
 disable-model-invocation: true
+user-invocable: false
 ---
 
 ## Quick Example

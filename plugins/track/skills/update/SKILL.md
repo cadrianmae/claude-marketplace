@@ -1,7 +1,9 @@
 ---
+name: update
 description: DEPRECATED in v2.0 - Retroactive scanning no longer needed with hooks-based tracking
 allowed-tools: Read, Write
 disable-model-invocation: true
+user-invocable: false
 deprecated: true
 ---
 

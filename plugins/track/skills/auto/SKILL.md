@@ -1,8 +1,10 @@
 ---
+name: auto
 description: This skill should be used when the user asks to enable tracking, disable tracking, toggle auto-tracking, turn on/off automatic tracking, pause tracking, resume tracking, or control hooks-based tracking state. Manages .claude/.ref-autotrack marker file to activate/deactivate PostToolUse and SessionEnd hooks for automatic source and prompt tracking.
 argument-hint: [on|off]
 allowed-tools: Bash, Write
 disable-model-invocation: true
+user-invocable: false
 ---
 
 ## Tracking Status (Auto-Captured)

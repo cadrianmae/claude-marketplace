@@ -1,7 +1,9 @@
 ---
+name: init
 description: This skill should be used when the user asks to initialize tracking, set up reference tracking, enable automatic source tracking, create tracking files, or start using the track plugin for the current project. Creates claude_usage/ directory with sources.md and prompts.md files, configures hooks-based automatic tracking with verbosity settings, and enables PostToolUse and SessionEnd hooks.
 allowed-tools: Bash, Write
 disable-model-invocation: true
+user-invocable: false
 ---
 
 ## Tracking Status (Auto-Captured)

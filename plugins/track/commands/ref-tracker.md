@@ -1,9 +1,7 @@
 ---
-name: ref-tracker
 description: DEPRECATED in v2.0 - Replaced by hooks-based tracking. This skill is no longer needed. Use /track:init to enable automatic hooks-based tracking instead.
 allowed-tools: Read, Edit, Write
 deprecated: true
-user-invocable: false
 ---
 
 ## ⚠️ DEPRECATED IN v2.0

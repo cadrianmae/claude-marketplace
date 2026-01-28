@@ -1,8 +1,10 @@
 ---
+name: config
 description: This skill should be used when the user asks to view tracking configuration, adjust tracking settings, configure what gets tracked, change tracking verbosity, set export path, customize prompt tracking, customize source tracking, or modify .claude/.ref-config settings. Supports interactive mode with AskUserQuestion or direct key=value updates for PROMPTS_VERBOSITY, SOURCES_VERBOSITY, and EXPORT_PATH.
 argument-hint: [prompts=all|major|minimal|off] [sources=all|off] [export_path=path/]
 allowed-tools: Bash, Read, Write, AskUserQuestion
 disable-model-invocation: true
+user-invocable: false
 ---
 
 ## Current Configuration (Auto-Captured)
