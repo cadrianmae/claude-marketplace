@@ -1,0 +1,22 @@
+{
+  "name": "nvr",
+  "version": "1.0.0",
+  "description": "Neovim Remote integration for Claude Code - automatically open files in the correct neovim instance based on working directory",
+  "author": {
+    "name": "Mae",
+    "email": "45900436+cadrianmae@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/cadrianmae/claude-marketplace",
+  "repository": "https://github.com/cadrianmae/claude-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "neovim",
+    "nvim",
+    "editor",
+    "nvr",
+    "remote",
+    "integration"
+  ],
+  "commands": "./commands/",
+  "skills": "./skills/"
+}
