@@ -34,10 +34,28 @@ session_id=$(echo "$HOOK_INPUT" | jq -r '.session_id // "default"')
 # Store in temporary file for SessionEnd processing
 # Use session_id to avoid conflicts between concurrent sessions
 mkdir -p .claude/.track-tmp
-echo "$user_prompt" > ".claude/.track-tmp/${session_id}_last_prompt.txt"
 
-# Store timestamp for attribution logic
-echo "$(date +%s)" > ".claude/.track-tmp/${session_id}_prompt_time.txt"
+# Append prompt to JSONL file (one prompt per line)
+# This captures ALL prompts during session, not just the last one
+prompt_file=".claude/.track-tmp/${session_id}_prompts.jsonl"
+timestamp=$(date +%s)
+
+# Get next sequence number (count existing lines)
+sequence=0
+if [ -f "$prompt_file" ]; then
+    sequence=$(wc -l < "$prompt_file")
+fi
+
+# Append prompt as compact JSON object (JSONL format - one line per entry)
+jq -nc \
+    --arg prompt "$user_prompt" \
+    --argjson timestamp "$timestamp" \
+    --argjson sequence "$sequence" \
+    '{timestamp: $timestamp, sequence: $sequence, prompt: $prompt}' >> "$prompt_file"
+
+# Also keep last_prompt.txt for backward compatibility with SessionEnd
+echo "$user_prompt" > ".claude/.track-tmp/${session_id}_last_prompt.txt"
+echo "$timestamp" > ".claude/.track-tmp/${session_id}_prompt_time.txt"
 
 # Exit successfully
 exit 0

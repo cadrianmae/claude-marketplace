@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.5] - 2026-02-09
+
+### Fixed
+- **Critical: Multi-turn conversation tracking** - UserPromptSubmit hook now captures ALL prompts during a session, not just the last one
+- **JSONL storage format** - Prompts stored as compact JSON Lines for efficient parsing
+- **SessionEnd pairing** - Processes all captured prompts and pairs each with corresponding assistant response from transcript
+- **No data loss** - Complete conversation history preserved for methodology documentation
+
+### Changed
+- `user-prompt-submit.sh` - Appends prompts to `${session_id}_prompts.jsonl` instead of overwriting single file
+- `session-end.sh` - Reads all prompts from JSONL and pairs with all transcript responses
+- Backward compatible with old single-prompt files
+
+### Technical Details
+- Prompt storage: `{timestamp, sequence, prompt}` in JSONL format
+- Sequential pairing: prompt[i] → response[i] from transcript
+- Maintains verbosity filtering for each pair independently
+- Cleanup includes new `_prompts.jsonl` temp files
+
+## [2.0.4] - 2026-02-09
+
+### Fixed
+- Hook variable syntax for CLAUDE_PLUGIN_ROOT environment variable
+
+## [2.0.3] - 2026-02-09
+
+### Fixed
+- Command frontmatter formatting in track plugin skills
+
 ## [2.0.2] - 2026-01-27
 
 ### Fixed

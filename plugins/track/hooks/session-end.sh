@@ -28,69 +28,130 @@ HOOK_INPUT=$(cat)
 session_id=$(echo "$HOOK_INPUT" | jq -r '.session_id // "default"')
 transcript_path=$(echo "$HOOK_INPUT" | jq -r '.transcript_path // empty')
 
-# Check if we have a captured prompt for this session
+# Check if we have captured prompts for this session
+prompts_file=".claude/.track-tmp/${session_id}_prompts.jsonl"
 last_prompt_file=".claude/.track-tmp/${session_id}_last_prompt.txt"
-[ -f "$last_prompt_file" ] || exit 0
 
-# Read last captured user prompt
-user_prompt=$(cat "$last_prompt_file")
+# Exit if no prompts captured (backwards compatible check)
+[ -f "$prompts_file" ] || [ -f "$last_prompt_file" ] || exit 0
 
-# Get last assistant response from transcript if available
-last_outcome=""
+# Ensure file exists with preamble
+ensure_file_with_preamble "claude_usage/prompts.md" "prompts"
+
+# Extract all assistant responses from transcript
+declare -a assistant_responses=()
 if [ -f "$transcript_path" ]; then
-    # Parse JSONL transcript to find last assistant message
-    # Extract content from last assistant role message
-    last_outcome=$(grep '"role":"assistant"' "$transcript_path" | tail -1 | jq -r '.content // empty' 2>/dev/null)
+    # Read all assistant responses in order
+    while IFS= read -r line; do
+        if echo "$line" | jq -e '.role == "assistant"' >/dev/null 2>&1; then
+            content=$(echo "$line" | jq -r '.content // empty')
+            assistant_responses+=("$content")
+        fi
+    done < "$transcript_path"
 fi
 
-# If no transcript outcome, use generic message
-if [ -z "$last_outcome" ]; then
-    last_outcome="Session completed"
-fi
+# Process all prompts from JSONL file (if exists)
+if [ -f "$prompts_file" ]; then
+    prompt_index=0
+    while IFS= read -r prompt_line; do
+        user_prompt=$(echo "$prompt_line" | jq -r '.prompt')
 
-# Determine if this should be tracked based on verbosity
-should_track=false
+        # Get corresponding assistant response (if available)
+        outcome=""
+        if [ "$prompt_index" -lt "${#assistant_responses[@]}" ]; then
+            outcome="${assistant_responses[$prompt_index]}"
+        fi
 
-case "$PROMPTS_VERBOSITY" in
-    all)
-        should_track=true
-        ;;
-    major)
-        # Heuristic: Track if response is substantial (>100 words)
-        word_count=$(echo "$last_outcome" | wc -w)
-        if [ "$word_count" -gt 100 ]; then
-            should_track=true
+        # Fallback if no outcome
+        if [ -z "$outcome" ]; then
+            outcome="Session completed"
         fi
-        ;;
-    minimal)
-        # Only track if user explicitly said "track this"
-        if echo "$user_prompt" | grep -qiE "(track this|log this|save this)"; then
-            should_track=true
-        fi
-        ;;
-    off)
+
+        # Determine if this should be tracked based on verbosity
         should_track=false
-        ;;
-esac
 
-# Write to claude_usage/prompts.md if should track
-if [ "$should_track" = "true" ]; then
-    # Ensure file exists with preamble
-    ensure_file_with_preamble "claude_usage/prompts.md" "prompts"
+        case "$PROMPTS_VERBOSITY" in
+            all)
+                should_track=true
+                ;;
+            major)
+                # Heuristic: Track if response is substantial (>100 words)
+                word_count=$(echo "$outcome" | wc -w)
+                if [ "$word_count" -gt 100 ]; then
+                    should_track=true
+                fi
+                ;;
+            minimal)
+                # Only track if user explicitly said "track this"
+                if echo "$user_prompt" | grep -qiE "(track this|log this|save this)"; then
+                    should_track=true
+                fi
+                ;;
+        esac
 
-    # Truncate outcome to 200 chars if too long
-    truncated_outcome=$(truncate_text "$last_outcome" 200)
+        # Write to claude_usage/prompts.md if should track
+        if [ "$should_track" = "true" ]; then
+            truncated_outcome=$(truncate_text "$outcome" 200)
 
-    # Append prompt-outcome pair with optional session ID
-    {
-        echo "Prompt: \"$user_prompt\""
-        echo "Outcome: $truncated_outcome"
-        echo "Session: $(get_timestamp)"
-        echo ""
-    } >> claude_usage/prompts.md
+            {
+                echo "Prompt: \"$user_prompt\""
+                echo "Outcome: $truncated_outcome"
+                echo "Session: $(get_timestamp)"
+                echo ""
+            } >> claude_usage/prompts.md
+        fi
+
+        ((prompt_index++))
+    done < "$prompts_file"
+else
+    # Fallback: Use old single-prompt behavior for backward compatibility
+    if [ -f "$last_prompt_file" ]; then
+        user_prompt=$(cat "$last_prompt_file")
+
+        # Get last assistant response
+        last_outcome=""
+        if [ -f "$transcript_path" ]; then
+            last_outcome=$(grep '"role":"assistant"' "$transcript_path" | tail -1 | jq -r '.content // empty' 2>/dev/null)
+        fi
+
+        if [ -z "$last_outcome" ]; then
+            last_outcome="Session completed"
+        fi
+
+        # Apply verbosity filter
+        should_track=false
+        case "$PROMPTS_VERBOSITY" in
+            all)
+                should_track=true
+                ;;
+            major)
+                word_count=$(echo "$last_outcome" | wc -w)
+                if [ "$word_count" -gt 100 ]; then
+                    should_track=true
+                fi
+                ;;
+            minimal)
+                if echo "$user_prompt" | grep -qiE "(track this|log this|save this)"; then
+                    should_track=true
+                fi
+                ;;
+        esac
+
+        if [ "$should_track" = "true" ]; then
+            truncated_outcome=$(truncate_text "$last_outcome" 200)
+
+            {
+                echo "Prompt: \"$user_prompt\""
+                echo "Outcome: $truncated_outcome"
+                echo "Session: $(get_timestamp)"
+                echo ""
+            } >> claude_usage/prompts.md
+        fi
+    fi
 fi
 
 # Cleanup temp files
+rm -f "$prompts_file"
 rm -f "$last_prompt_file"
 rm -f ".claude/.track-tmp/${session_id}_prompt_time.txt"
 
