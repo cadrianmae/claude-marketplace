@@ -1,9 +1,9 @@
 ---
 name: init
-description: This skill should be used when the user asks to initialize tracking, set up reference tracking, enable automatic source tracking, create tracking files, or start using the track plugin for the current project. Creates claude_usage/ directory with sources.md and prompts.md files, configures hooks-based automatic tracking with verbosity settings, and enables PostToolUse and SessionEnd hooks.
+description: This skill should be used when the user asks to initialize tracking, set up reference tracking, enable automatic source tracking, create tracking files, or start using the track plugin for the current project. Creates claude_usage/ directory with sources.md and prompts.md files, configures hooks-based automatic tracking with verbosity settings, and enables Stop hook for real-time LLM-enhanced tracking (v2.1).
 allowed-tools: Bash, Write
 disable-model-invocation: true
-user-invocable: false
+user-invocable: true
 ---
 
 ## Tracking Status (Auto-Captured)
@@ -23,9 +23,9 @@ user-invocable: false
 #          .claude/.ref-autotrack (enables hooks-based tracking)
 ```
 
-# init - Initialize Hooks-Based Tracking
+# init - Initialize Hooks-Based Tracking (v2.1)
 
-Initialize automatic reference and prompt tracking for the current project.
+Initialize automatic reference and prompt tracking with LLM-enhanced summaries for the current project.
 
 ## What it does
 
@@ -49,11 +49,13 @@ Initialize automatic reference and prompt tracking for the current project.
      ```
    - Creates `./.claude/.ref-autotrack` marker file with metadata
 
-4. **Enable hooks-based tracking:**
+4. **Enable hooks-based tracking (v2.1):**
    - Hooks activate automatically when `.ref-autotrack` exists
-   - PostToolUse hook → tracks WebSearch/WebFetch/Read/Grep
-   - UserPromptSubmit hook → captures user prompts
-   - SessionEnd hook → pairs prompts with outcomes
+   - **Stop hook** → Real-time tracking after each Claude response
+     - Extracts latest interaction from transcript
+     - Calls Claude Haiku for natural language summaries
+     - Writes to both sources.md and prompts.md
+     - Runs asynchronously (non-blocking)
    - **No skill activation needed** - fully automatic
 
 5. **Migrate existing files (if present):**
@@ -69,12 +71,13 @@ Initialize automatic reference and prompt tracking for the current project.
 
 ## Default configuration
 
-After init, tracking is **enabled by default** (changed in v2.0.0):
+After init, tracking is **enabled by default** with LLM enhancement (v2.1):
 - **Sources**: Track all WebSearch/WebFetch operations automatically
-- **Prompts**: Track major academic/development work automatically
+- **Prompts**: Track major academic/development work (LLM-classified)
 - **Export**: Default export path is `exports/` directory
+- **LLM**: Claude Haiku generates natural language summaries
 
-Hooks run automatically - no manual intervention needed.
+Stop hook runs automatically after each response - no manual intervention needed.
 
 ## Next steps
 
@@ -112,17 +115,13 @@ Concise status report showing what was created, migration status, and current co
 
 ## Implementation
 
-Initialization functionality is implemented in `scripts/init.sh`:
+Execute the initialization script:
 
 ```bash
-# Get skill directory
-SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Execute init script
-bash "$SKILL_DIR/scripts/init.sh"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/init.sh"
 ```
 
-**Script:** `skills/init/scripts/init.sh` (134 lines)
+**Script:** `scripts/init.sh` (134 lines)
 
 **Features:**
 - Directory creation (claude_usage/, .claude/, .track-tmp/)

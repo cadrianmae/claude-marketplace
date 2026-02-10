@@ -4,7 +4,7 @@ description: This skill should be used when the user asks to view tracking confi
 argument-hint: [prompts=all|major|minimal|off] [sources=all|off] [export_path=path/]
 allowed-tools: Bash, Read, Write, AskUserQuestion
 disable-model-invocation: true
-user-invocable: false
+user-invocable: true
 ---
 
 ## Current Configuration (Auto-Captured)
@@ -69,11 +69,14 @@ Controls what prompts are tracked to `claude_usage/prompts.md`:
 
 - **`major`** (default) - Only significant multi-step academic/development work
   - Example: "Implement authentication system", "Debug complex algorithm"
-  - Heuristic: Response >100 words or multiple tool uses
+  - **v2.1:** LLM classifies work as MAJOR or MINOR automatically
+  - MAJOR: Feature implementation, bug fixes, architectural decisions, multi-file changes
+  - MINOR: Simple questions, single file reads, documentation lookups
   - Best for: Academic research, project documentation
 
 - **`all`** - Track every user request
   - Example: "What is X?", "Explain Y", "Fix typo in file.txt"
+  - Tracks all work regardless of LLM classification
   - Best for: Complete session logs, detailed auditing
 
 - **`minimal`** - Only explicitly user-requested tracking

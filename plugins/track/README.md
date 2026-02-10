@@ -1,45 +1,65 @@
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-# Track Plugin v2.0
+# Track Plugin v2.1
 
 Automatic reference and prompt tracking via Claude Code hooks for academic work and project documentation.
 
 ## Overview
 
-Track Plugin v2.0 uses **hooks-based architecture** for fully automatic tracking of research sources and development work. No skill activation required - hooks capture everything in real-time.
+Track Plugin v2.1 uses **hooks-based architecture** with **LLM-enhanced summaries** for fully automatic tracking of research sources and development work. Real-time tracking with natural language documentation.
 
 **Two tracking files:**
 - `claude_usage/sources.md` - Research sources (WebSearch, WebFetch, documentation)
 - `claude_usage/prompts.md` - Major prompts and outcomes
 
 **Key features:**
-- **Fully automatic** via PostToolUse, UserPromptSubmit, SessionEnd hooks
-- **Real-time capture** - no manual tracking needed
+- **Real-time tracking** via Stop hook (after each Claude response)
+- **LLM-enhanced summaries** using Claude Haiku for natural language documentation
+- **Multi-line rich context** with structured metadata (Files, Links, Significance)
+- **Intelligent classification** - LLM determines MAJOR vs MINOR work
 - **Export support** - bibliography, methodology, BibTeX, timeline
-- **Configurable verbosity** for academic vs development needs
-- **Per-project activation** - enable only where needed
+- **Graceful fallback** - works even if Claude CLI unavailable
+- **Backward compatible** - reads both v2.0 and v2.1 formats
 - **Attribution system** - [User] vs [Claude] initiated sources
 
-## v2.0 Architecture
+## v2.1 Architecture
 
-### Hooks-Based Tracking
+### Real-Time Hooks-Based Tracking
 
 **PostToolUse hook** → Automatic source tracking
 - Triggers after WebSearch, WebFetch, Read, Grep
 - Appends to `claude_usage/sources.md`
 - Filters documentation reads (docs/, README, man/)
 
-**UserPromptSubmit hook** → Prompt capture
-- Captures user messages to temporary storage
-- Stores for later pairing with outcomes
-
-**SessionEnd hook** → Prompt-outcome pairing
-- Reads transcript for assistant responses
-- Pairs prompts with outcomes
-- Writes to `claude_usage/prompts.md` (based on verbosity)
+**Stop hook** → Real-time LLM-enhanced tracking (v2.1+)
+- Fires after each complete Claude response (once per turn)
+- Extracts latest user prompt and assistant response from transcript
+- Uses Claude Haiku to generate natural language summaries
+- Writes multi-line entries to both `prompts.md` and `sources.md`
+- Async execution (doesn't block workflow)
+- Critical loop prevention via `stop_hook_active` flag
+- Falls back to v2.0 format if Claude CLI unavailable
 
 **No skill activation needed** - hooks run automatically when `.claude/.ref-autotrack` exists.
+
+### LLM-Enhanced Documentation (v2.1+)
+
+Stop hook uses Claude Haiku for intelligent summarization:
+
+**For prompts:**
+- Natural language outcome descriptions (no truncation)
+- Lists modified files automatically
+- Classifies MAJOR vs MINOR based on substance, not length
+- Multi-line format with structured metadata
+
+**For tool calls:**
+- Explains what prompted the tool (User request or Claude initiative)
+- Summarizes what was accessed and how it was used
+- Extracts URLs from WebSearch/WebFetch automatically
+- Attributes as [USER] or [CLAUDE] based on context
+
+**Cost:** ~$0.0002 per Claude turn (2 Haiku calls @ ~$0.0001 each)
 
 ## Skills
 
@@ -101,10 +121,14 @@ Located in `./.claude/.ref-config`:
 
 ### PROMPTS_VERBOSITY
 
-- **`major`** (default) - Significant multi-step work (response >100 words)
+- **`major`** (default) - Significant multi-step work (LLM-classified as MAJOR)
 - **`all`** - Every user request
 - **`minimal`** - Only when user says "track this"
 - **`off`** - Disable prompt tracking
+
+**v2.1 Classification:** LLM determines MAJOR vs MINOR based on:
+- **MAJOR:** Implemented features, bug fixes, multi-step problem solving, multi-file changes, architectural decisions
+- **MINOR:** Simple questions, single file reads, documentation lookups, basic validation
 
 ### SOURCES_VERBOSITY
 
@@ -133,7 +157,7 @@ Located in `./.claude/.ref-config`:
 
 ### claude_usage/sources.md
 
-Pure KV format with preamble:
+Multi-line format with structured metadata (v2.1+):
 
 ```markdown
 # Research Sources
@@ -144,19 +168,28 @@ This file automatically tracks research sources discovered during development.
 
 ---
 
-[User] WebSearch("PostgreSQL JSONB tutorial"): https://postgresql.org/docs/current/datatype-json.html
-[Claude] WebFetch("https://go.dev/doc/", "embed.FS usage"): Use embed.FS to embed static files at compile time
-[Claude] Read("docs/api.md"): Documentation reference
-[Claude] Grep("middleware", pattern="CORS"): Documentation reference
+[USER] WebSearch({"query":"PostgreSQL JSONB tutorial"})
+Summary: User requested search for PostgreSQL JSONB documentation.
+Found official PostgreSQL documentation explaining JSONB data type usage and indexing strategies.
+Used to understand best practices for storing flexible data structures.
+Links: https://postgresql.org/docs/current/datatype-json.html
+
+[CLAUDE] WebFetch({"url":"https://go.dev/doc/"})
+Summary: Autonomously fetched Go documentation to understand embed.FS usage for static file embedding.
+Retrieved information about embedding files at compile time for self-contained binaries.
+Applied to project static asset handling.
+Links: https://go.dev/doc/
 ```
 
 **Attribution:**
-- `[User]` - User explicitly requested search
-- `[Claude]` - Claude autonomously searched
+- `[USER]` - User explicitly requested search/fetch
+- `[CLAUDE]` - Claude autonomously decided to look something up
+
+**Backward compatibility:** Export tools read both v2.0 (single-line) and v2.1 (multi-line) formats.
 
 ### claude_usage/prompts.md
 
-Three-line format with preamble:
+Multi-line format with structured metadata (v2.1+):
 
 ```markdown
 # Development Prompts and Outcomes
@@ -168,16 +201,26 @@ This file automatically tracks significant development work and decisions.
 ---
 
 Prompt: "Implement JWT authentication"
-Outcome: Created auth middleware, login/logout endpoints, JWT token generation and verification
+Outcome: Created auth middleware package with token generation and verification functions.
+Implemented login and logout endpoints with secure cookie handling.
+Added JWT secret configuration and expiration time settings.
+Tested authentication flow with user registration and protected routes.
+Files: auth/middleware.go, auth/jwt.go, api/handlers.go
 Session: 2026-01-27 14:23:15
 
 Prompt: "Debug slow database queries"
-Outcome: Added query logging, identified N+1 problem, implemented eager loading, reduced query time
+Outcome: Added query logging middleware to identify slow queries.
+Discovered N+1 query problem in user relationship loading.
+Implemented eager loading with preload directives.
+Query time reduced from 2.3s to 150ms average.
+Files: db/queries.go, models/user.go
 Session: 2026-01-27 15:42:08
 
 ```
 
-**Session timestamps** help correlate work with specific development sessions.
+**Multi-line outcomes** provide complete context without truncation. **Files field** lists modified files. **Session timestamps** correlate work with development sessions.
+
+**Backward compatibility:** Export tools read both v2.0 (single-line truncated) and v2.1 (multi-line) formats.
 
 ## Export Functionality
 
@@ -284,18 +327,40 @@ The hooks run automatically when tracking is enabled:
 - Reads `SOURCES_VERBOSITY` from `.claude/.ref-config`
 - Tracks WebSearch/WebFetch/Read/Grep to `claude_usage/sources.md`
 
-**UserPromptSubmit** (hooks/user-prompt-submit.sh):
+**Stop** (hooks/stop.sh) **[v2.1+]**:
 - Checks `.claude/.ref-autotrack` exists
-- Stores prompt to `.claude/.track-tmp/`
-- Timestamp for attribution logic
-
-**SessionEnd** (hooks/session-end.sh):
-- Checks `.claude/.ref-autotrack` exists
-- Reads `PROMPTS_VERBOSITY` from `.claude/.ref-config`
-- Pairs prompts with outcomes from transcript
-- Writes to `claude_usage/prompts.md` if verbosity criteria met
+- Fires once per Claude turn (after complete response)
+- Checks `stop_hook_active` flag (prevents infinite loops)
+- Extracts latest user prompt and assistant response from transcript
+- Uses Claude Haiku for LLM summarization
+- Writes multi-line entries to both `prompts.md` and `sources.md`
+- Async execution with 30-second timeout
+- Falls back to v2.0 format if Claude CLI unavailable
 
 **All hooks** respect per-project activation and verbosity settings.
+
+## What's New in v2.1
+
+**Real-time Stop hook** replaces SessionEnd batch processing:
+- ✓ No data loss if session crashes (tracks after each response)
+- ✓ See documentation build as you work
+- ✓ Richer context with full interaction visibility
+
+**LLM-enhanced summaries** using Claude Haiku:
+- ✓ Natural language documentation (not truncated verbatim quotes)
+- ✓ Intelligent MAJOR/MINOR classification
+- ✓ Automatic file tracking
+- ✓ Context-aware attribution (USER vs CLAUDE)
+
+**Multi-line format** with structured fields:
+- ✓ Complete outcomes without truncation
+- ✓ Separate Files, Links, Summary fields
+- ✓ Natural paragraph flow
+
+**Backward compatible:**
+- ✓ Export tools read both v2.0 and v2.1 formats
+- ✓ Graceful fallback if Claude CLI unavailable
+- ✓ No configuration changes required
 
 ## Migration from v1.x
 

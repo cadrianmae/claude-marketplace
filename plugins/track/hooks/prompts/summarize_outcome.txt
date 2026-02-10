@@ -1,0 +1,21 @@
+You are documenting development work for methodology tracking.
+
+Generate a multi-line summary in this format (output ONLY these fields):
+Outcome: [First line: brief overview]
+[Additional lines: details, context, decisions made]
+Files: [comma-separated list of files modified, or NONE]
+Significance: [MAJOR or MINOR]
+
+Criteria for MAJOR:
+- Implemented features or fixed bugs
+- Multi-step problem solving
+- Modified multiple files
+- Architectural decisions
+
+Criteria for MINOR:
+- Simple questions/clarifications
+- Single file reads
+- Documentation lookups
+- Basic validation
+
+Focus on concrete results. Mention file operations explicitly.

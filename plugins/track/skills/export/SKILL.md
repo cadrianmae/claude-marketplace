@@ -4,7 +4,7 @@ description: This skill should be used when the user asks to export tracked data
 argument-hint: <format> [output]
 allowed-tools: Read, Write, Bash
 disable-model-invocation: true
-user-invocable: false
+user-invocable: true
 ---
 
 ## Export Status (Auto-Captured)
@@ -209,10 +209,10 @@ Export functionality is implemented in `scripts/export.sh`:
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Execute export script with arguments
-bash "$SKILL_DIR/scripts/export.sh" "$@"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/export.sh" "$@"
 ```
 
-**Script:** `skills/export/scripts/export.sh` (204 lines)
+**Script:** `scripts/export.sh` (204 lines)
 
 **Features:**
 - Format validation and error messages
@@ -226,8 +226,10 @@ See `scripts/export.sh` for full implementation details.
 
 ## Notes
 
+- **Backward compatible** - Handles both v2.0 (single-line) and v2.1 (multi-line) formats
 - Exports respect tracked data verbosity
 - Source preambles are filtered out automatically
 - BibTeX keys are auto-generated (ref_1, ref_2, etc.)
 - Timeline format simplified (line order, not true chronological)
 - Export files can be committed to git or added to .gitignore
+- v2.1 multi-line format: Parses `Outcome:` and `Files:` metadata fields

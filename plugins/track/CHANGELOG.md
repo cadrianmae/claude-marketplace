@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-02-09
+
+### Added
+- **Real-time Stop hook tracking** - Tracks prompts and tool calls after each Claude response instead of batch processing at session end
+- **LLM-enhanced summaries** - Natural language documentation using Claude Haiku for outcome and tool call summarization
+- **Multi-line output format** - Rich, structured metadata with `Outcome:`, `Files:`, `Summary:`, `Links:` fields
+- **Intelligent significance classification** - LLM determines MAJOR vs MINOR instead of word count heuristic
+- **Unified tool call extraction** - Sources tracking integrated into Stop hook for consistent attribution
+- **Graceful LLM fallback** - Falls back to v2.0.5 truncation format if Claude CLI unavailable
+
+### Changed
+- **BREAKING:** Replaced SessionEnd batch processing with real-time Stop hook (no data loss if session crashes)
+- **Output format:** Multi-line entries with structured fields instead of single-line truncated text
+- **Sources format:** `[Attribution] Tool(params)` with multi-line `Summary:` instead of single-line result
+- **Export tools:** Updated to parse both v2.0.5 (single-line) and v2.1.0 (multi-line) formats
+- **Async execution:** Stop hook runs without blocking Claude's workflow (`async: true`, 30s timeout)
+- **Loop prevention:** Critical `stop_hook_active` flag check prevents infinite hook recursion
+- **Deduplication:** Tool calls deduplicated within each turn using bash associative arrays
+
+### Removed
+- **SessionEnd hook** - Archived to `hooks/archive/session-end.sh` (replaced by Stop hook)
+- **UserPromptSubmit hook** - Archived to `hooks/archive/user-prompt-submit.sh` (Stop hook extracts prompts from transcript directly)
+
+### Technical Details
+- Stop hook fires once per Claude turn (after complete response with all tool results)
+- LLM calls use Haiku model for cost-effective summarization (~$0.0002/turn for 2 calls)
+- Transcript parsing extracts latest user/assistant messages via jq
+- Multi-line parsing in export.sh maintains backward compatibility with v2.0.5 format
+- Verbosity filtering uses LLM classification instead of word count
+- Attribution (USER/CLAUDE) determined by LLM context analysis
+
+### Migration
+- Existing v2.0.5 entries continue to work with export tools (backward compatible)
+- Stop hook activates automatically when plugin updates
+- No configuration changes required
+- Mixed format files supported (old and new entries in same file)
+
 ## [2.0.5] - 2026-02-09
 
 ### Fixed
