@@ -2,8 +2,24 @@
 # Stop hook for real-time tracking
 # Tracks prompts and tool calls after each Claude response
 
-# Load common utilities
+# Calculate SCRIPT_DIR first (before any cd)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Parse hook input FIRST (need cwd to check tracking)
+HOOK_INPUT=$(cat)
+STOP_HOOK_ACTIVE=$(echo "$HOOK_INPUT" | jq -r '.stop_hook_active // false')
+
+# CRITICAL: Prevent infinite loops - skip if hook already ran
+[ "$STOP_HOOK_ACTIVE" = "true" ] && exit 0
+
+# Extract cwd and change to project directory
+PROJECT_DIR=$(echo "$HOOK_INPUT" | jq -r '.cwd // empty')
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR" ]; then
+    exit 0
+fi
+cd "$PROJECT_DIR" || exit 0
+
+# Load common utilities (now that we're in project dir)
 source "$SCRIPT_DIR/common.sh"
 
 # Exit if tracking not enabled
@@ -15,13 +31,6 @@ SOURCES_VERBOSITY=$(get_config_value "SOURCES_VERBOSITY" "all")
 
 # Exit if all tracking is off
 [ "$PROMPTS_VERBOSITY" = "off" ] && [ "$SOURCES_VERBOSITY" = "off" ] && exit 0
-
-# Parse hook input
-HOOK_INPUT=$(cat)
-STOP_HOOK_ACTIVE=$(echo "$HOOK_INPUT" | jq -r '.stop_hook_active // false')
-
-# CRITICAL: Prevent infinite loops - skip if hook already ran
-[ "$STOP_HOOK_ACTIVE" = "true" ] && exit 0
 
 # Extract transcript path
 TRANSCRIPT_PATH=$(echo "$HOOK_INPUT" | jq -r '.transcript_path // empty')

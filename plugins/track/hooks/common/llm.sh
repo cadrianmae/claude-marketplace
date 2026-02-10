@@ -15,6 +15,10 @@ summarize_outcome() {
     [ ! -f "$system_prompt_file" ] && return 1
     local system_prompt=$(cat "$system_prompt_file")
 
+    # Debug: log what we're passing
+    echo "[DEBUG] System prompt file: $system_prompt_file" >&2
+    echo "[DEBUG] System prompt length: ${#system_prompt}" >&2
+
     # Build context input using heredoc (safer for quotes)
     local context=$(cat <<EOF
 USER PROMPT: "$prompt"
@@ -26,7 +30,10 @@ EOF
 )
 
     # Call Claude with system prompt and context
-    echo "$context" | claude --model haiku --max-tokens 300 --system-prompt "$system_prompt" 2>/dev/null
+    # Debug: save output for inspection
+    local output=$(echo "$context" | claude --model haiku --system-prompt "$system_prompt" 2>>/tmp/track-llm-error.log)
+    echo "$output" | tee -a /tmp/track-llm-output.log
+    echo "$output"
 }
 
 # Summarize tool call for sources.md using Claude Haiku
@@ -55,5 +62,8 @@ EOF
 )
 
     # Call Claude with system prompt and context
-    echo "$context" | claude --model haiku --max-tokens 200 --system-prompt "$system_prompt" 2>/dev/null
+    # Debug: save output for inspection
+    local output=$(echo "$context" | claude --model haiku --system-prompt "$system_prompt" 2>>/tmp/track-llm-error.log)
+    echo "$output" | tee -a /tmp/track-llm-output.log
+    echo "$output"
 }
