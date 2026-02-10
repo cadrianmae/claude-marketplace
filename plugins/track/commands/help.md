@@ -1,7 +1,5 @@
 ---
-description: This skill should be used when the user asks for help with tracking, how to use the track plugin, tracking documentation, what tracking commands are available, how hooks-based tracking works, track plugin overview, or explanation of verbosity settings. Displays comprehensive documentation covering commands, file formats, verbosity settings, academic workflow examples, v2.0 architecture, and migration from v1.x.
-allowed-tools: Read
-disable-model-invocation: true
+description: Display comprehensive Track Plugin v2.1 documentation including hooks-based tracking, commands, file formats, verbosity settings, and workflow examples.
 ---
 
 ## Quick Example
@@ -14,35 +12,50 @@ disable-model-invocation: true
 
 # help - Hooks-Based Tracking System Help
 
-Comprehensive help for the Track Plugin v2.0 hooks-based automatic tracking system.
+Comprehensive help for the Track Plugin v2.1 hooks-based automatic tracking system with LLM-enhanced summaries.
 
 ## Overview
 
-The Track Plugin v2.0 uses Claude Code hooks for **fully automatic** reference and prompt tracking for academic work and project documentation.
+The Track Plugin v2.1 uses Claude Code hooks for **fully automatic** reference and prompt tracking with **natural language summaries** for academic work and project documentation.
 
 **Two tracking files:**
 - `claude_usage/sources.md` - Research sources (WebSearch, WebFetch, documentation)
-- `claude_usage/prompts.md` - Major prompts and outcomes
+- `claude_usage/prompts.md` - Major prompts and outcomes with rich context
 
 **Key features:**
-- **Automatic tracking via hooks** (PostToolUse, UserPromptSubmit, SessionEnd)
+- **Real-time tracking via Stop hook** - tracks after each Claude response
+- **LLM-enhanced summaries** - natural language documentation using Claude Haiku
+- **Multi-line rich format** - no truncation, structured metadata
 - **No skill activation needed** - hooks run automatically
 - **Per-project activation** - only tracks when enabled
-- **Configurable verbosity** - control what gets tracked
+- **Configurable verbosity** - control what gets tracked (with LLM classification)
 - **Export support** - generate bibliographies and methodology sections
 - **Attribution system** - tracks [User] vs [Claude] initiated sources
 
-## v2.0 Architecture
+## v2.1 Architecture (NEW)
 
-**Hooks-based tracking** (NEW):
-- **PostToolUse hook** → Automatically tracks WebSearch/WebFetch/Read/Grep to `claude_usage/sources.md`
-- **UserPromptSubmit hook** → Captures user prompts to temporary storage
-- **SessionEnd hook** → Pairs prompts with outcomes, writes to `claude_usage/prompts.md`
+**Real-time hooks-based tracking**:
+- **Stop hook** → Fires after each complete Claude response (real-time!)
+  - Extracts latest interaction from transcript
+  - Calls Claude Haiku for natural language summaries
+  - Writes to both sources.md and prompts.md in one pass
+  - Runs asynchronously (non-blocking)
+- **LLM classification** → Determines MAJOR vs MINOR work automatically
+- **Multi-line format** → Rich summaries with Files: metadata
 
 **Fully automatic** - no manual intervention:
 - Hooks check for `.claude/.ref-autotrack` marker
-- If present, hooks track automatically
+- If present, hooks track automatically after each turn
 - No skill activation needed (unlike v1.x)
+- No data loss if session crashes (real-time writes)
+
+**v2.1 Improvements over v2.0:**
+- ✅ Real-time tracking (not batch at session end)
+- ✅ LLM-powered significance classification (not word count)
+- ✅ Multi-line summaries (not 200-char truncation)
+- ✅ File tracking in metadata
+- ✅ Single hook for both sources and prompts
+- ✅ Async execution (non-blocking)
 
 ## Commands (Skills)
 
@@ -133,12 +146,15 @@ Display comprehensive documentation.
 
 ### claude_usage/prompts.md
 
-**Format:** Three-line entries with blank separator
+**Format (v2.1):** Multi-line entries with structured metadata
 
 **Pattern:**
 ```
 Prompt: "user request"
-Outcome: what was accomplished
+Outcome: first line overview
+additional context and details
+decisions made and rationale
+Files: file1.py, file2.js
 Session: timestamp
 
 ```
@@ -147,19 +163,33 @@ Session: timestamp
 ```markdown
 # Development Prompts and Outcomes
 
-This file automatically tracks significant development work and decisions.
+This file automatically tracks significant development work with LLM-enhanced summaries.
 
 ---
 
 Prompt: "Implement user authentication with JWT"
-Outcome: Created auth middleware, login/logout endpoints, JWT token generation and verification, integrated with database user model
+Outcome: Created auth middleware, login/logout endpoints, JWT token generation and verification.
+Integrated with database user model using bcrypt for password hashing.
+Implemented refresh token rotation for enhanced security.
+Added comprehensive error handling for token expiration cases.
+Files: auth/middleware.py, routes/auth.py, models/user.py, utils/jwt.py
 Session: 2026-01-27 14:23:15
 
 Prompt: "Debug slow database queries"
-Outcome: Added query logging, identified N+1 problem in user posts endpoint, implemented eager loading, reduced query time from 2.3s to 0.15s
+Outcome: Added query logging and profiling to identify performance bottlenecks.
+Discovered N+1 query problem in user posts endpoint causing 2.3s load times.
+Implemented eager loading with proper join strategies.
+Reduced query time from 2.3s to 0.15s (93% improvement).
+Files: routes/posts.py, models/post.py
 Session: 2026-01-27 15:42:08
 
 ```
+
+**Key features (v2.1):**
+- **Multi-line summaries** - Natural language, no truncation
+- **Files metadata** - Tracks modified files automatically
+- **LLM-generated** - Claude Haiku summarizes work naturally
+- **Rich context** - Explains decisions and outcomes in detail
 
 **Preamble:** Explains format, usage, and configuration
 
@@ -172,13 +202,23 @@ Located in `./.claude/.ref-config`:
 ### PROMPTS_VERBOSITY
 
 - **`major`** (default) - Significant multi-step academic/development work
-  - Heuristic: Response >100 words
+  - **v2.1:** LLM classifies work as MAJOR or MINOR automatically
+  - Tracks: Feature implementation, bug fixes, architectural decisions, multi-file changes
   - Best for project documentation
 - **`all`** - Every user request
+  - Tracks everything including simple questions and clarifications
   - Best for complete session logs
 - **`minimal`** - Only explicit user requests to track
+  - Only tracks when user says "track this" or "log this"
   - Best for selective curation
 - **`off`** - Disable prompt tracking
+
+**v2.1 Classification:** Claude Haiku determines MAJOR vs MINOR based on:
+- Concrete implementation work (MAJOR)
+- Multi-step problem solving (MAJOR)
+- Modified multiple files (MAJOR)
+- Architectural decisions (MAJOR)
+- Simple questions/lookups (MINOR)
 
 ### SOURCES_VERBOSITY
 
@@ -186,7 +226,7 @@ Located in `./.claude/.ref-config`:
   - Best for complete research audit trail
 - **`off`** - Disable source tracking
 
-### EXPORT_PATH (new in v2.0)
+### EXPORT_PATH
 
 - Default directory for `/track:export` output
 - Examples: `exports/`, `paper/references/`, `/tmp/tracking/`
@@ -253,13 +293,41 @@ grep "authentication" claude_usage/prompts.md
 - Auto-tracking marker: `./.claude/.ref-autotrack`
 - Temporary storage: `./.claude/.track-tmp/` (automatic cleanup)
 
+## Debugging (v2.1)
+
+**Verify hook is firing:**
+- Stop hook outputs debug systemMessage on **next turn** (async)
+- Look for: `[Track v2.1 Debug] Hook fired | ...`
+- Shows: prompts tracked, sources, verbosity, LLM status
+
+**Check for LLM errors:**
+```bash
+cat /tmp/track-llm-error.log
+```
+
+**Test with debug mode:**
+```bash
+claude --debug   # Shows hook execution details
+```
+
+**Important:** Async hooks deliver systemMessage on the **next conversation turn**. Don't close session immediately after work - send another message to see debug output!
+
+See `plugins/track/TESTING.md` for comprehensive debugging guide.
+
 ## Common Issues
 
 **"No tracking files found"**
 → Run `/track:init` first
 
+**"Hook not firing / No entries captured"**
+→ Check `/tmp/track-llm-error.log` for LLM failures
+→ Verify Claude CLI authenticated: `claude --model haiku "test"`
+→ Keep session alive for next turn (async output delay)
+→ Don't interrupt responses with Ctrl+C
+
 **"Too verbose"**
 → Use `/track:config prompts=minimal`
+→ LLM classifies work - 'major' only tracks significant work
 
 **"Want to pause tracking"**
 → Use `/track:auto off`
@@ -267,11 +335,42 @@ grep "authentication" claude_usage/prompts.md
 **"Need to export for paper"**
 → Use `/track:export bibliography`
 
+**"LLM call failing"**
+→ Check Claude CLI: `which claude`
+→ Test authentication: `claude --model haiku "summarize this"`
+→ Check system prompt files exist: `ls plugins/track/hooks/prompts/`
+
 **"Where are my old files?"**
-→ v2.0 uses `claude_usage/` directory instead of root-level files
+→ v2.0+ uses `claude_usage/` directory instead of root-level files
 → Run `/track:init` to migrate from `CLAUDE_*.md` files
 
-## v2.0 Changes from v1.x
+## Version History
+
+### v2.1 Changes from v2.0
+
+**Major improvements:**
+- **Real-time tracking** - Stop hook fires after each response (not batch at session end)
+- **LLM-enhanced summaries** - Claude Haiku generates natural language documentation
+- **Multi-line format** - Rich context without 200-char truncation
+- **File tracking** - Metadata shows which files were modified
+- **Intelligent classification** - LLM determines MAJOR vs MINOR (not word count)
+- **Single hook** - Stop hook handles both sources and prompts
+- **Async execution** - Non-blocking, runs in background
+- **Better debugging** - systemMessage output and error logging
+
+**Technical changes:**
+- Replaced SessionEnd + UserPromptSubmit with single Stop hook
+- Added LLM summarization functions in `hooks/common/llm.sh`
+- System prompts in `hooks/prompts/` directory
+- Preamble templates in `hooks/templates/` directory
+- Error logging to `/tmp/track-llm-error.log`
+
+**Migration from v2.0:**
+- Existing tracked files work unchanged (backward compatible)
+- Export tools handle both v2.0 and v2.1 formats
+- No action needed - Stop hook auto-activates on next `/track:init`
+
+### v2.0 Changes from v1.x
 
 **Major changes:**
 - **Hooks-based architecture** - Fully automatic, no skill activation
@@ -281,17 +380,18 @@ grep "authentication" claude_usage/prompts.md
 - **Enhanced config:** EXPORT_PATH setting added
 - **Deprecated:** `ref-tracker` skill, `/track:update` command
 
-**Migration:**
+**Migration from v1.x:**
 - Existing `.ref-autotrack` and `.ref-config` work unchanged
 - Run `/track:init` to migrate old `CLAUDE_*.md` files
 - Remove manual `/track:update` calls (automatic now)
 
 ## Related
 
-- **Plugin hooks** - PostToolUse, UserPromptSubmit, SessionEnd
+- **Plugin hooks** - Stop hook (v2.1), PostToolUse (archived)
 - **Global CLAUDE.md** - Documents the system in detail
 - **Project CLAUDE.md** - Can contain project-specific notes
+- **TESTING.md** - Comprehensive debugging guide (v2.1)
 
 ---
 
-For more help, consult plugin README or MIGRATION.md for v1.x → v2.0 upgrade guide.
+For more help, consult plugin README, TESTING.md for debugging, or CHANGELOG.md for version details.

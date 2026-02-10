@@ -1,8 +1,6 @@
 ---
-description: This skill should be used when the user asks to enable tracking, disable tracking, toggle auto-tracking, turn on/off automatic tracking, pause tracking, resume tracking, or control hooks-based tracking state. Manages .claude/.ref-autotrack marker file to activate/deactivate PostToolUse and SessionEnd hooks for automatic source and prompt tracking.
+description: Toggle automatic hooks-based tracking on/off. Controls the Stop hook for real-time LLM-enhanced tracking (v2.1).
 argument-hint: [on|off]
-allowed-tools: Bash, Write
-disable-model-invocation: true
 ---
 
 ## Tracking Status (Auto-Captured)
@@ -16,14 +14,15 @@ disable-model-invocation: true
 
 ```bash
 /track:auto on
-# ✓ Hooks-based tracking enabled
-# PostToolUse: WebSearch/WebFetch/Read/Grep → claude_usage/sources.md
-# SessionEnd: Major prompts → claude_usage/prompts.md
+# ✓ Real-time hooks-based tracking enabled (v2.1)
+# Stop hook: LLM-enhanced summaries after each response
+# Sources: WebSearch/WebFetch/Read/Grep → claude_usage/sources.md
+# Prompts: Major work (LLM-classified) → claude_usage/prompts.md
 ```
 
-# auto - Control Hooks-Based Auto-Tracking
+# auto - Control Hooks-Based Auto-Tracking (v2.1)
 
-Toggle or explicitly set automatic hooks-based tracking state.
+Toggle or explicitly set automatic hooks-based tracking with LLM-enhanced summaries.
 
 ## Usage
 

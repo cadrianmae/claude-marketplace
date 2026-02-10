@@ -1,8 +1,6 @@
 ---
-description: This skill should be used when the user asks to view tracking configuration, adjust tracking settings, configure what gets tracked, change tracking verbosity, set export path, customize prompt tracking, customize source tracking, or modify .claude/.ref-config settings. Supports interactive mode with AskUserQuestion or direct key=value updates for PROMPTS_VERBOSITY, SOURCES_VERBOSITY, and EXPORT_PATH.
+description: View or update tracking verbosity and export configuration. Configure PROMPTS_VERBOSITY (all/major/minimal/off), SOURCES_VERBOSITY (all/off), and EXPORT_PATH.
 argument-hint: [prompts=all|major|minimal|off] [sources=all|off] [export_path=path/]
-allowed-tools: Bash, Read, Write, AskUserQuestion
-disable-model-invocation: true
 ---
 
 ## Current Configuration (Auto-Captured)
@@ -67,11 +65,14 @@ Controls what prompts are tracked to `claude_usage/prompts.md`:
 
 - **`major`** (default) - Only significant multi-step academic/development work
   - Example: "Implement authentication system", "Debug complex algorithm"
-  - Heuristic: Response >100 words or multiple tool uses
+  - **v2.1:** LLM classifies work as MAJOR or MINOR automatically
+  - MAJOR: Feature implementation, bug fixes, architectural decisions, multi-file changes
+  - MINOR: Simple questions, single file reads, documentation lookups
   - Best for: Academic research, project documentation
 
 - **`all`** - Track every user request
   - Example: "What is X?", "Explain Y", "Fix typo in file.txt"
+  - Tracks all work regardless of LLM classification
   - Best for: Complete session logs, detailed auditing
 
 - **`minimal`** - Only explicitly user-requested tracking
