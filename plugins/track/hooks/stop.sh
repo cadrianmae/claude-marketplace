@@ -2,6 +2,15 @@
 # Stop hook for real-time tracking
 # Tracks prompts and tool calls after each Claude response
 
+# Helper function to exit with debug message
+hook_exit() {
+    local reason="$1"
+    jq -n --arg reason "$reason" '{
+        "systemMessage": "[Track v2.1 Debug] Hook exited early: \($reason)"
+    }'
+    exit 0
+}
+
 # Calculate SCRIPT_DIR first (before any cd)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -10,32 +19,32 @@ HOOK_INPUT=$(cat)
 STOP_HOOK_ACTIVE=$(echo "$HOOK_INPUT" | jq -r '.stop_hook_active // false')
 
 # CRITICAL: Prevent infinite loops - skip if hook already ran
-[ "$STOP_HOOK_ACTIVE" = "true" ] && exit 0
+[ "$STOP_HOOK_ACTIVE" = "true" ] && hook_exit "stop_hook_active is true"
 
 # Extract cwd and change to project directory
 PROJECT_DIR=$(echo "$HOOK_INPUT" | jq -r '.cwd // empty')
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR" ]; then
-    exit 0
+    hook_exit "no valid PROJECT_DIR: $PROJECT_DIR"
 fi
-cd "$PROJECT_DIR" || exit 0
+cd "$PROJECT_DIR" || hook_exit "failed to cd to $PROJECT_DIR"
 
 # Load common utilities (now that we're in project dir)
 source "$SCRIPT_DIR/common.sh"
 
 # Exit if tracking not enabled
-is_tracking_enabled || exit 0
+is_tracking_enabled || hook_exit "tracking not enabled (.ref-autotrack not found)"
 
 # Read verbosity config
 PROMPTS_VERBOSITY=$(get_config_value "PROMPTS_VERBOSITY" "major")
 SOURCES_VERBOSITY=$(get_config_value "SOURCES_VERBOSITY" "all")
 
 # Exit if all tracking is off
-[ "$PROMPTS_VERBOSITY" = "off" ] && [ "$SOURCES_VERBOSITY" = "off" ] && exit 0
+[ "$PROMPTS_VERBOSITY" = "off" ] && [ "$SOURCES_VERBOSITY" = "off" ] && hook_exit "all verbosity off"
 
 # Extract transcript path
 TRANSCRIPT_PATH=$(echo "$HOOK_INPUT" | jq -r '.transcript_path // empty')
 if [ -z "$TRANSCRIPT_PATH" ] || [ ! -f "$TRANSCRIPT_PATH" ]; then
-    exit 0
+    hook_exit "no valid transcript: $TRANSCRIPT_PATH"
 fi
 
 # Extract latest interaction from transcript
@@ -70,7 +79,7 @@ ASSISTANT_RESPONSE=$(echo "$INTERACTION" | jq -r '.assistant')
 
 # Skip if no user prompt or empty response
 if [ -z "$USER_PROMPT" ] || [ -z "$ASSISTANT_RESPONSE" ]; then
-    exit 0
+    hook_exit "no user prompt or assistant response in transcript"
 fi
 
 # Track prompt-outcome if verbosity allows
