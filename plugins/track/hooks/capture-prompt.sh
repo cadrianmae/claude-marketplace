@@ -44,6 +44,9 @@ PROMPTS_VERBOSITY=$(get_config_value "PROMPTS_VERBOSITY" "major")
 # Extract or construct transcript path
 TRANSCRIPT_PATH=$(echo "$HOOK_INPUT" | jq -r '.transcript_path // empty')
 
+# Expand $HOME in transcript path if present
+TRANSCRIPT_PATH="${TRANSCRIPT_PATH/\$HOME/$HOME}"
+
 # If not provided, construct from session_id and cwd
 if [ -z "$TRANSCRIPT_PATH" ]; then
     SESSION_ID=$(echo "$HOOK_INPUT" | jq -r '.session_id // empty')
@@ -64,13 +67,52 @@ extract_latest_interaction() {
     local transcript="$1"
     local last_user
     local last_assistant
+    local last_assistant_timestamp
 
-    # Get last user message content from nested structure
-    last_user=$(grep '"type":"user"' "$transcript" | tail -1 | jq -r '.message.content // empty')
+    # Get last assistant message with text content
+    last_assistant=""
+    last_assistant_timestamp=""
+    while IFS= read -r line; do
+        local text_content
+        text_content=$(echo "$line" | jq -r '.message.content[] | select(.type == "text") | .text // empty' 2>/dev/null | head -1)
+        if [ -n "$text_content" ]; then
+            last_assistant="$text_content"
+            last_assistant_timestamp=$(echo "$line" | jq -r '.timestamp // empty')
+            break
+        fi
+    done < <(grep '"type":"assistant"' "$transcript" | tac)
 
-    # Get last assistant message text from content array
-    last_assistant=$(grep '"type":"assistant"' "$transcript" | tail -1 | \
-        jq -r '.message.content[] | select(.type == "text") | .text // empty' | head -1)
+    # Get ALL user messages with text content AFTER the last assistant message
+    # (captures consecutive user messages from interruptions)
+    local user_messages=()
+    while IFS= read -r line; do
+        local msg_timestamp
+        msg_timestamp=$(echo "$line" | jq -r '.timestamp // empty')
+
+        # Only include messages after the last assistant message
+        if [ -n "$last_assistant_timestamp" ] && [ -n "$msg_timestamp" ]; then
+            if [[ "$msg_timestamp" > "$last_assistant_timestamp" ]]; then
+                if echo "$line" | jq -e '.message.content | type == "string"' >/dev/null 2>&1; then
+                    local msg_content
+                    msg_content=$(echo "$line" | jq -r '.message.content')
+                    user_messages+=("$msg_content")
+                fi
+            fi
+        fi
+    done < <(grep '"type":"user"' "$transcript")
+
+    # Concatenate all user messages with " [continued] " separator
+    if [ ${#user_messages[@]} -gt 0 ]; then
+        last_user=$(IFS=" [continued] "; echo "${user_messages[*]}")
+    else
+        # Fallback: just get the last user message if no timestamp comparison worked
+        while IFS= read -r line; do
+            if echo "$line" | jq -e '.message.content | type == "string"' >/dev/null 2>&1; then
+                last_user=$(echo "$line" | jq -r '.message.content')
+                break
+            fi
+        done < <(grep '"type":"user"' "$transcript" | tac)
+    fi
 
     # Output as JSON for easier parsing
     jq -n \
@@ -83,8 +125,9 @@ extract_latest_interaction() {
 extract_tool_uses() {
     local transcript="$1"
 
-    # Get last assistant message (may contain multiple tool uses)
-    grep '"type":"assistant"' "$transcript" | tail -1 | \
+    # Get tool uses from recent assistant messages (not just the last one)
+    # Look back through last 5 assistant messages to find tools
+    grep '"type":"assistant"' "$transcript" | tail -5 | \
         jq -r '(.message.content[]? | select(.type == "tool_use")) // .tool_uses[]? | @json' 2>/dev/null
 }
 

@@ -68,3 +68,10 @@ This file automatically tracks research sources discovered during development.
 [Claude] Read("/home/cadrianmae/git/github.com/cadrianmae/claude-marketplace/plugins/track/skills/export/SKILL.md"): Documentation reference
 [Claude] Read("/home/cadrianmae/git/github.com/cadrianmae/claude-marketplace/plugins/track/skills/config/SKILL.md"): Documentation reference
 [Claude] Read("/home/cadrianmae/git/github.com/cadrianmae/claude-marketplace/plugins/track/skills/help/SKILL.md"): Documentation reference
+[13:28:26] Read(capture-prompt.sh:44-59) -> 10 lines
+[13:29:54] Read(capture-prompt.sh:63-83) -> 10 lines
+[13:33:54] Read(capture-prompt.sh:75-85) -> 10 lines
+[13:35:12] Read(prompts.md) -> 10 lines
+[13:38:02] Read(plugin.json) -> 10 lines
+[13:38:03] Read(marketplace.json:40-55) -> 10 lines
+[13:38:10] Read(CHANGELOG.md) -> 10 lines

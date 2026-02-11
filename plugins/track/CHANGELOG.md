@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] - 2026-02-11
+
+### Added
+- **WebFetch LLM summarization** - WebFetch results now include AI-generated summaries instead of just headings
+- **Multiple consecutive user messages** - Captures all user messages in a row (from interrupted responses) with "[continued]" separator
+- **Enhanced Grep output** - Shows actual match content for content mode, full file paths for files mode
+- **Full WebSearch URLs** - WebSearch results show complete URLs without truncation (up to 5 results)
+
+### Changed
+- **Tool extraction scope** - Now extracts tools from last 5 assistant messages instead of just the last one (captures tools across full interaction)
+- **sources.md formatting** - More informative output for WebFetch (summaries), WebSearch (full URLs), and Grep (actual matches)
+
+### Technical Details
+- `hooks/capture-prompt.sh`: `extract_latest_interaction()` now captures ALL user messages after last assistant message
+- `hooks/capture-prompt.sh`: `extract_tool_uses()` searches last 5 assistant messages for tools
+- `hooks/capture-sources.sh`: `format_webfetch_entry()` calls Claude Haiku for content summarization
+- `hooks/capture-sources.sh`: `format_websearch_entry()` removed URL truncation, increased from 3 to 5 URLs
+- `hooks/capture-sources.sh`: `format_grep_entry()` shows actual match content based on output_mode
+
+## [2.5.2] - 2026-02-11
+
+### Fixed
+- **Hook transcript extraction** - Fixed `$HOME` path expansion in transcript path (was looking for literal `$HOME` string)
+- **User message extraction** - Skip tool_result arrays to find actual user text prompts
+- **Assistant message extraction** - Skip thinking/tool_use blocks to find actual assistant text responses
+- **Session history pollution** - Added `--no-session-persistence` flag to LLM summarization calls to prevent hook-spawned sessions from cluttering conversation history
+
+### Technical Details
+- `hooks/capture-prompt.sh`: Added `TRANSCRIPT_PATH="${TRANSCRIPT_PATH/\$HOME/$HOME}"` for path expansion
+- `hooks/capture-prompt.sh`: User extraction now searches backwards for `.message.content` of type string (skips tool results)
+- `hooks/capture-prompt.sh`: Assistant extraction now searches backwards for messages with text content
+- `hooks/common/llm.sh`: All `claude` CLI calls now use `--no-session-persistence` flag
+
 ## [2.5.1] - 2026-02-11
 
 ### Changed

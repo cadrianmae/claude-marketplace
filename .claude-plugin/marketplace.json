@@ -44,7 +44,7 @@
       "name": "track",
       "source": "./plugins/track",
       "description": "Automatic reference and prompt tracking via hooks for academic work. Prompts tracked via Stop hook with LLM summaries, sources tracked via PostToolUse hook with ASCII format. Export to bibliography, methodology, BibTeX, timeline.",
-      "version": "2.5.1",
+      "version": "2.6.0",
       "author": {
         "name": "Mae",
         "email": "45900436+cadrianmae@users.noreply.github.com"

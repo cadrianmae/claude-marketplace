@@ -49,7 +49,7 @@ EOF
 
     # Call Claude with structured output and extract just the structured_output field
     local output
-    output=$(echo "$context" | claude --model haiku --print --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output // empty')
+    output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output // empty')
 
     # Log and return output
     echo "$output" | tee -a /tmp/track-llm-output.log
@@ -108,7 +108,7 @@ EOF
 
     # Call Claude with structured output and extract just the structured_output field
     local output
-    output=$(echo "$context" | claude --model haiku --print --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output // empty')
+    output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output // empty')
 
     # Log and return output
     echo "$output" | tee -a /tmp/track-llm-output.log
@@ -147,7 +147,7 @@ CONTEXT_EOF
 
     # Call Claude with structured output and extract just the Summary field
     local output
-    output=$(echo "$context" | claude --model haiku --print --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output.Summary // empty')
+    output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output.Summary // empty')
 
     # Log and return output
     echo "$output" | tee -a /tmp/track-llm-output.log
