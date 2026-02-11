@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-02-11
+
+### Fixed
+- **YAML frontmatter parsing** - Fixed "Unexpected token" errors in skill metadata by properly quoting description strings and using array syntax for allowed-tools fields
+- **Skill loading** - All 7 skills now load without parse warnings in Claude Code debug logs
+- **Plugin structure** - Removed empty commands/ directory, consolidated to user-invocable skills only
+
+### Changed
+- **Skill frontmatter format** - Quoted long description fields, used array syntax for allowed-tools: `[Read, Write, Bash]`
+- **Structured outputs implementation** - LLM calls now use `--json-schema` flag with guaranteed-valid JSON responses
+- **Stop hook output** - Changed from text parsing (awk/sed) to direct JSON extraction with jq for reliability
+
+### Technical Details
+- Skills affected: auto, config, export, help, init (all now use proper YAML quoting)
+- LLM output uses Claude CLI structured outputs with inline JSON schemas
+- Removed duplicate echo statements causing "NONE NONE" output
+- Fixed AWK pattern matching causing double line printing
+- Cache invalidation requires uninstall/reinstall for immediate effect
+
 ## [2.1.0] - 2026-02-09
 
 ### Added
