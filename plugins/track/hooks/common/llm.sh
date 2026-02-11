@@ -30,10 +30,9 @@ EOF
 )
 
     # Call Claude with system prompt and context
-    # Debug: save output for inspection
     local output=$(echo "$context" | claude --model haiku --system-prompt "$system_prompt" 2>>/tmp/track-llm-error.log)
+    # Log and return output (tee outputs to both file and stdout)
     echo "$output" | tee -a /tmp/track-llm-output.log
-    echo "$output"
 }
 
 # Summarize tool call for sources.md using Claude Haiku
@@ -62,8 +61,7 @@ EOF
 )
 
     # Call Claude with system prompt and context
-    # Debug: save output for inspection
     local output=$(echo "$context" | claude --model haiku --system-prompt "$system_prompt" 2>>/tmp/track-llm-error.log)
+    # Log and return output (tee outputs to both file and stdout)
     echo "$output" | tee -a /tmp/track-llm-output.log
-    echo "$output"
 }

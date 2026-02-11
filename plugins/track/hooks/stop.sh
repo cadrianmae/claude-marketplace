@@ -41,8 +41,20 @@ SOURCES_VERBOSITY=$(get_config_value "SOURCES_VERBOSITY" "all")
 # Exit if all tracking is off
 [ "$PROMPTS_VERBOSITY" = "off" ] && [ "$SOURCES_VERBOSITY" = "off" ] && hook_exit "all verbosity off"
 
-# Extract transcript path
+# Extract or construct transcript path
 TRANSCRIPT_PATH=$(echo "$HOOK_INPUT" | jq -r '.transcript_path // empty')
+
+# If not provided, construct from session_id and cwd
+if [ -z "$TRANSCRIPT_PATH" ]; then
+    SESSION_ID=$(echo "$HOOK_INPUT" | jq -r '.session_id // empty')
+    if [ -n "$SESSION_ID" ] && [ -n "$PROJECT_DIR" ]; then
+        # Normalize cwd: /tmp/track-test -> -tmp-track-test
+        NORMALIZED_CWD=$(echo "$PROJECT_DIR" | sed 's|/|-|g')
+        TRANSCRIPT_PATH="$HOME/.claude/projects/$NORMALIZED_CWD/$SESSION_ID.jsonl"
+    fi
+fi
+
+# Verify transcript exists
 if [ -z "$TRANSCRIPT_PATH" ] || [ ! -f "$TRANSCRIPT_PATH" ]; then
     hook_exit "no valid transcript: $TRANSCRIPT_PATH"
 fi
@@ -51,11 +63,12 @@ fi
 extract_latest_interaction() {
     local transcript="$1"
 
-    # Get last user message
-    local last_user=$(grep '"role":"user"' "$transcript" | tail -1 | jq -r '.content // empty')
+    # Get last user message content from nested structure
+    local last_user=$(grep '"type":"user"' "$transcript" | tail -1 | jq -r '.message.content // empty')
 
-    # Get last assistant message
-    local last_assistant=$(grep '"role":"assistant"' "$transcript" | tail -1 | jq -r '.content // empty')
+    # Get last assistant message text from content array
+    local last_assistant=$(grep '"type":"assistant"' "$transcript" | tail -1 | \
+        jq -r '.message.content[] | select(.type == "text") | .text // empty' | head -1)
 
     # Output as JSON for easier parsing
     jq -n \
@@ -69,8 +82,9 @@ extract_tool_uses() {
     local transcript="$1"
 
     # Get last assistant message (may contain multiple tool uses)
-    grep '"role":"assistant"' "$transcript" | tail -1 | \
-        jq -r '.tool_uses[]? | @json' 2>/dev/null
+    # Tool uses can be in content array with type="tool_use" or in a tool_uses field
+    grep '"type":"assistant"' "$transcript" | tail -1 | \
+        jq -r '(.message.content[]? | select(.type == "tool_use")) // .tool_uses[]? | @json' 2>/dev/null
 }
 
 INTERACTION=$(extract_latest_interaction "$TRANSCRIPT_PATH")
@@ -92,10 +106,22 @@ if [ "$PROMPTS_VERBOSITY" != "off" ]; then
     LLM_EXIT_CODE=$?
 
     if [ $LLM_EXIT_CODE -eq 0 ] && [ -n "$OUTCOME_SUMMARY" ]; then
-        # Parse LLM output
-        OUTCOME_TEXT=$(echo "$OUTCOME_SUMMARY" | sed -n '/^Outcome:/,/^Files:/p' | sed '1d;$d')
-        FILES_TEXT=$(extract_field "Files" "$OUTCOME_SUMMARY")
-        SIGNIFICANCE=$(extract_field "Significance" "$OUTCOME_SUMMARY")
+        # Parse LLM output - extract Outcome value and any continuation lines
+        OUTCOME_TEXT=$(echo "$OUTCOME_SUMMARY" | awk '
+            /^Outcome:/ {
+                sub(/^Outcome: */, "");
+                if (NF) outcome = $0;
+                flag = 1;
+                next
+            }
+            /^Files:/ { flag = 0 }
+            flag {
+                if (outcome) outcome = outcome "\n" $0;
+                else outcome = $0
+            }
+            END { print outcome }')
+        FILES_TEXT=$(extract_field "Files" "$OUTCOME_SUMMARY" | tail -1)
+        SIGNIFICANCE=$(extract_field "Significance" "$OUTCOME_SUMMARY" | tail -1)
 
         # Apply verbosity filter
         SHOULD_TRACK=false
@@ -115,10 +141,10 @@ if [ "$PROMPTS_VERBOSITY" != "off" ]; then
         if [ "$SHOULD_TRACK" = "true" ]; then
             ensure_file_with_preamble "claude_usage/prompts.md" "prompts"
             {
-                echo "Prompt: \"$USER_PROMPT\""
-                echo "Outcome: $OUTCOME_TEXT"
-                [ "$FILES_TEXT" != "NONE" ] && echo "Files: $FILES_TEXT"
-                echo "Session: $(get_timestamp)"
+                printf "Prompt: \"%s\"\n" "$USER_PROMPT"
+                printf "Outcome: %s\n" "$OUTCOME_TEXT"
+                [ "$FILES_TEXT" != "NONE" ] && printf "Files: %s\n" "$FILES_TEXT"
+                printf "Session: %s\n" "$(get_timestamp)"
                 echo ""
             } >> claude_usage/prompts.md
         fi
@@ -191,16 +217,9 @@ if [ "$SOURCES_VERBOSITY" != "off" ]; then
     TRACKED_SOURCES=$(extract_tool_uses "$TRANSCRIPT_PATH" | wc -l)
 fi
 
-# Return systemMessage for debugging
-jq -n \
-    --arg prompts "$TRACKED_PROMPTS" \
-    --arg sources "$TRACKED_SOURCES" \
-    --arg verbosity "$PROMPTS_VERBOSITY" \
-    --arg llm_status "$LLM_STATUS" \
-    --arg has_prompt "$([ -n "$USER_PROMPT" ] && echo "yes" || echo "no")" \
-    --arg has_response "$([ -n "$ASSISTANT_RESPONSE" ] && echo "yes" || echo "no")" \
-    '{
-        "systemMessage": "[Track v2.1 Debug] Hook fired | Prompts tracked: \($prompts) | Sources: \($sources) | Verbosity: \($verbosity) | LLM exit: \($llm_status) | Has prompt: \($has_prompt) | Has response: \($has_response)"
-    }'
+# Silent completion - no systemMessage to avoid triggering continuation
+jq -n '{
+    "suppressOutput": true
+}'
 
 exit 0
