@@ -109,3 +109,40 @@ EOF
     # Log and return output
     echo "$output" | tee -a /tmp/track-llm-output.log
 }
+
+# Summarize long user prompts (>500 chars) for prompts.md
+summarize_long_prompt() {
+    local prompt="$1"
+
+    command -v claude >/dev/null 2>&1 || return 1
+
+    # Build context input
+    local context=$(cat <<CONTEXT_EOF
+Summarize this user request concisely while preserving key intent and details.
+
+USER PROMPT (${#prompt} chars):
+"$prompt"
+
+Create a concise summary (100-150 chars) that captures the core request and important details.
+CONTEXT_EOF
+)
+
+    # Define JSON schema for structured output
+    local schema='{
+        "type": "object",
+        "properties": {
+            "Summary": {
+                "type": "string",
+                "description": "Concise summary of user request in 100-150 characters"
+            }
+        },
+        "required": ["Summary"],
+        "additionalProperties": false
+    }'
+
+    # Call Claude with structured output and extract just the Summary field
+    local output=$(echo "$context" | claude --model haiku --print --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output.Summary // empty')
+
+    # Log and return output
+    echo "$output" | tee -a /tmp/track-llm-output.log
+}

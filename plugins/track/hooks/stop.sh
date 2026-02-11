@@ -128,8 +128,22 @@ if [ "$PROMPTS_VERBOSITY" != "off" ]; then
         # Write entry
         if [ "$SHOULD_TRACK" = "true" ]; then
             ensure_file_with_preamble "claude_usage/prompts.md" "prompts"
+
+            # Summarize long prompts (>500 chars = ~1 paragraph)
+            if [ ${#USER_PROMPT} -gt 500 ]; then
+                PROMPT_SUMMARY=$(summarize_long_prompt "$USER_PROMPT" 2>>/tmp/track-llm-error.log)
+                if [ $? -eq 0 ] && [ -n "$PROMPT_SUMMARY" ]; then
+                    PROMPT_DISPLAY="$PROMPT_SUMMARY (summarized from ${#USER_PROMPT} chars)"
+                else
+                    # Fallback to verbatim if LLM fails
+                    PROMPT_DISPLAY="$USER_PROMPT"
+                fi
+            else
+                PROMPT_DISPLAY="$USER_PROMPT"
+            fi
+
             {
-                printf "Prompt: \"%s\"\n" "$USER_PROMPT"
+                printf "Prompt: \"%s\"\n" "$PROMPT_DISPLAY"
                 printf "Outcome: %s\n" "$OUTCOME_TEXT"
                 [ "$FILES_TEXT" != "NONE" ] && printf "Files: %s\n" "$FILES_TEXT"
                 printf "Session: %s\n" "$(get_timestamp)"
