@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-02-11
+
+### Added
+- **Smart prompt summarization** - Long user prompts (>500 chars, ~1 paragraph) automatically summarized to 100-150 chars using Claude Haiku
+- **Graceful fallback** - If LLM summarization fails, falls back to verbatim prompt
+- **Summarization indicator** - Appends "(summarized from N chars)" to show original length
+
+### Changed
+- Prompt handling now length-aware: short prompts (<500 chars) remain verbatim, long prompts get concise summaries
+- Summary preserves key intent and important details while preventing file bloat
+
+### Technical Details
+- New `summarize_long_prompt()` function in `hooks/common/llm.sh`
+- Uses structured outputs with JSON schema for guaranteed format
+- Threshold: 500 chars (~1 paragraph typical length)
+- Target summary: 100-150 chars (readable, preserves context)
+- Cost: ~$0.00005 per long prompt (Haiku input/output)
+
 ## [2.2.0] - 2026-02-11
 
 ### Fixed
