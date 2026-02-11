@@ -1,8 +1,8 @@
 ---
 name: auto
-description: This skill should be used when the user asks to enable tracking, disable tracking, toggle auto-tracking, turn on/off automatic tracking, pause tracking, resume tracking, or control hooks-based tracking state. Manages .claude/.ref-autotrack marker file to activate/deactivate Stop hook for real-time automatic source and prompt tracking with LLM-enhanced summaries (v2.1).
-argument-hint: [on|off]
-allowed-tools: Bash, Write
+description: "This skill should be used when the user asks to enable tracking, disable tracking, toggle auto-tracking, turn on/off automatic tracking, pause tracking, resume tracking, or control hooks-based tracking state. Manages .claude/.ref-autotrack marker file to activate/deactivate Stop hook for real-time automatic source and prompt tracking with LLM-enhanced summaries (v2.1)."
+argument-hint: "[on|off]"
+allowed-tools: [Bash, Write]
 disable-model-invocation: true
 user-invocable: true
 ---

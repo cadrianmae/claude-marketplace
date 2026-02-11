@@ -1,8 +1,8 @@
 ---
 name: export
-description: This skill should be used when the user asks to export tracked data, generate bibliography, create methodology section, export to BibTeX, generate citations, create timeline, or produce formatted output from tracked sources and prompts. Supports formats: bibliography (Markdown numbered list), methodology (Markdown sections), bibtex (BibTeX entries), citations (numbered citations), and timeline (chronological activity log). Exports to configurable path from .claude/.ref-config.
-argument-hint: <format> [output]
-allowed-tools: Read, Write, Bash
+description: "This skill should be used when the user asks to export tracked data, generate bibliography, create methodology section, export to BibTeX, generate citations, create timeline, or produce formatted output from tracked sources and prompts. Supports formats: bibliography (Markdown numbered list), methodology (Markdown sections), bibtex (BibTeX entries), citations (numbered citations), and timeline (chronological activity log). Exports to configurable path from .claude/.ref-config."
+argument-hint: "<format> [output]"
+allowed-tools: [Read, Write, Bash]
 disable-model-invocation: true
 user-invocable: true
 ---
