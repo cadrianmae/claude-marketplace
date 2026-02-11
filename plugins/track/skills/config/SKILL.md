@@ -9,6 +9,7 @@ user-invocable: true
 
 ## Current Configuration (Auto-Captured)
 
+**Tracking Enabled**: !`grep TRACKING_ENABLED .claude/.ref-config 2>/dev/null | cut -d= -f2 || echo "true (default)"`
 **Prompts Verbosity**: !`grep PROMPTS_VERBOSITY .claude/.ref-config 2>/dev/null | cut -d= -f2 || echo "major (default)"`
 **Sources Verbosity**: !`grep SOURCES_VERBOSITY .claude/.ref-config 2>/dev/null | cut -d= -f2 || echo "all (default)"`
 **Export Path**: !`grep EXPORT_PATH .claude/.ref-config 2>/dev/null | cut -d= -f2 || echo "exports/ (default)"`

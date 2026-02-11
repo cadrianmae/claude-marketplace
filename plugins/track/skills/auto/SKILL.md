@@ -1,6 +1,6 @@
 ---
 name: auto
-description: "This skill should be used when the user asks to enable tracking, disable tracking, toggle auto-tracking, turn on/off automatic tracking, pause tracking, resume tracking, or control hooks-based tracking state. Manages .claude/.ref-autotrack marker file to activate/deactivate Stop hook for real-time automatic source and prompt tracking with LLM-enhanced summaries (v2.1)."
+description: "This skill should be used when the user asks to enable tracking, disable tracking, toggle auto-tracking, turn on/off automatic tracking, pause tracking, resume tracking, or control hooks-based tracking state. Manages TRACKING_ENABLED config value in .claude/.ref-config to activate/deactivate hooks for real-time automatic source and prompt tracking with LLM-enhanced summaries (v2.5+)."
 argument-hint: "[on|off]"
 allowed-tools: [Bash, Write]
 disable-model-invocation: true
@@ -9,7 +9,7 @@ user-invocable: true
 
 ## Tracking Status (Auto-Captured)
 
-**Auto-Track**: !`[ -f .claude/.ref-autotrack ] && echo "✓ Enabled" || echo "✗ Disabled"`
+**Auto-Track**: !`grep "^TRACKING_ENABLED=" .claude/.ref-config 2>/dev/null | cut -d= -f2 | sed 's/true/✓ Enabled/;s/false/✗ Disabled/' || echo "✗ Disabled"`
 **Sources Tracked**: !`wc -l < claude_usage/sources.md 2>/dev/null || echo "0"`
 **Prompts Tracked**: !`grep -c '^Prompt:' claude_usage/prompts.md 2>/dev/null || echo "0"`
 **Git Status**: !`git rev-parse --is-inside-work-tree &>/dev/null && echo "✓ Git repo" || echo "✗ Not a git repo"`
@@ -39,32 +39,22 @@ Toggle or explicitly set automatic hooks-based tracking with LLM-enhanced summar
 ## What it does
 
 1. **Check current status:**
-   - Looks for `./.claude/.ref-autotrack` marker file
-   - If exists → hooks-based tracking is enabled
-   - If missing → hooks are inactive
+   - Reads `TRACKING_ENABLED` from `./.claude/.ref-config`
+   - If `true` → hooks-based tracking is enabled
+   - If `false` → hooks are inactive
 
 2. **Update state:**
    - **No argument** → toggle current state
-   - **Argument "on"** → enable (create marker if missing)
-   - **Argument "off"** → disable (delete marker if exists)
+   - **Argument "on"** → enable (set `TRACKING_ENABLED=true`)
+   - **Argument "off"** → disable (set `TRACKING_ENABLED=false`)
 
 3. **When enabling:**
-   - Creates `./.claude/.ref-autotrack` with metadata:
-     ```
-     # Track Plugin v2.0 - Automatic Tracking Enabled
-     #
-     # Hooks configured:
-     # - PostToolUse: Tracks WebSearch, WebFetch, Read, Grep
-     # - UserPromptSubmit: Captures user prompts
-     # - SessionEnd: Pairs prompts with outcomes
-     #
-     # Initialized: <timestamp>
-     ```
+   - Sets `TRACKING_ENABLED=true` in `./.claude/.ref-config`
    - Hooks activate automatically
    - No skill invocation needed
 
 4. **When disabling:**
-   - Deletes `./.claude/.ref-autotrack` marker file
+   - Sets `TRACKING_ENABLED=false` in `./.claude/.ref-config`
    - Hooks stop running
    - Temporary files cleaned up
 
@@ -120,18 +110,8 @@ Run `/track:init` first to create `.claude/` directory structure.
 
 - State changes do not affect existing tracked data
 - Configuration in `.claude/.ref-config` persists across state changes
-- Marker file includes explanatory content and initialization timestamp
-- Hooks activate/deactivate instantly based on marker presence
+- Hooks activate/deactivate instantly based on `TRACKING_ENABLED` value
 - Temporary files in `.claude/.track-tmp/` are cleaned on disable
-
-## v2.0 Changes
-
-**Changed from v1.x:**
-- **Old:** Skill-based tracking (ref-tracker skill checked marker)
-- **New:** Hooks-based tracking (hooks check marker)
-- **Benefit:** Fully automatic, no skill activation needed
-- **Migration:** Existing markers work unchanged
-
 
 ## Implementation
 

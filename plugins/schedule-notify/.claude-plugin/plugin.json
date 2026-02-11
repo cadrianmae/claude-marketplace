@@ -1,0 +1,10 @@
+{
+  "name": "schedule-notify",
+  "version": "1.0.0",
+  "description": "Hook-based scheduled notification system for recurring reminders",
+  "author": {
+    "name": "cadrianmae"
+  },
+  "keywords": ["scheduling", "notifications", "reminders", "hooks"],
+  "license": "MIT"
+}

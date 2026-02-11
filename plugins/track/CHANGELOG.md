@@ -7,6 +7,91 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.1] - 2026-02-11
+
+### Changed
+- **Unified tracking state** - Replaced `.ref-autotrack` marker file with `TRACKING_ENABLED` key in `.ref-config`
+- **Single source of truth** - All tracking configuration now in one file (`.ref-config`)
+- **Simpler state management** - Toggle tracking by changing config value instead of file existence
+
+### Migration
+- Existing `.ref-autotrack` files ignored (state read from `TRACKING_ENABLED` in `.ref-config`)
+- `/track:init` now creates `TRACKING_ENABLED=true` in `.ref-config` by default
+- `/track:auto` toggles `TRACKING_ENABLED` value instead of creating/deleting marker file
+- `/track:config` preserves `TRACKING_ENABLED` when updating other settings
+
+### Technical Details
+- `hooks/common/config.sh`: `is_tracking_enabled()` reads `TRACKING_ENABLED` from config
+- `scripts/init.sh`: Creates `TRACKING_ENABLED=true` in `.ref-config`, removed marker file creation
+- `skills/auto/scripts/auto.sh`: Uses `sed` to toggle config value instead of file operations
+- `skills/config/scripts/config.sh`: Preserves `TRACKING_ENABLED` when rewriting config
+
+## [2.5.0] - 2026-02-11
+
+### BREAKING CHANGES
+- **New sources.md format** - ASCII compact format instead of LLM multi-line
+- **Hook split** - Sources tracking moved from Stop hook to PostToolUse hook
+
+### Added
+- **capture-sources.sh** - Dedicated PostToolUse hook for sources tracking
+- **ASCII format** - Compact `[HH:MM:SS] Tool(params) -> summary` format
+- **Smart summaries** - Tool-specific formatting without LLM calls
+- **Immediate tracking** - Tool calls written as they happen (per-call, not per-turn)
+- **Detail lines** - Optional `|> details` for functions, matches, headings, URLs
+
+### Changed
+- **Renamed stop.sh** - Now `capture-prompt.sh` (prompts only)
+- **Sources format** - No more JSON params, readable ASCII with timestamps
+- **Hook type** - Sources use PostToolUse instead of Stop
+- **No LLM for sources** - Pure bash parsing, zero API cost
+
+### Removed
+- **Sources tracking from Stop hook** - Moved to dedicated PostToolUse hook
+- **LLM summarization for sources** - Replaced with deterministic formatting
+
+### Migration
+- Existing sources.md entries remain compatible
+- New entries use ASCII format automatically
+- No action required - hooks update automatically
+
+### Technical Details
+- PostToolUse hook matcher: `Read|Grep|WebFetch|WebSearch`
+- capture-prompt.sh is stop.sh with sources code removed (~150 lines vs 228)
+- capture-sources.sh uses tool_input/tool_response directly (no transcript parsing)
+- Both hooks run async and respect SOURCES_VERBOSITY/PROMPTS_VERBOSITY config
+
+## [2.4.0] - 2026-02-11
+
+### BREAKING CHANGES
+- **Removed PostToolUse hook** - Sources tracking now exclusively via Stop hook
+- Projects using v2.0 tracking must migrate with `/track:migrate`
+
+### Added
+- **Migration tool** - `/track:migrate` skill for v2.0 → v2.1 upgrades
+- **Improved export regex** - Handles all PostToolUse format variations (multi-param, named params)
+
+### Changed
+- **Simplified hook architecture** - Single tracking system (Stop hook only)
+- **Updated templates** - sources.md template now shows v2.1+ multi-line format
+- **Updated README** - Removed PostToolUse references, clarified Stop hook is sole tracker
+
+### Fixed
+- **Export compatibility** - WebFetch and Grep with multiple parameters no longer skipped
+- **Template accuracy** - Matches actual v2.1+ output format
+- **Hook conflict** - Eliminated duplicate tracking from PostToolUse + Stop running simultaneously
+
+### Migration
+- Run `/track:migrate` in projects initialized with v2.0
+- Existing v2.0 entries preserved and backward compatible
+- New entries use v2.1+ multi-line format
+
+### Technical Details
+- PostToolUse hook archived to `hooks/archive/post-tool-use.sh`
+- Hooks.json now only registers Stop hook
+- Export.sh enhanced with multi-param and named-param regex patterns
+- Migration creates `.claude/.track-backup/` before making changes
+- `.ref-autotrack` marker updated with version info
+
 ## [2.3.0] - 2026-02-11
 
 ### Added

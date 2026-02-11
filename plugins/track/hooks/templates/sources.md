@@ -1,24 +1,25 @@
 # Research Sources
 
-This file automatically tracks research sources discovered during development.
+This file automatically tracks tool calls discovered during development.
 
-**Purpose:** Generate bibliographies, works cited, and maintain citation trail for academic work.
+**Purpose:** Track what files were read, searches performed, and content accessed.
 
-**Format:** Each line is a key-value entry:
+**Format:** ASCII compact format with timestamps:
 ```
-[Attribution] Tool("Query"): Result
+[HH:MM:SS] ToolName(params) -> summary
+  |> optional details
 ```
 
-**Attribution:**
-- `[User]` - Explicitly requested by user
-- `[Claude]` - Autonomously discovered by Claude
-
-**Tools tracked:** WebSearch, WebFetch, Read (documentation), Grep (documentation)
+**Examples:**
+- `[14:23:15] Read(auth.py:42-108) -> 66 lines`
+- `[14:23:16] Grep(*.js, "API_KEY") -> 3 matches`
+- `[14:23:17] WebFetch(docs.python.org) -> 12KB`
+- `[14:23:18] WebSearch("rust async await") -> 8 results`
 
 **Usage:**
-- Export for academic papers: `/track:export bibliography`
-- View recent sources: `tail claude_usage/sources.md`
-- Search specific topic: `grep "topic" claude_usage/sources.md`
+- View recent activity: `tail claude_usage/sources.md`
+- Search for file: `grep "filename" claude_usage/sources.md`
+- Count tool calls: `grep -c "^\[" claude_usage/sources.md`
 
 **Configuration:** `.claude/.ref-config` (SOURCES_VERBOSITY setting)
 

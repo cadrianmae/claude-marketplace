@@ -1,6 +1,12 @@
 #!/bin/bash
-# PostToolUse hook for automatic source tracking
-# Tracks WebSearch, WebFetch, Read, and Grep operations to claude_usage/sources.md
+# DEPRECATED: PostToolUse hook for automatic source tracking
+# This hook was deprecated in Track Plugin v2.4.0 (2026-02-11)
+# Sources tracking is now exclusively handled by the Stop hook
+# This file is kept for reference only and is not registered in hooks.json
+#
+# Previous functionality:
+# - Tracked WebSearch, WebFetch, Read, and Grep operations to claude_usage/sources.md
+# - Used single-line format: [Attribution] Tool("params"): Result
 
 # Validate jq is available
 command -v jq >/dev/null 2>&1 || {

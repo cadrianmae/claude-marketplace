@@ -1,4 +1,49 @@
-# Migration Guide: Track Plugin v1.x → v2.0
+# Migration Guide: Track Plugin
+
+This guide helps you migrate between Track Plugin versions.
+
+## v2.5.1: Unified Config Migration (Latest)
+
+**Released:** 2026-02-11
+
+### What Changed
+
+Tracking state now uses `TRACKING_ENABLED=true` in `.ref-config` instead of the `.ref-autotrack` marker file.
+
+**Before (v2.5.0):**
+```
+.claude/
+├── .ref-autotrack          # Marker file (exists = enabled)
+└── .ref-config             # Settings only
+```
+
+**After (v2.5.1):**
+```
+.claude/
+└── .ref-config             # Tracking state + settings
+    TRACKING_ENABLED=true   # Single source of truth
+    PROMPTS_VERBOSITY=major
+    SOURCES_VERBOSITY=all
+    EXPORT_PATH=exports/
+```
+
+### Migration
+
+**No action needed** - automatic migration:
+- `/track:init` creates `TRACKING_ENABLED=true` in `.ref-config`
+- `/track:auto` toggles config value instead of file creation
+- Old `.ref-autotrack` files ignored if present
+
+### Benefits
+
+- ✅ Single source of truth - all config in one file
+- ✅ Simpler state management - no file existence checks
+- ✅ Easier debugging - `cat .claude/.ref-config` shows everything
+- ✅ Config preservation - `/track:config` maintains tracking state
+
+---
+
+## v1.x → v2.0: Skill-Based to Hooks-Based
 
 This guide helps you migrate from Track Plugin v1.2.1 (skill-based) to v2.0.0 (hooks-based).
 
@@ -161,26 +206,7 @@ EXPORT_PATH=exports/
 
 **Migration:** Add `EXPORT_PATH=exports/` to your `.claude/.ref-config` or run `/track:config` to update.
 
-### .claude/.ref-autotrack
-
-**v1.x:** Simple marker file
-```
-# Auto-tracking enabled
-```
-
-**v2.0:** Enhanced with metadata
-```
-# Track Plugin v2.0 - Automatic Tracking Enabled
-#
-# Hooks configured:
-# - PostToolUse: Tracks WebSearch, WebFetch, Read, Grep
-# - UserPromptSubmit: Captures user prompts
-# - SessionEnd: Pairs prompts with outcomes
-#
-# Last enabled: 2026-01-27 14:23:15
-```
-
-**Migration:** Existing marker files work unchanged. Hooks will update the format on next toggle.
+**Note:** As of v2.5.1, the `.ref-autotrack` marker file is deprecated. Tracking state is now stored as `TRACKING_ENABLED=true` in `.ref-config`.
 
 ## Feature Comparison
 
@@ -219,8 +245,8 @@ cat CLAUDE_PROMPTS.md >> claude_usage/prompts.md 2>/dev/null || echo "No CLAUDE_
 
 **Diagnosis:**
 ```bash
-# Check if marker exists
-ls -la .claude/.ref-autotrack
+# Check if tracking enabled
+grep TRACKING_ENABLED .claude/.ref-config
 
 # Check config
 cat .claude/.ref-config

@@ -156,14 +156,32 @@ parse_sources() {
             summary=""
             links=""
             files=""
-        # v2.0.5 format: [Attribution] Tool("query"): Result
+        # v2.0.5 format variations (backward compatibility)
+        # Pattern 1: Single param - Tool("param"): Result
         elif [[ "$line" =~ ^\[([A-Za-z]+)\]\ ([A-Za-z]+)\(\"([^\"]+)\"\):\ (.+)$ ]]; then
-            # Old format - convert to new
             attribution="${BASH_REMATCH[1]}"
             tool="${BASH_REMATCH[2]}"
             params="${BASH_REMATCH[3]}"
             summary="${BASH_REMATCH[4]}"
             links="$summary"  # In old format, result may contain URL
+            files=""
+            echo "SOURCE|$attribution|$tool|$params|$summary|$links|$files"
+        # Pattern 2: Multi-param - Tool("param1", "param2"): Result
+        elif [[ "$line" =~ ^\[([A-Za-z]+)\]\ ([A-Za-z]+)\(\"([^\"]+)\",\ \"([^\"]+)\"\):\ (.+)$ ]]; then
+            attribution="${BASH_REMATCH[1]}"
+            tool="${BASH_REMATCH[2]}"
+            params="${BASH_REMATCH[3]}, ${BASH_REMATCH[4]}"
+            summary="${BASH_REMATCH[5]}"
+            links="$summary"
+            files=""
+            echo "SOURCE|$attribution|$tool|$params|$summary|$links|$files"
+        # Pattern 3: Named param - Tool("param", key="value"): Result
+        elif [[ "$line" =~ ^\[([A-Za-z]+)\]\ ([A-Za-z]+)\(\"([^\"]+)\",\ ([a-z_]+)=\"([^\"]*)\"\):\ (.+)$ ]]; then
+            attribution="${BASH_REMATCH[1]}"
+            tool="${BASH_REMATCH[2]}"
+            params="${BASH_REMATCH[3]} (${BASH_REMATCH[4]}=${BASH_REMATCH[5]})"
+            summary="${BASH_REMATCH[6]}"
+            links="$summary"
             files=""
             echo "SOURCE|$attribution|$tool|$params|$summary|$links|$files"
         elif [[ "$line" =~ ^Summary:\ (.*)$ ]]; then

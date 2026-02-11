@@ -76,29 +76,12 @@ fi
 # Create configuration file
 if [ ! -f .claude/.ref-config ]; then
     cat > .claude/.ref-config << 'EOF'
+TRACKING_ENABLED=true
 PROMPTS_VERBOSITY=major
 SOURCES_VERBOSITY=all
 EXPORT_PATH=exports/
 EOF
 fi
-
-# Create autotrack marker with metadata
-cat > .claude/.ref-autotrack << EOF
-# Track Plugin v2.0 - Automatic Tracking Enabled
-#
-# This marker file enables hooks-based automatic tracking for this project.
-#
-# Hooks configured:
-# - PostToolUse: Tracks WebSearch, WebFetch, Read, Grep
-# - UserPromptSubmit: Captures user prompts
-# - SessionEnd: Pairs prompts with outcomes
-#
-# Verbosity settings: ./.claude/.ref-config
-# Toggle tracking: /track:auto
-# Disable tracking: rm .claude/.ref-autotrack
-#
-# Initialized: $(date '+%Y-%m-%d %H:%M:%S')
-EOF
 
 # Detect old files and offer migration
 if [ -f CLAUDE_SOURCES.md ] || [ -f CLAUDE_PROMPTS.md ]; then

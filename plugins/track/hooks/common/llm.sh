@@ -11,7 +11,8 @@ summarize_outcome() {
     command -v claude >/dev/null 2>&1 || return 1
 
     # Build context input
-    local context=$(cat <<EOF
+    local context
+    context=$(cat <<EOF
 Analyze this development interaction and provide a structured summary.
 
 USER PROMPT: "$prompt"
@@ -47,7 +48,8 @@ EOF
     }'
 
     # Call Claude with structured output and extract just the structured_output field
-    local output=$(echo "$context" | claude --model haiku --print --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output // empty')
+    local output
+    output=$(echo "$context" | claude --model haiku --print --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output // empty')
 
     # Log and return output
     echo "$output" | tee -a /tmp/track-llm-output.log
@@ -63,7 +65,8 @@ summarize_tool_call() {
     command -v claude >/dev/null 2>&1 || return 1
 
     # Build context input
-    local context=$(cat <<EOF
+    local context
+    context=$(cat <<EOF
 Analyze this tool call and provide structured information about it.
 
 TOOL USED: $tool_name
@@ -104,7 +107,8 @@ EOF
     }'
 
     # Call Claude with structured output and extract just the structured_output field
-    local output=$(echo "$context" | claude --model haiku --print --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output // empty')
+    local output
+    output=$(echo "$context" | claude --model haiku --print --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output // empty')
 
     # Log and return output
     echo "$output" | tee -a /tmp/track-llm-output.log
@@ -117,7 +121,8 @@ summarize_long_prompt() {
     command -v claude >/dev/null 2>&1 || return 1
 
     # Build context input
-    local context=$(cat <<CONTEXT_EOF
+    local context
+    context=$(cat <<CONTEXT_EOF
 Summarize this user request concisely while preserving key intent and details.
 
 USER PROMPT (${#prompt} chars):
@@ -141,7 +146,8 @@ CONTEXT_EOF
     }'
 
     # Call Claude with structured output and extract just the Summary field
-    local output=$(echo "$context" | claude --model haiku --print --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output.Summary // empty')
+    local output
+    output=$(echo "$context" | claude --model haiku --print --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output.Summary // empty')
 
     # Log and return output
     echo "$output" | tee -a /tmp/track-llm-output.log

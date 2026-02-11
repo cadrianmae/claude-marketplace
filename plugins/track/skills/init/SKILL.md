@@ -8,7 +8,7 @@ user-invocable: true
 
 ## Tracking Status (Auto-Captured)
 
-**Tracking Enabled**: !`[ -f .claude/.ref-autotrack ] && echo "✓ Active" || echo "✗ Inactive"`
+**Tracking Enabled**: !`grep "^TRACKING_ENABLED=" .claude/.ref-config 2>/dev/null | cut -d= -f2 | sed 's/true/✓ Active/;s/false/✗ Inactive/' || echo "✗ Inactive"`
 **Sources File**: !`[ -f claude_usage/sources.md ] && echo "✓ Exists ($(wc -l < claude_usage/sources.md) entries)" || echo "✗ Not created"`
 **Prompts File**: !`[ -f claude_usage/prompts.md ] && echo "✓ Exists ($(grep -c '^Prompt:' claude_usage/prompts.md 2>/dev/null || echo 0) entries)" || echo "✗ Not created"`
 **Git Status**: !`git rev-parse --is-inside-work-tree &>/dev/null && echo "✓ Git repo" || echo "✗ Not a git repo"`
@@ -19,8 +19,7 @@ user-invocable: true
 /track:init
 # Creates: claude_usage/sources.md (with preamble)
 #          claude_usage/prompts.md (with preamble)
-#          .claude/.ref-config (with default settings)
-#          .claude/.ref-autotrack (enables hooks-based tracking)
+#          .claude/.ref-config (with TRACKING_ENABLED=true)
 ```
 
 # init - Initialize Hooks-Based Tracking (v2.1)
@@ -43,14 +42,14 @@ Initialize automatic reference and prompt tracking with LLM-enhanced summaries f
    - Creates `./.claude/` directory if missing
    - Creates `./.claude/.ref-config` with default settings:
      ```
+     TRACKING_ENABLED=true
      PROMPTS_VERBOSITY=major
      SOURCES_VERBOSITY=all
      EXPORT_PATH=exports/
      ```
-   - Creates `./.claude/.ref-autotrack` marker file with metadata
 
 4. **Enable hooks-based tracking (v2.1):**
-   - Hooks activate automatically when `.ref-autotrack` exists
+   - Hooks activate automatically when `TRACKING_ENABLED=true`
    - **Stop hook** → Real-time tracking after each Claude response
      - Extracts latest interaction from transcript
      - Calls Claude Haiku for natural language summaries
@@ -92,8 +91,7 @@ After running `/track:init`:
 
 ```
 .claude/
-├── .ref-autotrack          # Marker: hooks-based tracking enabled
-├── .ref-config             # Verbosity and export settings
+├── .ref-config             # Tracking state and verbosity settings
 └── .track-tmp/             # Temporary storage for prompt capture
 claude_usage/
 ├── sources.md              # Research sources (with preamble)

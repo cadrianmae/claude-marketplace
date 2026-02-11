@@ -48,8 +48,8 @@ The Track Plugin v2.1 uses Claude Code hooks for **fully automatic** reference a
 - **Multi-line format** → Rich summaries with Files: metadata
 
 **Fully automatic** - no manual intervention:
-- Hooks check for `.claude/.ref-autotrack` marker
-- If present, hooks track automatically after each turn
+- Hooks check `TRACKING_ENABLED` in `.claude/.ref-config`
+- If `true`, hooks track automatically after each turn
 - No skill activation needed (unlike v1.x)
 - No data loss if session crashes (real-time writes)
 
@@ -69,8 +69,7 @@ Set up hooks-based tracking files and configuration for the current project.
 Creates:
 - `claude_usage/sources.md` (with preamble)
 - `claude_usage/prompts.md` (with preamble)
-- `.claude/.ref-autotrack` (enables hooks)
-- `.claude/.ref-config` (verbosity settings)
+- `.claude/.ref-config` (tracking state and verbosity settings)
 
 **Run this first** before using other tracking commands.
 
@@ -293,8 +292,7 @@ grep "authentication" claude_usage/prompts.md
 - Tracking files: `./claude_usage/` directory
   - `claude_usage/sources.md`
   - `claude_usage/prompts.md`
-- Configuration: `./.claude/.ref-config`
-- Auto-tracking marker: `./.claude/.ref-autotrack`
+- Configuration: `./.claude/.ref-config` (includes `TRACKING_ENABLED`)
 - Temporary storage: `./.claude/.track-tmp/` (automatic cleanup)
 
 ## Debugging (v2.1)

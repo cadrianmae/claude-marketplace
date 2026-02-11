@@ -1,0 +1,9 @@
+# Track Plugin v2.1+ - Stop Hook Tracking
+#
+# Hooks configured:
+# - Stop: Real-time LLM-enhanced tracking (prompts + sources)
+#
+# Migrated from v2.0: $(date)
+#
+# Previous PostToolUse hook has been deprecated in v2.4.0
+# All tracking now uses Stop hook for consistent multi-line format
