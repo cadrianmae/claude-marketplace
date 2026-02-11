@@ -106,22 +106,10 @@ if [ "$PROMPTS_VERBOSITY" != "off" ]; then
     LLM_EXIT_CODE=$?
 
     if [ $LLM_EXIT_CODE -eq 0 ] && [ -n "$OUTCOME_SUMMARY" ]; then
-        # Parse LLM output - extract Outcome value and any continuation lines
-        OUTCOME_TEXT=$(echo "$OUTCOME_SUMMARY" | awk '
-            /^Outcome:/ {
-                sub(/^Outcome: */, "");
-                if (NF) outcome = $0;
-                flag = 1;
-                next
-            }
-            /^Files:/ { flag = 0 }
-            flag {
-                if (outcome) outcome = outcome "\n" $0;
-                else outcome = $0
-            }
-            END { print outcome }')
-        FILES_TEXT=$(extract_field "Files" "$OUTCOME_SUMMARY" | tail -1)
-        SIGNIFICANCE=$(extract_field "Significance" "$OUTCOME_SUMMARY" | tail -1)
+        # Parse JSON output using jq
+        OUTCOME_TEXT=$(echo "$OUTCOME_SUMMARY" | jq -r '.Outcome // empty')
+        FILES_TEXT=$(echo "$OUTCOME_SUMMARY" | jq -r '.Files // "NONE"')
+        SIGNIFICANCE=$(echo "$OUTCOME_SUMMARY" | jq -r '.Significance // "MINOR"')
 
         # Apply verbosity filter
         SHOULD_TRACK=false
@@ -180,11 +168,11 @@ if [ "$SOURCES_VERBOSITY" != "off" ]; then
                 TOOL_LLM_EXIT=$?
 
                 if [ $TOOL_LLM_EXIT -eq 0 ] && [ -n "$TOOL_SUMMARY" ]; then
-                    # Parse LLM output
-                    SUMMARY_TEXT=$(echo "$TOOL_SUMMARY" | sed -n '/^Summary:/,/^Attribution:/p' | sed '1d;$d')
-                    ATTRIBUTION=$(extract_field "Attribution" "$TOOL_SUMMARY")
-                    LINKS_TEXT=$(extract_field "Links" "$TOOL_SUMMARY")
-                    FILES_TEXT=$(extract_field "Files" "$TOOL_SUMMARY")
+                    # Parse JSON output using jq
+                    SUMMARY_TEXT=$(echo "$TOOL_SUMMARY" | jq -r '.Summary // empty')
+                    ATTRIBUTION=$(echo "$TOOL_SUMMARY" | jq -r '.Attribution // "CLAUDE"')
+                    LINKS_TEXT=$(echo "$TOOL_SUMMARY" | jq -r '.Links // "NONE"')
+                    FILES_TEXT=$(echo "$TOOL_SUMMARY" | jq -r '.Files // "NONE"')
 
                     # Format tool call line
                     PARAMS=$(echo "$TOOL_INPUT" | jq -c '.')

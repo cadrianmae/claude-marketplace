@@ -1,5 +1,5 @@
 #!/bin/bash
-# LLM summarization functions using Claude Haiku
+# LLM summarization functions using Claude Haiku with structured outputs
 
 # Summarize outcome for prompts.md using Claude Haiku
 summarize_outcome() {
@@ -10,28 +10,46 @@ summarize_outcome() {
     # Check if claude CLI is available
     command -v claude >/dev/null 2>&1 || return 1
 
-    # Read system prompt
-    local system_prompt_file="$SCRIPT_DIR/prompts/summarize_outcome.txt"
-    [ ! -f "$system_prompt_file" ] && return 1
-    local system_prompt=$(cat "$system_prompt_file")
-
-    # Debug: log what we're passing
-    echo "[DEBUG] System prompt file: $system_prompt_file" >&2
-    echo "[DEBUG] System prompt length: ${#system_prompt}" >&2
-
-    # Build context input using heredoc (safer for quotes)
+    # Build context input
     local context=$(cat <<EOF
+Analyze this development interaction and provide a structured summary.
+
 USER PROMPT: "$prompt"
 
 ASSISTANT RESPONSE: "$response"
 
 TOOLS USED: $tool_uses
+
+Summarize what was accomplished, which files were modified, and whether this was major or minor work.
 EOF
 )
 
-    # Call Claude with system prompt and context
-    local output=$(echo "$context" | claude --model haiku --system-prompt "$system_prompt" 2>>/tmp/track-llm-error.log)
-    # Log and return output (tee outputs to both file and stdout)
+    # Define JSON schema for structured output
+    local schema='{
+        "type": "object",
+        "properties": {
+            "Outcome": {
+                "type": "string",
+                "description": "Brief summary of what was accomplished in 1-2 sentences"
+            },
+            "Files": {
+                "type": "string",
+                "description": "Comma-separated list of files modified, or NONE"
+            },
+            "Significance": {
+                "type": "string",
+                "enum": ["MAJOR", "MINOR"],
+                "description": "MAJOR for features/fixes/multi-step work, MINOR for questions/lookups"
+            }
+        },
+        "required": ["Outcome", "Files", "Significance"],
+        "additionalProperties": false
+    }'
+
+    # Call Claude with structured output and extract just the structured_output field
+    local output=$(echo "$context" | claude --model haiku --print --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output // empty')
+
+    # Log and return output
     echo "$output" | tee -a /tmp/track-llm-output.log
 }
 
@@ -44,24 +62,50 @@ summarize_tool_call() {
 
     command -v claude >/dev/null 2>&1 || return 1
 
-    # Read system prompt
-    local system_prompt_file="$SCRIPT_DIR/prompts/summarize_tool_call.txt"
-    [ ! -f "$system_prompt_file" ] && return 1
-    local system_prompt=$(cat "$system_prompt_file")
-
-    # Build context input using heredoc (safer for quotes)
+    # Build context input
     local context=$(cat <<EOF
+Analyze this tool call and provide structured information about it.
+
 TOOL USED: $tool_name
 TOOL INPUT: $tool_input
 
 CONTEXT:
 User: "$user_prompt"
 Assistant: "$assistant_response"
+
+Determine who initiated the tool use (USER explicitly asked vs CLAUDE autonomously decided), summarize what was accessed, and extract relevant links/files.
 EOF
 )
 
-    # Call Claude with system prompt and context
-    local output=$(echo "$context" | claude --model haiku --system-prompt "$system_prompt" 2>>/tmp/track-llm-error.log)
-    # Log and return output (tee outputs to both file and stdout)
+    # Define JSON schema for structured output
+    local schema='{
+        "type": "object",
+        "properties": {
+            "Summary": {
+                "type": "string",
+                "description": "Brief summary of what prompted this tool and how it was used"
+            },
+            "Attribution": {
+                "type": "string",
+                "enum": ["USER", "CLAUDE"],
+                "description": "USER if user explicitly requested, CLAUDE if autonomously decided"
+            },
+            "Links": {
+                "type": "string",
+                "description": "Comma-separated URLs for WebSearch/WebFetch, or NONE"
+            },
+            "Files": {
+                "type": "string",
+                "description": "Comma-separated file paths for Read/Grep/Edit, or NONE"
+            }
+        },
+        "required": ["Summary", "Attribution", "Links", "Files"],
+        "additionalProperties": false
+    }'
+
+    # Call Claude with structured output and extract just the structured_output field
+    local output=$(echo "$context" | claude --model haiku --print --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output // empty')
+
+    # Log and return output
     echo "$output" | tee -a /tmp/track-llm-output.log
 }
