@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-02-24
+
+### Changed
+- **Source timestamp format** - Timestamps in `sources.md` now use ISO 8601 format with minutes (`2026-02-24T23:58+00:00`) instead of time-only (`23:58:00`)
+
+### Technical Details
+- `hooks/capture-sources.sh`: Changed `date +%H:%M:%S` to `date --iso-8601=minutes` for full datestamp context
+
 ## [2.6.0] - 2026-02-11
 
 ### Added

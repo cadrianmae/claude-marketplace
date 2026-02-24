@@ -37,7 +37,7 @@ SOURCES_VERBOSITY=$(get_config_value "SOURCES_VERBOSITY" "all")
 ensure_file_with_preamble "claude_usage/sources.md" "sources"
 
 # Get timestamp
-TIMESTAMP=$(date +%H:%M:%S)
+TIMESTAMP=$(date --iso-8601=minutes)
 
 # --- Format functions ---
 
