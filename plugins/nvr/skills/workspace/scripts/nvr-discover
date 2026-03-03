@@ -1,0 +1,61 @@
+#!/bin/bash
+# nvr-discover - Find neovim socket for directory
+#
+# Usage: nvr-discover [directory]
+# Returns: Socket path on success (exit 0), error message on stderr (exit 1)
+
+set -euo pipefail
+
+DIR="${1:-$(pwd)}"
+
+# Check environment override
+if [[ -n "${NVIM_SOCKET:-}" ]]; then
+  if [[ -S "$NVIM_SOCKET" ]]; then
+    echo "$NVIM_SOCKET"
+    exit 0
+  else
+    echo "Error: NVIM_SOCKET=$NVIM_SOCKET is not a valid socket" >&2
+    exit 1
+  fi
+fi
+
+# Check if nvr is available
+if ! command -v nvr &>/dev/null; then
+  echo "Error: nvr (neovim-remote) not found. Install: pip install neovim-remote" >&2
+  exit 1
+fi
+
+# Get all active sockets
+mapfile -t SOCKETS < <(nvr --serverlist 2>/dev/null || true)
+
+if [[ ${#SOCKETS[@]} -eq 0 ]]; then
+  echo "Error: No neovim instances found" >&2
+  echo "Start neovim with: nvim" >&2
+  exit 1
+fi
+
+# Query each socket for working directory
+MATCHES=()
+for socket in "${SOCKETS[@]}"; do
+  cwd=$(nvr --servername "$socket" --remote-expr 'getcwd()' 2>/dev/null || true)
+
+  # Check exact match or parent match
+  if [[ "$DIR" == "$cwd" ]] || [[ "$DIR" == "$cwd"/* ]]; then
+    MATCHES+=("$socket:$cwd")
+  fi
+done
+
+# Return best match
+if [[ ${#MATCHES[@]} -gt 0 ]]; then
+  # Use first match (could enhance to find closest parent)
+  echo "${MATCHES[0]%%:*}"
+  exit 0
+else
+  echo "Error: No neovim instance found for directory: $DIR" >&2
+  echo "Available instances:" >&2
+  for socket in "${SOCKETS[@]}"; do
+    cwd=$(nvr --servername "$socket" --remote-expr 'getcwd()' 2>/dev/null || true)
+    echo "  - $cwd (socket: $socket)" >&2
+  done
+  exit 1
+fi

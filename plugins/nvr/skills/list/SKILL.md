@@ -24,8 +24,8 @@ Use this skill when the user wants to see all neovim instances across all projec
 
 ## Active Instances (Auto-Captured)
 
-**Total Instances**: !```nvr --serverlist 2>/dev/null | wc -l```
-**Current Directory**: !```pwd```
+**Total Instances**: !`nvr --serverlist 2>/dev/null | wc -l`
+**Current Directory**: !`pwd`
 
 ## How to Use
 
