@@ -32,7 +32,7 @@ Use this skill when the user wants to see all neovim instances across all projec
 Invoke the list script:
 
 ```bash
-bash $CLAUDE_PLUGIN_ROOT/skills/list/scripts/list.sh
+bash scripts/list.sh
 ```
 
 No arguments needed - the script discovers and lists all active neovim instances.
