@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.2] - 2026-03-03
+
+### Fixed
+- **Runaway claude haiku processes** - Stop hook now debounces rapid-fire events; only the last Stop in a burst triggers the LLM call, preventing process pile-up
+
+### Technical Details
+- `hooks/capture-prompt.sh`: Added 5-second debounce using `/tmp/track-capture-prompt-debounce` timestamp file; concurrent Stop events exit early, only the last writer proceeds
+
 ## [2.6.1] - 2026-02-24
 
 ### Changed

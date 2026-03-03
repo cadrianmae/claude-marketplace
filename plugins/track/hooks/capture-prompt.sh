@@ -15,6 +15,15 @@ hook_exit() {
 # Calculate SCRIPT_DIR first (before any cd)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Debounce: only the last Stop event in a rapid burst runs the LLM call
+DEBOUNCE_FILE="/tmp/track-capture-prompt-debounce"
+DEBOUNCE_DELAY=5
+MY_TIME=$(date +%s%N)
+echo "$MY_TIME" > "$DEBOUNCE_FILE"
+sleep "$DEBOUNCE_DELAY"
+CURRENT_TIME=$(cat "$DEBOUNCE_FILE" 2>/dev/null)
+[ "$CURRENT_TIME" != "$MY_TIME" ] && exit 0
+
 # Parse hook input FIRST (need cwd to check tracking)
 HOOK_INPUT=$(cat)
 STOP_HOOK_ACTIVE=$(echo "$HOOK_INPUT" | jq -r '.stop_hook_active // false')
