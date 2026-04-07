@@ -2,7 +2,7 @@
 # Edit fields of an existing schedule in place.
 #
 # Usage:
-#   schedule-edit.sh <id> [global|project] [flags...]
+#   cron-edit.sh <id> [global|project] [flags...]
 #
 # Flags (any combination, only listed fields are touched):
 #   --cron "EXPR"          replace cron expression (clears time/days)

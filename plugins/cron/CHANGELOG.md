@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-04-07
+### Added
+- New `bin/` directory with thin wrapper scripts (`cron-add`, `cron-list`, `cron-edit`, `cron-modify`, `cron-match`). Claude Code puts each plugin's `bin/` on `PATH` automatically, so the skill can now invoke helpers as bare commands with no path construction.
+
+### Changed
+- **Skill now calls helpers as bare commands** (e.g. `cron-list all`) instead of `bash "$CLAUDE_PLUGIN_ROOT/scripts/schedule-list.sh"`. This works around [anthropics/claude-code#9354](https://github.com/anthropics/claude-code/issues/9354): `$CLAUDE_PLUGIN_ROOT` is not substituted inside SKILL.md files, causing previous invocations to silently expand to empty and fail with "No such file or directory".
+- **Renamed all `schedule-*` code files to `cron-*`** for consistency with the plugin name:
+  - `scripts/schedule-add.sh` → `scripts/cron-add.sh`
+  - `scripts/schedule-list.sh` → `scripts/cron-list.sh`
+  - `scripts/schedule-edit.sh` → `scripts/cron-edit.sh`
+  - `scripts/schedule-modify.sh` → `scripts/cron-modify.sh`
+  - `hooks/check-schedule.sh` → `hooks/check-cron.sh`
+- Hook status message updated: `"Checking scheduled notifications..."` → `"Checking cron schedules..."`.
+
+### Not changed (preserved for backwards compatibility)
+- User data files keep their original names: `~/.claude/schedules.json`, `.claude/schedules.json`, `~/.claude/.schedule-state.json`, `.claude/.schedule-state.json`. Renaming these would silently break every existing installation.
+
 ## [2.1.0] - 2026-04-07
 ### Added
 - New `edit` subcommand and `scripts/schedule-edit.sh` helper. Modifies fields of an existing schedule in place; mutually-exclusive groups (`cron` vs `time/days`, `message` vs `command`) are handled automatically.

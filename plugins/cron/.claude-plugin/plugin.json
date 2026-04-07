@@ -1,6 +1,6 @@
 {
   "name": "cron",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Hook-based scheduled notifications using crontab(5) syntax. Per-prompt evaluation with anacron-style catch-up.",
   "author": {
     "name": "cadrianmae"

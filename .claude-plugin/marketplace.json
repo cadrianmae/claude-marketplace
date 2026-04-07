@@ -248,7 +248,7 @@
       "name": "cron",
       "source": "./plugins/cron",
       "description": "Hook-based scheduled notifications using crontab(5) syntax. Anacron-style catch-up with per-tick deduplication. Global and per-project schedules with add/replace modes. Single unified interactive /cron command. Requires python3 and jq.",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "author": {
         "name": "Mae",
         "email": "45900436+cadrianmae@users.noreply.github.com"

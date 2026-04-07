@@ -29,16 +29,17 @@ Set `header: "Action"` and offer these options:
 
 After the user picks, follow the matching workflow below.
 
-## Helper Scripts
+## Helper Commands
 
-All real work is done by helper scripts. Always call them via `$CLAUDE_PLUGIN_ROOT`:
+All real work is done by thin wrappers that live in the plugin's `bin/` directory. Claude Code puts that directory on `PATH` automatically, so you invoke them as bare commands — **no path construction, no `$CLAUDE_PLUGIN_ROOT`**. (`$CLAUDE_PLUGIN_ROOT` is not substituted inside SKILL.md files; see [anthropics/claude-code#9354](https://github.com/anthropics/claude-code/issues/9354).)
 
-- `bash "$CLAUDE_PLUGIN_ROOT/scripts/schedule-add.sh" ...` — add
-- `bash "$CLAUDE_PLUGIN_ROOT/scripts/schedule-list.sh" [global|project|all]` — list
-- `bash "$CLAUDE_PLUGIN_ROOT/scripts/schedule-edit.sh" <id> [global|project] [flags...]` — edit fields in place
-- `bash "$CLAUDE_PLUGIN_ROOT/scripts/schedule-modify.sh" enable|disable|remove <id> [global|project]` — modify
+- `cron-add ...` — add a schedule
+- `cron-list [global|project|all]` — list schedules
+- `cron-edit <id> [global|project] [flags...]` — edit fields in place
+- `cron-modify enable|disable|remove <id> [global|project]` — enable/disable/remove
+- `cron-match "<expr>" <now-epoch>` — validate a cron expression (parse-only check when `now-epoch` is `0`)
 
-You do NOT manipulate `~/.claude/schedules.json` or `.claude/schedules.json` directly. Use the scripts.
+You do NOT manipulate `~/.claude/schedules.json` or `.claude/schedules.json` directly. Use the commands.
 
 ## Schedule Schema (reference)
 
@@ -86,7 +87,7 @@ Gather inputs via a sequence of AskUserQuestion calls. Skip steps the user has a
 
 2. **If cron**: ask for the cron expression as a free-text answer. Validate it before proceeding by running:
    ```bash
-   python3 "$CLAUDE_PLUGIN_ROOT/scripts/cron-match.py" "<expr>" 0 >/dev/null && echo OK || echo INVALID
+   cron-match "<expr>" 0 >/dev/null && echo OK || echo INVALID
    ```
    If invalid, show the error and re-ask. If the expression triggers the OR rule (both DOM and DOW restricted), flag it explicitly: "Heads-up: this fires on DAY-OF-MONTH X **or** DAY-OF-WEEK Y, not both — that's standard cron behavior. OK?"
 
@@ -112,7 +113,7 @@ Gather inputs via a sequence of AskUserQuestion calls. Skip steps the user has a
 
 9. **Create it** — Call the helper script with the assembled arguments:
    ```bash
-   bash "$CLAUDE_PLUGIN_ROOT/scripts/schedule-add.sh" \
+   cron-add \
      [<message> | --command "<cmd>"] \
      [--cron "<expr>" | --time HH:MM --days <days>] \
      --catchup <true|false> \
@@ -125,14 +126,14 @@ Gather inputs via a sequence of AskUserQuestion calls. Skip steps the user has a
 Run the list script and present results. Ask scope if not obvious from context:
 
 ```bash
-bash "$CLAUDE_PLUGIN_ROOT/scripts/schedule-list.sh" all
+cron-list all
 ```
 
 (or `global` / `project` if the user specified). The script's output is already formatted; pass it through as a code block.
 
 ## Workflow: EDIT
 
-1. **List first** — Run `schedule-list.sh all` so the user can see what exists.
+1. **List first** — Run `cron-list all` so the user can see what exists.
 2. **Pick a schedule** — AUQ with each schedule id as an option (with the message/command in `description`), plus `cancel`.
 3. **Show current state** — Display the picked entry's full JSON so the user can see all fields.
 4. **Pick fields to change** — AUQ `header: "Field"`, question: "Which field do you want to change?". Options: `cron`, `time + days`, `message`, `command`, `catchup`, `done`. Allow multi-select if the user wants to change several at once; otherwise loop one-at-a-time until they pick `done`.
@@ -140,7 +141,7 @@ bash "$CLAUDE_PLUGIN_ROOT/scripts/schedule-list.sh" all
 6. **Confirm** — Show the resolved diff (old → new) and ask `apply` / `cancel`.
 7. **Execute**:
    ```bash
-   bash "$CLAUDE_PLUGIN_ROOT/scripts/schedule-edit.sh" <id> <global|project> \
+   cron-edit <id> <global|project> \
      [--cron "EXPR" | --time HH:MM --days DAYS] \
      [--message "TEXT" | --command "CMD"] \
      [--catchup true|false]
@@ -153,13 +154,13 @@ Print a static reference. Do not call any helper script. Output the subcommand g
 
 ## Workflow: ENABLE / DISABLE / REMOVE
 
-1. **List first** — Always run `schedule-list.sh all` so the user can see what exists.
+1. **List first** — Always run `cron-list all` so the user can see what exists.
 2. **Pick a schedule** — Use AskUserQuestion with each schedule id as an option, plus `cancel`. Include the schedule's message/command in the option `description` so the user can identify it.
 3. **Determine scope** — From the list output, you know whether the picked id is global or project. If ambiguous (same id in both), ask.
 4. **For `remove`**: confirm destructively first. AUQ with `header: "Confirm delete"`, options `delete` / `cancel`.
 5. **Execute**:
    ```bash
-   bash "$CLAUDE_PLUGIN_ROOT/scripts/schedule-modify.sh" <enable|disable|remove> <id> <global|project>
+   cron-modify <enable|disable|remove> <id> <global|project>
    ```
    Show the result.
 
@@ -186,13 +187,13 @@ The user can pass arguments to skip prompts. The first positional argument is th
 
 | Subcommand | Helper script invocation |
 |---|---|
-| `add ARGS...` | `bash "$CLAUDE_PLUGIN_ROOT/scripts/schedule-add.sh" ARGS...` |
-| `list [SCOPE]` | `bash "$CLAUDE_PLUGIN_ROOT/scripts/schedule-list.sh" ${SCOPE:-all}` |
-| `edit ID [SCOPE] FLAGS...` | `bash "$CLAUDE_PLUGIN_ROOT/scripts/schedule-edit.sh" ID ${SCOPE:-project} FLAGS...` |
+| `add ARGS...` | `cron-add ARGS...` |
+| `list [SCOPE]` | `cron-list ${SCOPE:-all}` |
+| `edit ID [SCOPE] FLAGS...` | `cron-edit ID ${SCOPE:-project} FLAGS...` |
 | `help` | (no helper script — print static reference inline) |
-| `enable ID [SCOPE]` | `bash "$CLAUDE_PLUGIN_ROOT/scripts/schedule-modify.sh" enable ID ${SCOPE:-project}` |
-| `disable ID [SCOPE]` | `bash "$CLAUDE_PLUGIN_ROOT/scripts/schedule-modify.sh" disable ID ${SCOPE:-project}` |
-| `remove ID [SCOPE]` | `bash "$CLAUDE_PLUGIN_ROOT/scripts/schedule-modify.sh" remove ID ${SCOPE:-project}` |
+| `enable ID [SCOPE]` | `cron-modify enable ID ${SCOPE:-project}` |
+| `disable ID [SCOPE]` | `cron-modify disable ID ${SCOPE:-project}` |
+| `remove ID [SCOPE]` | `cron-modify remove ID ${SCOPE:-project}` |
 
 ### Examples
 
@@ -216,6 +217,6 @@ If the user provides only `/cron` with no arguments, run the fully interactive f
 - Notifications appear in the next user prompt's context as a `systemMessage`.
 - The hook only evaluates schedules on `UserPromptSubmit`. If the user is away from the keyboard for a tick, anacron-style catch-up will still fire it on their next prompt (only the most recent tick, not every missed one).
 - Always show the full final command before running it, so the user can spot mistakes.
-- After any modification, optionally run `schedule-list.sh` again to confirm the new state — but only if the user wants to verify.
+- After any modification, optionally run `cron-list` again to confirm the new state — but only if the user wants to verify.
 - If the user asks to "delete" a schedule, treat it as `remove`.
 - If the user asks to "pause" or "stop" a schedule without deleting, treat it as `disable`.
