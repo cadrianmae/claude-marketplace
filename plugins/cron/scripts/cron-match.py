@@ -87,36 +87,108 @@ def parse_cron(expr):
     return minute, hour, dom, month, dow, dom_restricted, dow_restricted
 
 
-def matches(dt, parsed):
-    minute, hour, dom, month, dow, dom_r, dow_r = parsed
-    if dt.minute not in minute:
-        return False
-    if dt.hour not in hour:
-        return False
-    if dt.month not in month:
-        return False
+def _cron_dow(dt):
     # Python's weekday(): Mon=0..Sun=6 ; cron: Sun=0..Sat=6
-    cron_dow = (dt.weekday() + 1) % 7
+    return (dt.weekday() + 1) % 7
+
+
+def _day_matches(dt, parsed):
+    _, _, dom, _, dow, dom_r, dow_r = parsed
     dom_match = dt.day in dom
-    dow_match = cron_dow in dow
+    dow_match = _cron_dow(dt) in dow
     if dom_r and dow_r:
         # crontab(5): if both restricted, match is OR
         return dom_match or dow_match
     return dom_match and dow_match
 
 
-def prev_tick(expr, now_epoch, lookback_minutes=366 * 24 * 60):
+def matches(dt, parsed):
+    minute, hour, _, month, _, _, _ = parsed
+    if dt.minute not in minute:
+        return False
+    if dt.hour not in hour:
+        return False
+    if dt.month not in month:
+        return False
+    return _day_matches(dt, parsed)
+
+
+def _prev_allowed(values, current):
+    """Return the largest v in values with v <= current, or None."""
+    for v in reversed(values):
+        if v <= current:
+            return v
+    return None
+
+
+def _days_in_month(year, month):
+    if month == 12:
+        next_month = datetime(year + 1, 1, 1)
+    else:
+        next_month = datetime(year, month + 1, 1)
+    return (next_month - timedelta(days=1)).day
+
+
+def prev_tick(expr, now_epoch, lookback_minutes=4 * 366 * 24 * 60):
     """Return epoch seconds of most recent matching minute <= now_epoch.
 
-    Searches backwards minute by minute up to lookback_minutes.
-    Returns None if no match found in window.
+    Searches backwards using field-aware jumps rather than minute-by-minute,
+    so sparse expressions (e.g. yearly) resolve in microseconds instead of
+    iterating up to half a million minutes. Returns None if no match found
+    within lookback_minutes.
     """
     parsed = parse_cron(expr)
+    minute_set, hour_set, _, month_set, _, _, _ = parsed
+    allowed_minutes = sorted(minute_set)
+    allowed_hours = sorted(hour_set)
+    allowed_months = sorted(month_set)
+
     dt = datetime.fromtimestamp(now_epoch).replace(second=0, microsecond=0)
-    for _ in range(lookback_minutes + 1):
-        if matches(dt, parsed):
-            return int(dt.timestamp())
-        dt -= timedelta(minutes=1)
+    min_dt = dt - timedelta(minutes=lookback_minutes)
+
+    while dt >= min_dt:
+        # Month mismatch: jump to the last minute of the previous allowed month.
+        if dt.month not in month_set:
+            prev_month = _prev_allowed(allowed_months, dt.month - 1)
+            year = dt.year
+            if prev_month is None:
+                prev_month = allowed_months[-1]
+                year -= 1
+            dt = datetime(
+                year, prev_month, _days_in_month(year, prev_month), 23, 59
+            )
+            continue
+
+        # Day mismatch (DOM/DOW OR-rule handled in _day_matches): jump to
+        # the last minute of the previous day.
+        if not _day_matches(dt, parsed):
+            dt = datetime(dt.year, dt.month, dt.day, 0, 0) - timedelta(minutes=1)
+            continue
+
+        # Hour mismatch: jump to the previous allowed hour within this day,
+        # or roll into the previous day.
+        if dt.hour not in hour_set:
+            prev_hour = _prev_allowed(allowed_hours, dt.hour - 1)
+            if prev_hour is not None:
+                dt = dt.replace(hour=prev_hour, minute=59)
+            else:
+                dt = datetime(dt.year, dt.month, dt.day, 0, 0) - timedelta(
+                    minutes=1
+                )
+            continue
+
+        # Minute mismatch: jump to the previous allowed minute within the
+        # hour, or roll into the previous hour.
+        if dt.minute not in minute_set:
+            prev_minute = _prev_allowed(allowed_minutes, dt.minute - 1)
+            if prev_minute is not None:
+                dt = dt.replace(minute=prev_minute)
+            else:
+                dt = dt.replace(minute=0) - timedelta(minutes=1)
+            continue
+
+        return int(dt.timestamp())
+
     return None
 
 

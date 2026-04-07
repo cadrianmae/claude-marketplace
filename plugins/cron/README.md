@@ -180,14 +180,14 @@ Run `/cron` and pick the action. The skill lists existing schedules so you can p
 
 The plugin uses a `UserPromptSubmit` hook that runs every time you send a message to Claude:
 
-1. Checks current time and day
-2. Matches against your schedules
-3. Shows notifications for matches (if not shown in last 60 seconds)
-4. Tracks state to prevent duplicates
+1. For each schedule, computes the most recent matching minute (the "tick") using the cron expression
+2. Compares it against the last tick that was already fired (stored in the state file)
+3. Fires the notification if this tick is newer — including ticks missed while you were away (anacron-style catch-up), unless `catchup` is set to `false`
+4. Records the fired tick so the same tick is never shown twice
 
-**Passive notifications:** Reminders appear on your next prompt after the scheduled time, not immediately.
+**Passive notifications:** Reminders appear on your next prompt after the scheduled tick, not immediately.
 
-**Deduplication:** Notifications shown once per schedule within 60-second window to prevent spam.
+**Deduplication:** Per-tick, not time-windowed. A given matching minute fires exactly once; subsequent prompts in the same minute (or any time before the next matching tick) produce nothing.
 
 ## State Management
 

@@ -23,11 +23,16 @@ GLOBAL_STATE="$HOME/.claude/.schedule-state.json"
 PROJECT_STATE=".claude/.schedule-state.json"
 CRON_MATCH="$(dirname "$0")/../scripts/cron-match.py"
 
-# Dependency checks
+# Dependency checks. If jq itself is missing we can't use it to emit the
+# error, so fall back to a literal JSON string via printf.
 for dep in jq python3; do
   if ! command -v "$dep" &>/dev/null; then
-    jq -n --arg ctx "[ERROR] cron plugin: $dep is required but not installed" \
-      '{hookSpecificOutput:{hookEventName:"UserPromptSubmit",additionalContext:$ctx}}'
+    if [[ "$dep" == "jq" ]]; then
+      printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"UserPromptSubmit","additionalContext":"[ERROR] cron plugin: jq is required but not installed"}}'
+    else
+      jq -n --arg ctx "[ERROR] cron plugin: $dep is required but not installed" \
+        '{hookSpecificOutput:{hookEventName:"UserPromptSubmit",additionalContext:$ctx}}'
+    fi
     exit 2
   fi
 done
@@ -107,10 +112,16 @@ resolve_text() {
   local cmd msg
   cmd=$(echo "$schedule" | jq -r '.command // empty')
   if [[ -n "$cmd" ]]; then
-    local out err rc=0
-    out=$(bash -c "$cmd" 2>/tmp/.cron-cmd-err) || rc=$?
-    err=$(cat /tmp/.cron-cmd-err 2>/dev/null || true)
-    rm -f /tmp/.cron-cmd-err
+    # Use a per-invocation temp file so concurrent hook runs don't clobber
+    # each other's stderr capture.
+    local out err rc=0 err_file
+    err_file=$(mktemp) || {
+      echo "[cron error] failed to create temporary file for command stderr"
+      return
+    }
+    out=$(bash -c "$cmd" 2>"$err_file") || rc=$?
+    err=$(cat "$err_file" 2>/dev/null || true)
+    rm -f "$err_file"
     if [[ $rc -ne 0 ]]; then
       echo "[cron error] command exited $rc: ${err:-no stderr}"
     else

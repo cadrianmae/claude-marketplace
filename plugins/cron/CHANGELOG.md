@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.1] - 2026-04-07
+### Fixed
+- **Hook jq-bootstrap error.** If `jq` itself was missing, the dependency check still tried to emit its error message via `jq -n`, which obviously failed and hid the real cause. The `jq`-missing branch now prints a literal JSON string via `printf`. (Copilot review)
+- **`/tmp/.cron-cmd-err` race condition.** `resolve_text` captured command stderr to a fixed shared path, so concurrent hook invocations (multiple Claude sessions) could clobber each other. Now uses a per-invocation `mktemp` file. (Copilot review)
+- **`prev_tick()` performance.** Replaced minute-by-minute walk with field-aware jumping: on a mismatch the algorithm skips directly to the previous allowed month/day/hour/minute boundary. Sparse expressions (e.g. yearly) now resolve in microseconds instead of iterating hundreds of thousands of minutes per prompt. (Copilot review)
+- **Leap-year lookback.** Bumped `prev_tick` lookback from 1 year to 4 years so expressions like `30 4 29 2 *` (Feb 29) resolve in non-leap years. The new jumping algorithm makes the larger bound effectively free.
+- **Stale README dedup docs.** "How It Works" and "Deduplication" sections still described the old 60-second dedup window; rewritten to reflect the per-tick state-file model with anacron-style catch-up. (Copilot review)
+
 ## [2.2.0] - 2026-04-07
 ### Added
 - New `bin/` directory with thin wrapper scripts (`cron-add`, `cron-list`, `cron-edit`, `cron-modify`, `cron-match`). Claude Code puts each plugin's `bin/` on `PATH` automatically, so the skill can now invoke helpers as bare commands with no path construction.
