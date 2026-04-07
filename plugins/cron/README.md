@@ -1,4 +1,4 @@
-# Schedule Notify Plugin
+# Cron Plugin
 
 Hook-based scheduled notification system for recurring reminders in Claude Code.
 
@@ -7,22 +7,64 @@ Hook-based scheduled notification system for recurring reminders in Claude Code.
 Provides passive, time-based notifications that appear in your Claude Code conversation when scheduled times arrive.
 
 **Key Features:**
-- Global schedules apply everywhere
-- Per-project schedules with configurable modes (add/replace)
-- 60-second deduplication to prevent spam
-- No external dependencies (cron/systemd)
-- Simple CLI skills for management
+- Full **crontab(5) syntax** for schedules (5 fields, ranges, lists, steps, named months/days)
+- **Dynamic notification text** via shell commands (`date`, `git`, `curl`, etc.)
+- **Anacron-style catch-up** by default — missed ticks fire on the next prompt; toggleable per schedule
+- Per-tick deduplication — each matching tick fires exactly once
+- Global and per-project schedules with add/replace modes
+- Legacy `time`+`days` form still supported
+
+## Cron Syntax
+
+Standard 5-field crontab(5):
+
+```
+MIN  HOUR  DOM  MONTH  DOW
+0-59 0-23  1-31 1-12   0-7  (0 or 7 = Sunday)
+```
+
+Operators: `*`, `a-b`, `a,b`, `*/n`, `a-b/n`. Named months (`jan`-`dec`) and days (`sun`-`sat`).
+
+> **OR rule:** if both day-of-month and day-of-week are restricted (neither is `*`), the match is **OR** — same as `crond`. E.g. `0 9 1,15 * 5` fires on the 1st, the 15th, **and** every Friday at 9:00.
+
+### Quick examples
+
+```bash
+# Hourly chime with live timestamp
+/cron:add --command "date '+Chime: %H:%M %A'" --cron "0 * * * *" global
+
+# Every 15 minutes during work hours, weekdays
+/cron:add "Stretch break" --cron "*/15 9-17 * * 1-5" global
+
+# Standup at 9:00 weekdays, no catchup (only fires if active in that minute)
+/cron:add "Standup time!" --cron "0 9 * * 1-5" --catchup false global
+```
+
+### catchup
+
+| Value | Behavior |
+|---|---|
+| `true` (default) | Anacron-style. If a tick was missed (no prompt during that minute), the next prompt still fires it once. |
+| `false` | Strict cron. Only fires if the matching tick is in the current wall-clock minute. Missed ticks are lost. |
+
+### message vs command
+
+- `message` — static text (positional argument).
+- `--command` — shell command run via `bash -c`; stdout becomes the notification text. Lets the message change every time it fires.
+
+Mutually exclusive. Commands run with your shell privileges; treat `~/.claude/schedules.json` as trusted (same as `~/.bashrc`).
 
 ## Installation
 
 This plugin is available in the cadrianmae-claude-marketplace. Enable it through your Claude Code plugin settings.
 
 **Dependencies:**
-- `jq` - JSON processor (install: `sudo dnf install jq` on Fedora)
+- `jq` - JSON processor (`sudo dnf install jq` on Fedora)
+- `python3` - cron expression evaluator (preinstalled on Fedora)
 
 **Verify installation:**
 ```bash
-/schedule:list
+/cron:list
 ```
 
 ## Configuration
@@ -33,7 +75,7 @@ Global schedules apply to all projects and directories. Managed user-wide.
 
 **Create global schedule:**
 ```bash
-/schedule:add "Morning standup" --time 09:00 --days weekdays global
+/cron:add "Morning standup" --time 09:00 --days weekdays global
 ```
 
 **File location:** `~/.claude/schedules.json`
@@ -57,7 +99,7 @@ Project schedules apply only within specific projects. Useful for project-specif
 
 **Create project schedule:**
 ```bash
-/schedule:add "Deploy window" --time 16:00 --days Mon,Wed,Fri
+/cron:add "Deploy window" --time 16:00 --days Mon,Wed,Fri
 ```
 
 **File location:** `.claude/schedules.json` (in project root)
@@ -95,26 +137,26 @@ Project schedules apply only within specific projects. Useful for project-specif
 
 **Interactive mode:**
 ```bash
-/schedule:add
+/cron:add
 ```
 Claude prompts for message, time, days, and scope.
 
 **All-in-one mode:**
 ```bash
 # Weekday standup
-/schedule:add "Standup time!" --time 09:00 --days weekdays
+/cron:add "Standup time!" --time 09:00 --days weekdays
 
 # Global afternoon break
-/schedule:add "Take a break" --time 15:00 --days weekdays global
+/cron:add "Take a break" --time 15:00 --days weekdays global
 
 # Weekend reminder
-/schedule:add "Weekend planning" --time 10:00 --days weekends
+/cron:add "Weekend planning" --time 10:00 --days weekends
 
 # Specific days
-/schedule:add "Deploy day" --time 16:00 --days Mon,Wed,Fri
+/cron:add "Deploy day" --time 16:00 --days Mon,Wed,Fri
 
 # Daily reminder
-/schedule:add "End of day review" --time 17:00 --days daily
+/cron:add "End of day review" --time 17:00 --days daily
 ```
 
 **Special day values:**
@@ -125,29 +167,29 @@ Claude prompts for message, time, days, and scope.
 ### List Schedules
 
 ```bash
-/schedule:list              # Show all (global + project)
-/schedule:list global       # Global only
-/schedule:list project      # Project only
+/cron:list              # Show all (global + project)
+/cron:list global       # Global only
+/cron:list project      # Project only
 ```
 
 ### Disable/Enable Schedule
 
 ```bash
 # Disable (keeps configuration)
-/schedule:disable morning-standup
-/schedule:disable afternoon-break global
+/cron:disable morning-standup
+/cron:disable afternoon-break global
 
 # Re-enable
-/schedule:enable morning-standup
-/schedule:enable afternoon-break global
+/cron:enable morning-standup
+/cron:enable afternoon-break global
 ```
 
 ### Remove Schedule
 
 ```bash
 # Remove permanently (cannot be undone)
-/schedule:remove deploy-window
-/schedule:remove morning-standup global
+/cron:remove deploy-window
+/cron:remove morning-standup global
 ```
 
 ## How It Works
@@ -176,17 +218,17 @@ Auto-created and managed by hook. Can be manually reset by deleting them.
 
 ### Daily Standup
 ```bash
-/schedule:add "Daily standup in 5 minutes" --time 08:55 --days weekdays global
+/cron:add "Daily standup in 5 minutes" --time 08:55 --days weekdays global
 ```
 
 ### Lunch Break
 ```bash
-/schedule:add "Time for lunch break!" --time 12:30 --days daily global
+/cron:add "Time for lunch break!" --time 12:30 --days daily global
 ```
 
 ### Code Review Friday
 ```bash
-/schedule:add "Friday code review session" --time 14:00 --days Fri
+/cron:add "Friday code review session" --time 14:00 --days Fri
 ```
 
 ### Pomodoro (Project-Specific)
@@ -271,11 +313,11 @@ Submit a prompt - notifications should appear immediately.
 
 ## Skills
 
-- `/schedule:add` - Add new schedule
-- `/schedule:list` - View schedules
-- `/schedule:disable` - Disable schedule
-- `/schedule:enable` - Enable schedule
-- `/schedule:remove` - Remove schedule
+- `/cron:add` - Add new schedule
+- `/cron:list` - View schedules
+- `/cron:disable` - Disable schedule
+- `/cron:enable` - Enable schedule
+- `/cron:remove` - Remove schedule
 
 ## License
 

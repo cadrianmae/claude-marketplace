@@ -1,5 +1,5 @@
 ---
-name: schedule:disable
+name: cron:disable
 description: This skill should be used when the user asks to "disable a schedule", "turn off reminder", "pause notification", "stop schedule temporarily", or wants to temporarily deactivate a scheduled notification without deleting it.
 version: 1.0.0
 user-invocable: true
@@ -42,25 +42,25 @@ The helper script:
 2. Sets `"enabled": false` in the JSON configuration
 3. Confirms the schedule was disabled
 
-**Important:** The schedule remains in the configuration file. It can be re-enabled later with `/schedule:enable`.
+**Important:** The schedule remains in the configuration file. It can be re-enabled later with `/cron:enable`.
 
 ## Scope Selection
 
 **Project scope (default):**
 ```bash
-/schedule:disable morning-standup
+/cron:disable morning-standup
 ```
 Searches in `.claude/schedules.json`
 
 **Global scope:**
 ```bash
-/schedule:disable morning-standup global
+/cron:disable morning-standup global
 ```
 Searches in `~/.claude/schedules.json`
 
 ## Finding Schedule IDs
 
-Use `/schedule:list` to see all schedule IDs:
+Use `/cron:list` to see all schedule IDs:
 
 ```
 [GLOBAL] [ENABLED] morning-standup - 09:00 on Mon, Tue, Wed, Thu, Fri
@@ -96,19 +96,19 @@ The helper script at `$CLAUDE_PLUGIN_ROOT/scripts/schedule-modify.sh`:
 
 **Disable project schedule:**
 ```
-User: /schedule:disable deploy-window
+User: /cron:disable deploy-window
 Claude: [OK] Disabled schedule: deploy-window (scope: project)
 ```
 
 **Disable global schedule:**
 ```
-User: /schedule:disable afternoon-break global
+User: /cron:disable afternoon-break global
 Claude: [OK] Disabled schedule: afternoon-break (scope: global)
 ```
 
 ## Tips
 
 - Use disable (not remove) if you might want to re-enable later
-- Disabled schedules still appear in `/schedule:list` with `[DISABLED]` status
-- Re-enable with `/schedule:enable <id>`
-- To permanently delete, use `/schedule:remove` instead
+- Disabled schedules still appear in `/cron:list` with `[DISABLED]` status
+- Re-enable with `/cron:enable <id>`
+- To permanently delete, use `/cron:remove` instead

@@ -9,19 +9,29 @@ format_schedule() {
   local schedule="$1"
   local scope_label="$2"
 
-  local id=$(echo "$schedule" | jq -r '.id')
-  local time=$(echo "$schedule" | jq -r '.time')
-  local message=$(echo "$schedule" | jq -r '.message')
-  local days=$(echo "$schedule" | jq -r '.days | join(", ")')
-  local enabled=$(echo "$schedule" | jq -r '.enabled')
+  local id cron time days message command enabled catchup
+  id=$(echo "$schedule" | jq -r '.id')
+  cron=$(echo "$schedule" | jq -r '.cron // empty')
+  time=$(echo "$schedule" | jq -r '.time // empty')
+  days=$(echo "$schedule" | jq -r '(.days // []) | join(", ")')
+  message=$(echo "$schedule" | jq -r '.message // empty')
+  command=$(echo "$schedule" | jq -r '.command // empty')
+  enabled=$(echo "$schedule" | jq -r '.enabled')
+  catchup=$(echo "$schedule" | jq -r '.catchup // true')
 
   local status="[ENABLED]"
-  if [[ "$enabled" != "true" ]]; then
-    status="[DISABLED]"
-  fi
+  [[ "$enabled" != "true" ]] && status="[DISABLED]"
 
-  echo "[$scope_label] $status $id - $time on $days"
-  echo "  Message: $message"
+  if [[ -n "$cron" ]]; then
+    echo "[$scope_label] $status $id - cron: $cron (catchup: $catchup)"
+  else
+    echo "[$scope_label] $status $id - $time on $days (catchup: $catchup)"
+  fi
+  if [[ -n "$command" ]]; then
+    echo "  Command: $command"
+  else
+    echo "  Message: $message"
+  fi
 }
 
 list_global() {

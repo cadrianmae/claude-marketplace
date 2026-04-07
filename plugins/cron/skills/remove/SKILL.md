@@ -1,5 +1,5 @@
 ---
-name: schedule:remove
+name: cron:remove
 description: This skill should be used when the user asks to "remove a schedule", "delete reminder", "delete notification", "remove schedule permanently", "unschedule task", or wants to permanently delete a scheduled notification.
 version: 1.0.0
 user-invocable: true
@@ -46,12 +46,12 @@ The helper script:
 
 ## Disable vs Remove
 
-**Use `/schedule:disable` if:**
+**Use `/cron:disable` if:**
 - You might want to re-enable later
 - You want to keep the configuration
 - You're temporarily stopping notifications
 
-**Use `/schedule:remove` if:**
+**Use `/cron:remove` if:**
 - You no longer need the schedule
 - You're cleaning up old reminders
 - You want to permanently delete
@@ -60,19 +60,19 @@ The helper script:
 
 **Project scope (default):**
 ```bash
-/schedule:remove morning-standup
+/cron:remove morning-standup
 ```
 Removes from `.claude/schedules.json`
 
 **Global scope:**
 ```bash
-/schedule:remove morning-standup global
+/cron:remove morning-standup global
 ```
 Removes from `~/.claude/schedules.json`
 
 ## Finding Schedule IDs
 
-Use `/schedule:list` to see all schedule IDs:
+Use `/cron:list` to see all schedule IDs:
 
 ```
 [GLOBAL] [ENABLED] morning-standup - 09:00 on Mon, Tue, Wed, Thu, Fri
@@ -108,20 +108,20 @@ The helper script at `$CLAUDE_PLUGIN_ROOT/scripts/schedule-modify.sh`:
 
 **Remove project schedule:**
 ```
-User: /schedule:remove deploy-window
+User: /cron:remove deploy-window
 Claude: [OK] Removed schedule: deploy-window (scope: project)
 ```
 
 **Remove global schedule:**
 ```
-User: /schedule:remove afternoon-break global
+User: /cron:remove afternoon-break global
 Claude: [OK] Removed schedule: afternoon-break (scope: global)
 ```
 
 ## Tips
 
-- Use `/schedule:list` to verify which schedules exist before removing
-- Consider `/schedule:disable` for temporary deactivation instead
-- Removed schedules must be manually recreated with `/schedule:add`
+- Use `/cron:list` to verify which schedules exist before removing
+- Consider `/cron:disable` for temporary deactivation instead
+- Removed schedules must be manually recreated with `/cron:add`
 - Double-check the scope (global vs project) before removing
 - No confirmation prompt - removal is immediate

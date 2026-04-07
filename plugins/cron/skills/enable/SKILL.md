@@ -1,5 +1,5 @@
 ---
-name: schedule:enable
+name: cron:enable
 description: This skill should be used when the user asks to "enable a schedule", "turn on reminder", "activate notification", "resume schedule", "re-enable notification", or wants to reactivate a previously disabled scheduled notification.
 version: 1.0.0
 user-invocable: true
@@ -42,25 +42,25 @@ The helper script:
 2. Sets `"enabled": true` in the JSON configuration
 3. Confirms the schedule was enabled
 
-**Important:** The schedule must already exist in configuration. To add a new schedule, use `/schedule:add`.
+**Important:** The schedule must already exist in configuration. To add a new schedule, use `/cron:add`.
 
 ## Scope Selection
 
 **Project scope (default):**
 ```bash
-/schedule:enable morning-standup
+/cron:enable morning-standup
 ```
 Searches in `.claude/schedules.json`
 
 **Global scope:**
 ```bash
-/schedule:enable morning-standup global
+/cron:enable morning-standup global
 ```
 Searches in `~/.claude/schedules.json`
 
 ## Finding Disabled Schedules
 
-Use `/schedule:list` to see all schedules including disabled ones:
+Use `/cron:list` to see all schedules including disabled ones:
 
 ```
 [GLOBAL] [DISABLED] afternoon-break - 15:00 on Mon, Tue, Wed, Thu, Fri
@@ -96,19 +96,19 @@ The helper script at `$CLAUDE_PLUGIN_ROOT/scripts/schedule-modify.sh`:
 
 **Enable project schedule:**
 ```
-User: /schedule:enable deploy-window
+User: /cron:enable deploy-window
 Claude: [OK] Enabled schedule: deploy-window (scope: project)
 ```
 
 **Enable global schedule:**
 ```
-User: /schedule:enable afternoon-break global
+User: /cron:enable afternoon-break global
 Claude: [OK] Enabled schedule: afternoon-break (scope: global)
 ```
 
 ## Tips
 
-- Use `/schedule:list` to find disabled schedules
+- Use `/cron:list` to find disabled schedules
 - Enabled schedules start triggering immediately if current time matches
 - No need to recreate the schedule - all configuration is preserved
-- Pair with `/schedule:disable` for temporary on/off control
+- Pair with `/cron:disable` for temporary on/off control

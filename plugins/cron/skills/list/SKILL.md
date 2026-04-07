@@ -1,5 +1,5 @@
 ---
-name: schedule:list
+name: cron:list
 description: This skill should be used when the user asks to "list schedules", "show reminders", "view notifications", "what schedules exist", "display my reminders", or wants to see configured scheduled notifications.
 version: 1.0.0
 user-invocable: true
@@ -104,19 +104,19 @@ The helper script at `$CLAUDE_PLUGIN_ROOT/scripts/schedule-list.sh`:
 
 **Show all schedules:**
 ```
-User: /schedule:list
+User: /cron:list
 Claude: [Displays global and project schedules]
 ```
 
 **Show only global:**
 ```
-User: /schedule:list global
+User: /cron:list global
 Claude: [Displays only global schedules]
 ```
 
 **Show only project:**
 ```
-User: /schedule:list project
+User: /cron:list project
 Claude: [Displays only project schedules]
 ```
 
