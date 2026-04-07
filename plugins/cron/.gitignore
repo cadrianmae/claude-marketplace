@@ -1,0 +1,5 @@
+# Temporary files
+*.tmp
+
+# State files
+.schedule-state.json

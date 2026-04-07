@@ -43,8 +43,8 @@
     {
       "name": "track",
       "source": "./plugins/track",
-      "description": "Automatic reference and prompt tracking via hooks for academic work. Tracks WebSearch/WebFetch/Read/Grep sources and major prompts to claude_usage/ directory. Hooks-based automation (PostToolUse, SessionEnd). Export to bibliography, methodology, BibTeX, timeline. Configurable verbosity, [User]/[Claude] attribution.",
-      "version": "2.0.4",
+      "description": "Automatic reference and prompt tracking via hooks for academic work. Prompts tracked via Stop hook with LLM summaries, sources tracked via PostToolUse hook with ASCII format. Export to bibliography, methodology, BibTeX, timeline.",
+      "version": "2.6.2",
       "author": {
         "name": "Mae",
         "email": "45900436+cadrianmae@users.noreply.github.com"
@@ -227,7 +227,7 @@
       "name": "nvr",
       "source": "./plugins/nvr",
       "description": "Neovim Remote integration - automatically open files in the correct neovim instance based on working directory. Auto-discovers sockets across multiple projects with natural language interface.",
-      "version": "1.0.0",
+      "version": "1.0.2",
       "author": {
         "name": "Mae",
         "email": "45900436+cadrianmae@users.noreply.github.com"
@@ -242,6 +242,27 @@
         "integration",
         "socket",
         "automation"
+      ]
+    },
+    {
+      "name": "cron",
+      "source": "./plugins/cron",
+      "description": "Hook-based scheduled notifications using crontab(5) syntax. Anacron-style catch-up with per-tick deduplication. Global and per-project schedules with add/replace modes. Single unified interactive /cron command. Requires python3 and jq.",
+      "version": "2.2.1",
+      "author": {
+        "name": "Mae",
+        "email": "45900436+cadrianmae@users.noreply.github.com"
+      },
+      "license": "MIT",
+      "keywords": [
+        "scheduling",
+        "notifications",
+        "reminders",
+        "hooks",
+        "automation",
+        "time-based",
+        "recurring",
+        "tasks"
       ]
     }
   ]

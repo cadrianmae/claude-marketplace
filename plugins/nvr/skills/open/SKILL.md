@@ -27,10 +27,10 @@ To handle file opening requests, parse the user's intent to extract the file pat
 
 ## Current Workspace (Auto-Captured)
 
-**Working Directory**: !```pwd```
-**Discovered Socket**: !```$CLAUDE_PLUGIN_ROOT/scripts/nvr-discover 2>/dev/null || echo "None"```
-**Socket Valid**: !```[[ -S "$($CLAUDE_PLUGIN_ROOT/scripts/nvr-discover 2>/dev/null)" ]] && echo "✓" || echo "✗"```
-**Active Instances**: !```nvr --serverlist 2>/dev/null | wc -l``` neovim process(es)
+**Working Directory**: !`pwd`
+**Discovered Socket**: !`nvr-discover 2>/dev/null || echo "None"`
+**Socket Valid**: !`nvr-discover 2>/dev/null | xargs -I{} test -S {} && echo "✓" || echo "✗"`
+**Active Instances**: !`nvr --serverlist 2>/dev/null | wc -l` neovim process(es)
 
 ## How to Use
 
@@ -39,7 +39,7 @@ To handle file opening requests, parse the user's intent to extract the file pat
 When the user requests opening a file, invoke the implementation script:
 
 ```bash
-bash $CLAUDE_PLUGIN_ROOT/skills/open/scripts/open.sh <file> [line]
+nvr-open <file> [line]
 ```
 
 **Arguments:**
@@ -50,17 +50,17 @@ bash $CLAUDE_PLUGIN_ROOT/skills/open/scripts/open.sh <file> [line]
 
 Open file at specific line:
 ```bash
-bash $CLAUDE_PLUGIN_ROOT/skills/open/scripts/open.sh database.py 45
+nvr-open database.py 45
 ```
 
 Open file at beginning:
 ```bash
-bash $CLAUDE_PLUGIN_ROOT/skills/open/scripts/open.sh config.yaml
+nvr-open config.yaml
 ```
 
 Open with absolute path:
 ```bash
-bash $CLAUDE_PLUGIN_ROOT/skills/open/scripts/open.sh /home/user/project/src/main.py 10
+nvr-open /home/user/project/src/main.py 10
 ```
 
 ### Natural Language Interpretation
@@ -71,13 +71,13 @@ To extract file and line from user requests:
 **Implementation steps**:
 1. Search database.py for TODO comments
 2. Identify line number (e.g., line 67)
-3. Invoke: `bash $CLAUDE_PLUGIN_ROOT/skills/open/scripts/open.sh database.py 67`
+3. Invoke: `nvr-open database.py 67`
 
 **User**: "Show me where we defined the User class"
 **Implementation steps**:
 1. Search codebase for "class User"
 2. Find file and line (e.g., models.py:23)
-3. Invoke: `bash $CLAUDE_PLUGIN_ROOT/skills/open/scripts/open.sh models.py 23`
+3. Invoke: `nvr-open models.py 23`
 
 ### Success Response
 

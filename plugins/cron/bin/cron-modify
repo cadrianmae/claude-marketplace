@@ -1,0 +1,3 @@
+#!/bin/bash
+# Wrapper for cron-modify.sh (enable/disable/remove). See cron-add for rationale.
+exec "$(dirname "$(readlink -f "$0")")/../scripts/cron-modify.sh" "$@"

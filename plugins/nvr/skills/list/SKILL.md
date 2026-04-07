@@ -24,15 +24,15 @@ Use this skill when the user wants to see all neovim instances across all projec
 
 ## Active Instances (Auto-Captured)
 
-**Total Instances**: !```nvr --serverlist 2>/dev/null | wc -l```
-**Current Directory**: !```pwd```
+**Total Instances**: !`nvr --serverlist 2>/dev/null | wc -l`
+**Current Directory**: !`pwd`
 
 ## How to Use
 
 Invoke the list script:
 
 ```bash
-bash $CLAUDE_PLUGIN_ROOT/skills/list/scripts/list.sh
+nvr-list
 ```
 
 No arguments needed - the script discovers and lists all active neovim instances.

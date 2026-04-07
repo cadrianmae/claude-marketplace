@@ -1,0 +1,10 @@
+{
+  "name": "cron",
+  "version": "2.2.1",
+  "description": "Hook-based scheduled notifications using crontab(5) syntax. Per-prompt evaluation with anacron-style catch-up.",
+  "author": {
+    "name": "cadrianmae"
+  },
+  "keywords": ["scheduling", "notifications", "reminders", "hooks"],
+  "license": "MIT"
+}

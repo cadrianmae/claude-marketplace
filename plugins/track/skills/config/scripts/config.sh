@@ -12,11 +12,13 @@ if [ ! -f .claude/.ref-config ]; then
 fi
 
 # Read current configuration
+CURRENT_TRACKING=$(grep "^TRACKING_ENABLED=" .claude/.ref-config | cut -d= -f2)
 CURRENT_PROMPTS=$(grep "^PROMPTS_VERBOSITY=" .claude/.ref-config | cut -d= -f2)
 CURRENT_SOURCES=$(grep "^SOURCES_VERBOSITY=" .claude/.ref-config | cut -d= -f2)
 CURRENT_EXPORT=$(grep "^EXPORT_PATH=" .claude/.ref-config | cut -d= -f2)
 
 # Set defaults if empty
+CURRENT_TRACKING="${CURRENT_TRACKING:-true}"
 CURRENT_PROMPTS="${CURRENT_PROMPTS:-major}"
 CURRENT_SOURCES="${CURRENT_SOURCES:-all}"
 CURRENT_EXPORT="${CURRENT_EXPORT:-exports/}"
@@ -28,6 +30,7 @@ if [ ${#ARGS[@]} -eq 0 ]; then
     echo "Interactive mode:"
     echo ""
     echo "Current configuration:"
+    echo "  - Tracking: $CURRENT_TRACKING"
     echo "  - Prompts: $CURRENT_PROMPTS"
     echo "  - Sources: $CURRENT_SOURCES"
     echo "  - Export: $CURRENT_EXPORT"
@@ -89,12 +92,11 @@ for arg in "${ARGS[@]}"; do
     esac
 done
 
-# Update configuration file
-cat > .claude/.ref-config << EOF
-PROMPTS_VERBOSITY=$NEW_PROMPTS
-SOURCES_VERBOSITY=$NEW_SOURCES
-EXPORT_PATH=$NEW_EXPORT
-EOF
+# Update configuration file (preserve TRACKING_ENABLED)
+# Use printf to avoid shell expansion in heredoc
+printf 'TRACKING_ENABLED=%s\nPROMPTS_VERBOSITY=%s\nSOURCES_VERBOSITY=%s\nEXPORT_PATH=%s\n' \
+    "$CURRENT_TRACKING" "$NEW_PROMPTS" "$NEW_SOURCES" "$NEW_EXPORT" \
+    > .claude/.ref-config
 
 # Show changes
 echo "✓ Configuration updated"

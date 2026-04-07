@@ -3,7 +3,7 @@ name: ref-tracker
 description: DEPRECATED in v2.0 - Replaced by hooks-based tracking. This skill is no longer needed. Use /track:init to enable automatic hooks-based tracking instead.
 allowed-tools: Read, Edit, Write
 deprecated: true
-user-invocable: false
+user-invocable: true
 ---
 
 ## ⚠️ DEPRECATED IN v2.0
@@ -46,15 +46,15 @@ This skill activates automatically when:
 
 Claude autonomously decides when to use this skill based on the description and context.
 
-Once activated, check `./.claude/.ref-autotrack` to determine if auto-tracking is enabled.
+Once activated, check `TRACKING_ENABLED` in `./.claude/.ref-config` to determine if auto-tracking is enabled.
 
 ## Activation Check
 
 **Before any tracking operation:**
 
-1. Check if `./.claude/.ref-autotrack` exists
-   - If exists → auto-tracking enabled, proceed with tracking
-   - If missing → auto-tracking disabled, skip tracking
+1. Check if `TRACKING_ENABLED=true` in `./.claude/.ref-config`
+   - If `true` → auto-tracking enabled, proceed with tracking
+   - If `false` → auto-tracking disabled, skip tracking
 
 2. Read `./.claude/.ref-config` for verbosity settings:
    ```
@@ -62,31 +62,27 @@ Once activated, check `./.claude/.ref-autotrack` to determine if auto-tracking i
    SOURCES_VERBOSITY=all|off
    ```
 
-## About the .ref-autotrack File
+## About TRACKING_ENABLED
 
-**Location:** `./.claude/.ref-autotrack`
+**Location:** `./.claude/.ref-config`
 
-**Purpose:** Marker file that enables/disables automatic tracking
+**Purpose:** Config value that enables/disables automatic tracking
 
-**Contents:** Contains explanatory comments for other Claude sessions:
+**Format:**
 ```
-# Auto-tracking marker for ref-tracker plugin
-# Presence = enabled | Absence = disabled
-# Managed by: /track:auto command
-# See: /track:help for details
+TRACKING_ENABLED=true   # enabled
+TRACKING_ENABLED=false  # disabled
 ```
 
-**Created by:** `/track:auto` or `/track:auto on` command
+**Created by:** `/track:init` command (defaults to `true`)
 
-**Managed by:** `/track:auto` command (toggles on/off, or explicit on/off)
+**Managed by:** `/track:auto` command (toggles true/false)
 
-**NOT created by:** `/track:init` - tracking starts disabled
-
-**If you find this file:** The project has reference tracking initialized. Use the ref-tracker skill to automatically log research sources and major prompts according to the verbosity configuration in `./.claude/.ref-config`.
+**If set to true:** The project has reference tracking enabled. Use the ref-tracker skill to automatically log research sources and major prompts according to the verbosity configuration in `./.claude/.ref-config`.
 
 ## Tracking Rules
 
-When auto-tracking is enabled (`.ref-autotrack` exists), automatically track:
+When auto-tracking is enabled (`TRACKING_ENABLED=true`), automatically track:
 
 ### CLAUDE_SOURCES.md
 Track **after every**:
@@ -164,7 +160,7 @@ Outcome: Added query logging, identified N+1 problem, implemented eager loading,
 ### For CLAUDE_SOURCES.md
 
 1. **After operation completes** (WebSearch/WebFetch/doc search)
-2. **Check activation:** Look for `./.claude/.ref-autotrack`
+2. **Check activation:** Read `TRACKING_ENABLED` from `./.claude/.ref-config`
 3. **Read config:** Check SOURCES_VERBOSITY in `./.claude/.ref-config`
 4. **If enabled and verbosity allows:**
    - Check if `./CLAUDE_SOURCES.md` exists
@@ -175,7 +171,7 @@ Outcome: Added query logging, identified N+1 problem, implemented eager loading,
 ### For CLAUDE_PROMPTS.md
 
 1. **After completing major request**
-2. **Check activation:** Look for `./.claude/.ref-autotrack`
+2. **Check activation:** Read `TRACKING_ENABLED` from `./.claude/.ref-config`
 3. **Read config:** Check PROMPTS_VERBOSITY in `./.claude/.ref-config`
 4. **If enabled and verbosity allows:**
    - Check if `./CLAUDE_PROMPTS.md` exists
@@ -186,8 +182,7 @@ Outcome: Added query logging, identified N+1 problem, implemented eager loading,
 ## File Locations
 
 - **Tracking files:** Project root (`./CLAUDE_SOURCES.md`, `./CLAUDE_PROMPTS.md`)
-- **Configuration:** `./.claude/.ref-config`
-- **Activation marker:** `./.claude/.ref-autotrack`
+- **Configuration:** `./.claude/.ref-config` (includes `TRACKING_ENABLED`)
 
 Never create tracking files in subdirectories or `~/.claude/`.
 
@@ -243,7 +238,7 @@ Skip all source tracking.
 
 ## Best Practices
 
-1. **Check activation first** - Always look for `./.claude/.ref-autotrack` before tracking
+1. **Check activation first** - Always read `TRACKING_ENABLED` from `./.claude/.ref-config` before tracking
 2. **Read configuration** - Respect verbosity settings in `./.claude/.ref-config`
 3. **Be immediate** - Track right after triggering action completes
 4. **Be silent** - Never announce "Tracking to CLAUDE_SOURCES.md"

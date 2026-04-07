@@ -1,45 +1,69 @@
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![Version](https://img.shields.io/badge/version-2.6.2-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-# Track Plugin v2.0
+# Track Plugin v2.6
 
 Automatic reference and prompt tracking via Claude Code hooks for academic work and project documentation.
 
 ## Overview
 
-Track Plugin v2.0 uses **hooks-based architecture** for fully automatic tracking of research sources and development work. No skill activation required - hooks capture everything in real-time.
+Track Plugin v2.6 uses a **split hooks architecture** for fully automatic tracking of research sources and development work.
 
 **Two tracking files:**
-- `claude_usage/sources.md` - Research sources (WebSearch, WebFetch, documentation)
-- `claude_usage/prompts.md` - Major prompts and outcomes
+- `claude_usage/prompts.md` - Major prompts and outcomes (LLM-enhanced)
+- `claude_usage/sources.md` - Tool calls in ASCII compact format
 
 **Key features:**
-- **Fully automatic** via PostToolUse, UserPromptSubmit, SessionEnd hooks
-- **Real-time capture** - no manual tracking needed
+- **Split hook architecture** - prompts (Stop hook) and sources (PostToolUse hook)
+- **LLM-enhanced prompts** using Claude Haiku for outcome summaries
+- **ASCII sources format** - compact `[YYYY-MM-DDTHH:MM±HH:MM] Tool(params) -> summary` entries (ISO-8601, minute precision)
+- **Immediate source tracking** - tool calls written as they happen
+- **Intelligent classification** - LLM determines MAJOR vs MINOR work
 - **Export support** - bibliography, methodology, BibTeX, timeline
-- **Configurable verbosity** for academic vs development needs
-- **Per-project activation** - enable only where needed
-- **Attribution system** - [User] vs [Claude] initiated sources
+- **Mostly deterministic sources tracking** - pure bash for Read/Grep/WebSearch; only `WebFetch` invokes Claude Haiku to summarize fetched content
 
-## v2.0 Architecture
+## Hooks Architecture
 
-### Hooks-Based Tracking
+### capture-prompt.sh (Stop hook)
 
-**PostToolUse hook** → Automatic source tracking
-- Triggers after WebSearch, WebFetch, Read, Grep
-- Appends to `claude_usage/sources.md`
-- Filters documentation reads (docs/, README, man/)
+Tracks conversation outcomes to `prompts.md`:
+- Fires after each complete Claude response (once per turn)
+- Extracts latest user prompt and assistant response from transcript
+- Uses Claude Haiku for natural language outcome summaries
+- MAJOR/MINOR classification for verbosity filtering
+- Smart summarization for long prompts (>500 chars)
+- Async execution with 30s timeout
+- Critical loop prevention via `stop_hook_active` flag
 
-**UserPromptSubmit hook** → Prompt capture
-- Captures user messages to temporary storage
-- Stores for later pairing with outcomes
+### capture-sources.sh (PostToolUse hook)
 
-**SessionEnd hook** → Prompt-outcome pairing
-- Reads transcript for assistant responses
-- Pairs prompts with outcomes
-- Writes to `claude_usage/prompts.md` (based on verbosity)
+Tracks tool calls to `sources.md` in ASCII format:
+- Fires immediately after each Read/Grep/WebFetch/WebSearch call
+- Writes compact ASCII entries with per-tool timestamps
+- Smart summaries without LLM calls (zero API cost)
+- Tool-specific formatting with optional detail lines
+- Async execution (doesn't block workflow)
 
-**No skill activation needed** - hooks run automatically when `.claude/.ref-autotrack` exists.
+**No skill activation needed** - hooks run automatically when `TRACKING_ENABLED=true` in `.claude/.ref-config`.
+
+### Sources Format (v2.5)
+
+```
+[HH:MM:SS] ToolName(params) -> summary
+  |> optional details
+```
+
+**Tool-specific examples:**
+- `[14:23:15] Read(auth.py:42-108) -> 66 lines`
+  `  |> authenticate, verify_token`
+- `[14:23:16] Grep(*.js, "API_KEY") -> 3 matches`
+  `  |> config.js:12, utils.js:45`
+- `[14:23:17] WebFetch(docs.python.org/tutorial) -> 12KB`
+  `  |> Introduction, Quickstart, API Reference`
+- `[14:23:18] WebSearch("rust async await") -> 8 results`
+  `  |> rust-lang.org/async, tokio.rs/tutorial`
+
+**Cost:** ~$0.0001 per Claude turn (1 Haiku call for prompts only, zero for sources)
 
 ## Skills
 
@@ -86,8 +110,7 @@ After `/track:init`:
 
 ```
 .claude/
-├── .ref-autotrack          # Marker: hooks enabled (with metadata)
-├── .ref-config             # Verbosity and export settings
+├── .ref-config             # Tracking state and verbosity settings
 └── .track-tmp/             # Temporary prompt storage (auto-cleanup)
 claude_usage/
 ├── sources.md              # Research sources (with preamble)
@@ -101,10 +124,14 @@ Located in `./.claude/.ref-config`:
 
 ### PROMPTS_VERBOSITY
 
-- **`major`** (default) - Significant multi-step work (response >100 words)
+- **`major`** (default) - Significant multi-step work (LLM-classified as MAJOR)
 - **`all`** - Every user request
 - **`minimal`** - Only when user says "track this"
 - **`off`** - Disable prompt tracking
+
+**v2.1 Classification:** LLM determines MAJOR vs MINOR based on:
+- **MAJOR:** Implemented features, bug fixes, multi-step problem solving, multi-file changes, architectural decisions
+- **MINOR:** Simple questions, single file reads, documentation lookups, basic validation
 
 ### SOURCES_VERBOSITY
 
@@ -133,30 +160,30 @@ Located in `./.claude/.ref-config`:
 
 ### claude_usage/sources.md
 
-Pure KV format with preamble:
+ASCII compact format with timestamps (v2.5+):
 
 ```markdown
 # Research Sources
 
-This file automatically tracks research sources discovered during development.
-
-[Preamble explaining format, usage, configuration...]
+[Preamble explaining format...]
 
 ---
 
-[User] WebSearch("PostgreSQL JSONB tutorial"): https://postgresql.org/docs/current/datatype-json.html
-[Claude] WebFetch("https://go.dev/doc/", "embed.FS usage"): Use embed.FS to embed static files at compile time
-[Claude] Read("docs/api.md"): Documentation reference
-[Claude] Grep("middleware", pattern="CORS"): Documentation reference
+[14:23:15] Read(auth.py:42-108) -> 66 lines
+  |> authenticate, verify_token
+[14:23:16] Grep(*.js, "API_KEY") -> 3 matches
+  |> config.js:12, utils.js:45, env.example:8
+[14:23:17] WebFetch(docs.python.org/tutorial) -> 12KB
+  |> Introduction, Quickstart, API Reference, Examples
+[14:23:18] WebSearch("rust async await") -> 8 results
+  |> rust-lang.org/async, tokio.rs/tutorial, stackoverflow.com/...
 ```
 
-**Attribution:**
-- `[User]` - User explicitly requested search
-- `[Claude]` - Claude autonomously searched
+**Backward compatibility:** Export tools read v2.0, v2.1, and v2.5 formats.
 
 ### claude_usage/prompts.md
 
-Three-line format with preamble:
+Multi-line format with structured metadata (v2.1+):
 
 ```markdown
 # Development Prompts and Outcomes
@@ -168,16 +195,26 @@ This file automatically tracks significant development work and decisions.
 ---
 
 Prompt: "Implement JWT authentication"
-Outcome: Created auth middleware, login/logout endpoints, JWT token generation and verification
+Outcome: Created auth middleware package with token generation and verification functions.
+Implemented login and logout endpoints with secure cookie handling.
+Added JWT secret configuration and expiration time settings.
+Tested authentication flow with user registration and protected routes.
+Files: auth/middleware.go, auth/jwt.go, api/handlers.go
 Session: 2026-01-27 14:23:15
 
 Prompt: "Debug slow database queries"
-Outcome: Added query logging, identified N+1 problem, implemented eager loading, reduced query time
+Outcome: Added query logging middleware to identify slow queries.
+Discovered N+1 query problem in user relationship loading.
+Implemented eager loading with preload directives.
+Query time reduced from 2.3s to 150ms average.
+Files: db/queries.go, models/user.go
 Session: 2026-01-27 15:42:08
 
 ```
 
-**Session timestamps** help correlate work with specific development sessions.
+**Multi-line outcomes** provide complete context without truncation. **Files field** lists modified files. **Session timestamps** correlate work with development sessions.
+
+**Backward compatibility:** Export tools read both v2.0 (single-line truncated) and v2.1 (multi-line) formats.
 
 ## Export Functionality
 
@@ -279,23 +316,41 @@ cd ~/research/thesis-project
 
 The hooks run automatically when tracking is enabled:
 
-**PostToolUse** (hooks/post-tool-use.sh):
-- Checks `.claude/.ref-autotrack` exists
-- Reads `SOURCES_VERBOSITY` from `.claude/.ref-config`
-- Tracks WebSearch/WebFetch/Read/Grep to `claude_usage/sources.md`
+**capture-prompt.sh** (Stop hook):
+- Checks `TRACKING_ENABLED=true` in `.claude/.ref-config`
+- Fires once per Claude turn (after complete response)
+- Checks `stop_hook_active` flag (prevents infinite loops)
+- Extracts latest user prompt and assistant response from transcript
+- Uses Claude Haiku for LLM summarization
+- Writes entries to `prompts.md`
+- Async execution with 30-second timeout
 
-**UserPromptSubmit** (hooks/user-prompt-submit.sh):
-- Checks `.claude/.ref-autotrack` exists
-- Stores prompt to `.claude/.track-tmp/`
-- Timestamp for attribution logic
-
-**SessionEnd** (hooks/session-end.sh):
-- Checks `.claude/.ref-autotrack` exists
-- Reads `PROMPTS_VERBOSITY` from `.claude/.ref-config`
-- Pairs prompts with outcomes from transcript
-- Writes to `claude_usage/prompts.md` if verbosity criteria met
+**capture-sources.sh** (PostToolUse hook):
+- Matcher: `Read|Grep|WebFetch|WebSearch`
+- Fires immediately after each matched tool call
+- Writes ASCII compact entries to `sources.md`
+- Pure bash parsing (no LLM calls, zero API cost)
+- Async execution
 
 **All hooks** respect per-project activation and verbosity settings.
+
+## What's New in v2.5
+
+**Split hook architecture** for clean separation:
+- Prompts tracking via Stop hook (conversation outcomes)
+- Sources tracking via PostToolUse hook (tool calls)
+- Each hook focused on one responsibility
+
+**ASCII sources format** replacing LLM multi-line:
+- `[HH:MM:SS] Tool(params) -> summary` compact format
+- Per-tool timestamps (not per-turn)
+- Zero LLM cost for sources tracking
+- Immediate writes as tool calls happen
+
+**Backward compatible:**
+- Export tools read v2.0, v2.1, and v2.5 formats
+- Existing entries preserved
+- No configuration changes required
 
 ## Migration from v1.x
 
@@ -344,7 +399,7 @@ See [MIGRATION.md](./MIGRATION.md) for detailed migration guide.
 **Tracking not working:**
 ```bash
 # Check if enabled
-ls -la .claude/.ref-autotrack
+grep TRACKING_ENABLED .claude/.ref-config
 
 # Re-enable if needed
 /track:auto on
@@ -378,10 +433,15 @@ cat .claude-plugin/plugin.json | grep version
 track/
 ├── hooks/
 │   ├── hooks.json              # Hook configuration
-│   ├── common.sh               # Shared utilities
-│   ├── post-tool-use.sh        # Source tracking
-│   ├── user-prompt-submit.sh   # Prompt capture
-│   └── session-end.sh          # Prompt-outcome pairing
+│   ├── common.sh               # Shared utilities loader
+│   ├── common/                 # Utility modules
+│   │   ├── config.sh           # Configuration helpers
+│   │   ├── files.sh            # File management
+│   │   ├── utils.sh            # General utilities
+│   │   └── llm.sh              # LLM summarization
+│   ├── capture-prompt.sh       # Stop hook (prompts.md)
+│   ├── capture-sources.sh      # PostToolUse hook (sources.md)
+│   └── templates/              # File preamble templates
 ├── skills/
 │   ├── init/SKILL.md
 │   ├── auto/SKILL.md

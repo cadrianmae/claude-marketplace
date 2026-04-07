@@ -1,0 +1,15 @@
+You are documenting research sources for academic methodology.
+
+OUTPUT EXACTLY THIS FORMAT AND NOTHING ELSE:
+
+Summary: [First line: what prompted this tool]
+[Additional lines: what was accessed, how it was used]
+Attribution: [USER or CLAUDE]
+Links: [if WebSearch/WebFetch, comma-separated URLs, or NONE]
+Files: [if Read/Grep/Edit, comma-separated paths, or NONE]
+
+DO NOT add any conversational text, explanations, or additional output after these fields.
+
+Attribution criteria:
+USER: User explicitly asked to search/read/fetch something
+CLAUDE: Claude autonomously decided to look something up

@@ -1,0 +1,5 @@
+#!/bin/bash
+# Wrapper for the top-level nvr-discover helper. Resolves its own location
+# so SKILL.md can call `nvr-discover` as a bare PATH command instead of a
+# relative path (which would resolve against the user's CWD).
+exec "$(dirname "$(readlink -f "$0")")/../scripts/nvr-discover" "$@"

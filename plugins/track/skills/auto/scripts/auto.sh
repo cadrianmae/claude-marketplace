@@ -5,9 +5,14 @@
 # Parse argument if provided
 ARG="${1:-}"
 
-# Determine current state
-if [ -f .claude/.ref-autotrack ]; then
-    CURRENT_STATE="enabled"
+# Determine current state from .ref-config
+if [ -f .claude/.ref-config ]; then
+    TRACKING_ENABLED=$(grep "^TRACKING_ENABLED=" .claude/.ref-config 2>/dev/null | cut -d= -f2)
+    if [ "$TRACKING_ENABLED" = "true" ]; then
+        CURRENT_STATE="enabled"
+    else
+        CURRENT_STATE="disabled"
+    fi
 else
     CURRENT_STATE="disabled"
 fi
@@ -36,26 +41,26 @@ esac
 
 # Apply new state
 if [ "$NEW_STATE" = "enabled" ]; then
-    # Ensure .claude directory exists
+    # Ensure .claude directory and config file exist
     mkdir -p .claude
 
-    # Create marker with metadata
-    cat > .claude/.ref-autotrack << EOF
-# Track Plugin v2.0 - Automatic Tracking Enabled
-#
-# This marker file enables hooks-based automatic tracking for this project.
-#
-# Hooks configured:
-# - PostToolUse: Tracks WebSearch, WebFetch, Read, Grep
-# - UserPromptSubmit: Captures user prompts
-# - SessionEnd: Pairs prompts with outcomes
-#
-# Verbosity settings: ./.claude/.ref-config
-# Toggle tracking: /track:auto
-# Disable tracking: rm .claude/.ref-autotrack
-#
-# Last enabled: $(date '+%Y-%m-%d %H:%M:%S')
+    if [ ! -f .claude/.ref-config ]; then
+        # Create config if missing
+        cat > .claude/.ref-config << 'EOF'
+TRACKING_ENABLED=true
+PROMPTS_VERBOSITY=major
+SOURCES_VERBOSITY=all
+EXPORT_PATH=exports/
 EOF
+    else
+        # Update existing config with sed
+        if grep -q "^TRACKING_ENABLED=" .claude/.ref-config; then
+            sed -i 's/^TRACKING_ENABLED=.*/TRACKING_ENABLED=true/' .claude/.ref-config
+        else
+            # Add if missing
+            echo "TRACKING_ENABLED=true" >> .claude/.ref-config
+        fi
+    fi
 
     echo "✓ Hooks-based tracking enabled"
     echo ""
@@ -78,8 +83,14 @@ EOF
     echo ""
     echo "Use /track:config to adjust verbosity settings."
 else
-    # Delete marker
-    rm -f .claude/.ref-autotrack
+    # Update config to set TRACKING_ENABLED=false
+    if [ -f .claude/.ref-config ]; then
+        if grep -q "^TRACKING_ENABLED=" .claude/.ref-config; then
+            sed -i 's/^TRACKING_ENABLED=.*/TRACKING_ENABLED=false/' .claude/.ref-config
+        else
+            echo "TRACKING_ENABLED=false" >> .claude/.ref-config
+        fi
+    fi
 
     # Clean up temporary files
     rm -rf .claude/.track-tmp

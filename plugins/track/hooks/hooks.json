@@ -2,33 +2,24 @@
   "hooks": {
     "PostToolUse": [
       {
-        "matcher": "WebSearch|WebFetch|Read|Grep",
+        "matcher": "Read|Grep|WebFetch|WebSearch",
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/post-tool-use.sh"
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/capture-sources.sh",
+            "async": true
           }
         ]
       }
     ],
-    "UserPromptSubmit": [
+    "Stop": [
       {
-        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-submit.sh"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/session-end.sh"
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/capture-prompt.sh",
+            "async": true,
+            "timeout": 30000
           }
         ]
       }
