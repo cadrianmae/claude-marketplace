@@ -23,7 +23,7 @@ for plugin_dir in plugins/*/; do
     fi
 
     # Get current version from plugin.json
-    current_version=$(jq -r '.version // "1.0.0"' "$plugin_dir.claude-plugin/plugin.json")
+    current_version=$(jq -r '.version // "1.0.0"' "$plugin_dir/.claude-plugin/plugin.json")
 
     # Calculate next version (PATCH bump)
     IFS='.' read -r major minor patch <<< "$current_version"
@@ -52,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - CHANGELOG.md following Keep a Changelog format
 $([ -f "$plugin_dir/LICENSE" ] || echo "- LICENSE file (MIT)")
-$(jq -e '.repository' "$plugin_dir.claude-plugin/plugin.json" &>/dev/null || echo "- Repository field in plugin.json")
+$(jq -e '.repository' "$plugin_dir/.claude-plugin/plugin.json" &>/dev/null || echo "- Repository field in plugin.json")
 
 ### Changed
 - Updated README.md with version badge and license information

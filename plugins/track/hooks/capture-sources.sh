@@ -1,8 +1,9 @@
 #!/bin/bash
 # PostToolUse hook for sources tracking
 # Writes tool calls to claude_usage/sources.md in ASCII format
-# Format: [HH:MM:SS] ToolName(params) -> summary
+# Format: [YYYY-MM-DDTHH:MM±HH:MM] ToolName(params) -> summary
 #   |> optional details (indented)
+# Timestamps come from `date --iso-8601=minutes` (minute precision, with TZ).
 
 # Calculate SCRIPT_DIR first (before any cd)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

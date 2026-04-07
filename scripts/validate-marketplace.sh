@@ -195,13 +195,17 @@ validate_success_metrics() {
     echo -e "${BLUE}Success Metrics${NC}"
     echo "───────────────"
 
+    # Count plugins dynamically (any directory containing .claude-plugin/plugin.json)
+    total_plugins=$(find plugins -maxdepth 3 -path '*/.claude-plugin/plugin.json' | wc -l)
+    [[ $total_plugins -eq 0 ]] && total_plugins=1  # avoid div-by-zero
+
     # Count plugins with CHANGELOG
     changelog_count=$(find plugins -maxdepth 2 -name "CHANGELOG.md" | wc -l)
-    echo "CHANGELOG.md: $changelog_count/11 ($(($changelog_count * 100 / 11))%)"
+    echo "CHANGELOG.md: $changelog_count/$total_plugins ($(($changelog_count * 100 / $total_plugins))%)"
 
     # Count plugins with LICENSE
     license_count=$(find plugins -maxdepth 2 -name "LICENSE" | wc -l)
-    echo "LICENSE: $license_count/11 ($(($license_count * 100 / 11))%)"
+    echo "LICENSE: $license_count/$total_plugins ($(($license_count * 100 / $total_plugins))%)"
 
     # Count plugins with dynamic injection
     dynamic_count=0

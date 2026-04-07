@@ -1,6 +1,6 @@
 {
   "name": "nvr",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Neovim Remote integration for Claude Code - automatically open files in the correct neovim instance based on working directory",
   "author": {
     "name": "Mae",

@@ -14,7 +14,7 @@ echo -e "${BLUE}Phase 1: Bumping plugin versions...${NC}\n"
 
 for plugin_dir in plugins/*/; do
     plugin_name=$(basename "$plugin_dir")
-    plugin_json="$plugin_dir.claude-plugin/plugin.json"
+    plugin_json="$plugin_dir/.claude-plugin/plugin.json"
 
     # Get current version
     current_version=$(jq -r '.version // "1.0.0"' "$plugin_json")

@@ -32,7 +32,7 @@ Use this skill when the user wants to see all neovim instances across all projec
 Invoke the list script:
 
 ```bash
-bash scripts/list.sh
+nvr-list
 ```
 
 No arguments needed - the script discovers and lists all active neovim instances.

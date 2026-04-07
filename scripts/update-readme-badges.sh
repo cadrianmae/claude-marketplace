@@ -16,7 +16,7 @@ echo -e "${BLUE}Adding badges to README.md files...${NC}\n"
 for plugin_dir in plugins/*/; do
     plugin_name=$(basename "$plugin_dir")
     readme="$plugin_dir/README.md"
-    plugin_json="$plugin_dir.claude-plugin/plugin.json"
+    plugin_json="$plugin_dir/.claude-plugin/plugin.json"
 
     if [ ! -f "$readme" ]; then
         echo -e "${YELLOW}⚠${NC} $plugin_name - No README.md found, skipping"

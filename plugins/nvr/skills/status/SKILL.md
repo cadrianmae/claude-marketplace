@@ -25,16 +25,16 @@ Use this skill when the user wants to verify their editor setup or troubleshoot 
 ## Workspace Status (Auto-Captured)
 
 **Working Directory**: !`pwd`
-**Active Socket**: !`scripts/nvr-discover 2>/dev/null || echo "None found"`
-**Neovim PID**: !`scripts/nvr-discover 2>/dev/null | xargs -I{} nvr --servername {} --remote-expr 'getpid()' 2>/dev/null || echo "N/A"`
-**Workspace Root**: !`scripts/nvr-discover 2>/dev/null | xargs -I{} nvr --servername {} --remote-expr 'getcwd()' 2>/dev/null || echo "N/A"`
+**Active Socket**: !`nvr-discover 2>/dev/null || echo "None found"`
+**Neovim PID**: !`nvr-discover 2>/dev/null | xargs -I{} nvr --servername {} --remote-expr 'getpid()' 2>/dev/null || echo "N/A"`
+**Workspace Root**: !`nvr-discover 2>/dev/null | xargs -I{} nvr --servername {} --remote-expr 'getcwd()' 2>/dev/null || echo "N/A"`
 
 ## How to Use
 
 Invoke the status script:
 
 ```bash
-bash scripts/status.sh
+nvr-status
 ```
 
 No arguments needed - the script automatically detects the neovim instance for the current working directory.

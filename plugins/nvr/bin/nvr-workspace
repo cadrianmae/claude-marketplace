@@ -1,0 +1,3 @@
+#!/bin/bash
+# Wrapper for skills/workspace/scripts/workspace.sh
+exec "$(dirname "$(readlink -f "$0")")/../skills/workspace/scripts/workspace.sh" "$@"

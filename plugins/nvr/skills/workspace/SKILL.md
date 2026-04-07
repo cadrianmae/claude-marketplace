@@ -26,14 +26,14 @@ Use this skill when the user wants to understand their full workspace context:
 
 **Current Directory**: !`pwd`
 **Git Repository**: !`git rev-parse --show-toplevel 2>/dev/null || echo "Not in git repo"`
-**Neovim Socket**: !`scripts/nvr-discover 2>/dev/null || echo "No active instance"`
+**Neovim Socket**: !`nvr-discover 2>/dev/null || echo "No active instance"`
 
 ## How to Use
 
 Invoke the workspace script:
 
 ```bash
-bash scripts/workspace.sh
+nvr-workspace
 ```
 
 No arguments needed - the script automatically gathers all workspace information.

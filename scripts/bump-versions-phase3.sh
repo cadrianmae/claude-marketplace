@@ -15,7 +15,7 @@ echo -e "${BLUE}Phase 3: PATCH version bumps for documentation...${NC}\n"
 # All plugins get PATCH bump for docs improvements
 for plugin_dir in plugins/*/; do
     plugin_name=$(basename "$plugin_dir")
-    plugin_json="$plugin_dir.claude-plugin/plugin.json"
+    plugin_json="$plugin_dir/.claude-plugin/plugin.json"
 
     # Get current version
     current_version=$(jq -r '.version' "$plugin_json")

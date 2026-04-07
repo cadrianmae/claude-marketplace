@@ -4,10 +4,14 @@ This file automatically tracks significant development work and decisions.
 
 **Purpose:** Document methodology, implementation decisions, and project evolution for reports and retrospectives.
 
-**Format:** Two-line entries with blank separator:
+**Format:** Multi-line structured entries with blank separator. The Stop hook
+writes `Prompt:` and `Outcome:` always, plus `Files:` (when files were modified)
+and `Session:` (timestamp). `Outcome:` may span multiple lines.
 ```
 Prompt: "user request"
-Outcome: what was accomplished
+Outcome: what was accomplished (may be multi-line)
+Files: file1.py, file2.md         (optional, omitted if none)
+Session: 2026-04-07T14:23+01:00   (timestamp from get_timestamp)
 ```
 
 **Verbosity:** Controlled by PROMPTS_VERBOSITY setting

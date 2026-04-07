@@ -15,21 +15,27 @@ hook_exit() {
 # Calculate SCRIPT_DIR first (before any cd)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Debounce: only the last Stop event in a rapid burst runs the LLM call
-DEBOUNCE_FILE="/tmp/track-capture-prompt-debounce"
+# Read hook input now so we can derive a per-session debounce key.
+# Each Claude session/project gets its own debounce file, so concurrent
+# sessions don't suppress each other's tracking during the 5s window.
+HOOK_INPUT=$(cat)
+STOP_HOOK_ACTIVE=$(echo "$HOOK_INPUT" | jq -r '.stop_hook_active // false')
+
+# CRITICAL: Prevent infinite loops - skip if hook already ran (before sleep)
+[ "$STOP_HOOK_ACTIVE" = "true" ] && hook_exit "stop_hook_active is true"
+
+# Debounce: only the last Stop event in a rapid burst runs the LLM call.
+# Scope by session_id (falling back to cwd) so different sessions don't
+# clobber each other's debounce file.
+DEBOUNCE_KEY_RAW=$(echo "$HOOK_INPUT" | jq -r '.session_id // .cwd // "default"')
+DEBOUNCE_KEY=$(printf '%s' "$DEBOUNCE_KEY_RAW" | sha1sum | cut -c1-16)
+DEBOUNCE_FILE="/tmp/track-capture-prompt-debounce-${DEBOUNCE_KEY}"
 DEBOUNCE_DELAY=5
 MY_TIME=$(date +%s%N)
 echo "$MY_TIME" > "$DEBOUNCE_FILE"
 sleep "$DEBOUNCE_DELAY"
 CURRENT_TIME=$(cat "$DEBOUNCE_FILE" 2>/dev/null)
 [ "$CURRENT_TIME" != "$MY_TIME" ] && exit 0
-
-# Parse hook input FIRST (need cwd to check tracking)
-HOOK_INPUT=$(cat)
-STOP_HOOK_ACTIVE=$(echo "$HOOK_INPUT" | jq -r '.stop_hook_active // false')
-
-# CRITICAL: Prevent infinite loops - skip if hook already ran
-[ "$STOP_HOOK_ACTIVE" = "true" ] && hook_exit "stop_hook_active is true"
 
 # Extract cwd and change to project directory
 PROJECT_DIR=$(echo "$HOOK_INPUT" | jq -r '.cwd // empty')

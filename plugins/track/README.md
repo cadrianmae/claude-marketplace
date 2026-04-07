@@ -1,13 +1,13 @@
-[![Version](https://img.shields.io/badge/version-2.5.1-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![Version](https://img.shields.io/badge/version-2.6.2-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-# Track Plugin v2.5
+# Track Plugin v2.6
 
 Automatic reference and prompt tracking via Claude Code hooks for academic work and project documentation.
 
 ## Overview
 
-Track Plugin v2.5 uses a **split hooks architecture** for fully automatic tracking of research sources and development work.
+Track Plugin v2.6 uses a **split hooks architecture** for fully automatic tracking of research sources and development work.
 
 **Two tracking files:**
 - `claude_usage/prompts.md` - Major prompts and outcomes (LLM-enhanced)
@@ -16,11 +16,11 @@ Track Plugin v2.5 uses a **split hooks architecture** for fully automatic tracki
 **Key features:**
 - **Split hook architecture** - prompts (Stop hook) and sources (PostToolUse hook)
 - **LLM-enhanced prompts** using Claude Haiku for outcome summaries
-- **ASCII sources format** - compact `[HH:MM:SS] Tool(params) -> summary` entries
+- **ASCII sources format** - compact `[YYYY-MM-DDTHH:MM±HH:MM] Tool(params) -> summary` entries (ISO-8601, minute precision)
 - **Immediate source tracking** - tool calls written as they happen
 - **Intelligent classification** - LLM determines MAJOR vs MINOR work
 - **Export support** - bibliography, methodology, BibTeX, timeline
-- **Zero LLM cost for sources** - pure bash parsing, deterministic formatting
+- **Mostly deterministic sources tracking** - pure bash for Read/Grep/WebSearch; only `WebFetch` invokes Claude Haiku to summarize fetched content
 
 ## Hooks Architecture
 

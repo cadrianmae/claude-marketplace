@@ -51,8 +51,14 @@ EOF
     local output
     output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output // empty')
 
-    # Log and return output
-    echo "$output" | tee -a /tmp/track-llm-output.log
+    # Return output. Optionally also tee to a debug log when TRACK_LLM_DEBUG_LOG
+    # is set to a writable path. The previous unconditional append to a fixed
+    # /tmp file leaked tracked content to disk and grew unbounded.
+    if [ -n "${TRACK_LLM_DEBUG_LOG:-}" ]; then
+        printf '%s\n' "$output" | tee -a "$TRACK_LLM_DEBUG_LOG"
+    else
+        printf '%s\n' "$output"
+    fi
 }
 
 # Summarize tool call for sources.md using Claude Haiku
@@ -110,8 +116,14 @@ EOF
     local output
     output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output // empty')
 
-    # Log and return output
-    echo "$output" | tee -a /tmp/track-llm-output.log
+    # Return output. Optionally also tee to a debug log when TRACK_LLM_DEBUG_LOG
+    # is set to a writable path. The previous unconditional append to a fixed
+    # /tmp file leaked tracked content to disk and grew unbounded.
+    if [ -n "${TRACK_LLM_DEBUG_LOG:-}" ]; then
+        printf '%s\n' "$output" | tee -a "$TRACK_LLM_DEBUG_LOG"
+    else
+        printf '%s\n' "$output"
+    fi
 }
 
 # Summarize long user prompts (>500 chars) for prompts.md
@@ -149,6 +161,12 @@ CONTEXT_EOF
     local output
     output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output.Summary // empty')
 
-    # Log and return output
-    echo "$output" | tee -a /tmp/track-llm-output.log
+    # Return output. Optionally also tee to a debug log when TRACK_LLM_DEBUG_LOG
+    # is set to a writable path. The previous unconditional append to a fixed
+    # /tmp file leaked tracked content to disk and grew unbounded.
+    if [ -n "${TRACK_LLM_DEBUG_LOG:-}" ]; then
+        printf '%s\n' "$output" | tee -a "$TRACK_LLM_DEBUG_LOG"
+    else
+        printf '%s\n' "$output"
+    fi
 }
