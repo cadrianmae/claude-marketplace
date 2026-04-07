@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-04-07
+### Added
+- New `edit` subcommand and `scripts/schedule-edit.sh` helper. Modifies fields of an existing schedule in place; mutually-exclusive groups (`cron` vs `time/days`, `message` vs `command`) are handled automatically.
+- New `help` subcommand that prints subcommand grammar and cron syntax reference inline (no helper script).
+
+### Changed
+- **Unified all commands into a single interactive `/cron` entry point** driven by AskUserQuestion. Replaces the five separate `/cron:add`, `/cron:list`, `/cron:enable`, `/cron:disable`, `/cron:remove` skills with one workflow-driven skill that branches per action. Helper scripts are unchanged — the new skill calls them under the hood.
+- Subcommand grammar formalized: `/cron <add|list|edit|enable|disable|remove|help> [args...]`. With no arguments, runs the fully interactive flow.
+
+### Removed
+- `cron:add`, `cron:list`, `cron:enable`, `cron:disable`, `cron:remove` skill subdirectories. All functionality is reachable from `/cron`.
+
 ## [2.0.0] - 2026-04-07
 ### Added
 - **Cron expression support** via new `cron` field on schedules. Full crontab(5) syntax: 5 fields, ranges, lists, steps, named months/days, and the OR-rule for restricted day-of-month/day-of-week.

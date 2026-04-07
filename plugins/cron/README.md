@@ -31,13 +31,13 @@ Operators: `*`, `a-b`, `a,b`, `*/n`, `a-b/n`. Named months (`jan`-`dec`) and day
 
 ```bash
 # Hourly chime with live timestamp
-/cron:add --command "date '+Chime: %H:%M %A'" --cron "0 * * * *" global
+/cron --command "date '+Chime: %H:%M %A'" --cron "0 * * * *" global
 
 # Every 15 minutes during work hours, weekdays
-/cron:add "Stretch break" --cron "*/15 9-17 * * 1-5" global
+/cron "Stretch break" --cron "*/15 9-17 * * 1-5" global
 
 # Standup at 9:00 weekdays, no catchup (only fires if active in that minute)
-/cron:add "Standup time!" --cron "0 9 * * 1-5" --catchup false global
+/cron "Standup time!" --cron "0 9 * * 1-5" --catchup false global
 ```
 
 ### catchup
@@ -64,7 +64,7 @@ This plugin is available in the cadrianmae-claude-marketplace. Enable it through
 
 **Verify installation:**
 ```bash
-/cron:list
+/cron
 ```
 
 ## Configuration
@@ -75,7 +75,7 @@ Global schedules apply to all projects and directories. Managed user-wide.
 
 **Create global schedule:**
 ```bash
-/cron:add "Morning standup" --time 09:00 --days weekdays global
+/cron "Morning standup" --time 09:00 --days weekdays global
 ```
 
 **File location:** `~/.claude/schedules.json`
@@ -99,7 +99,7 @@ Project schedules apply only within specific projects. Useful for project-specif
 
 **Create project schedule:**
 ```bash
-/cron:add "Deploy window" --time 16:00 --days Mon,Wed,Fri
+/cron "Deploy window" --time 16:00 --days Mon,Wed,Fri
 ```
 
 **File location:** `.claude/schedules.json` (in project root)
@@ -137,26 +137,26 @@ Project schedules apply only within specific projects. Useful for project-specif
 
 **Interactive mode:**
 ```bash
-/cron:add
+/cron
 ```
 Claude prompts for message, time, days, and scope.
 
 **All-in-one mode:**
 ```bash
 # Weekday standup
-/cron:add "Standup time!" --time 09:00 --days weekdays
+/cron "Standup time!" --time 09:00 --days weekdays
 
 # Global afternoon break
-/cron:add "Take a break" --time 15:00 --days weekdays global
+/cron "Take a break" --time 15:00 --days weekdays global
 
 # Weekend reminder
-/cron:add "Weekend planning" --time 10:00 --days weekends
+/cron "Weekend planning" --time 10:00 --days weekends
 
 # Specific days
-/cron:add "Deploy day" --time 16:00 --days Mon,Wed,Fri
+/cron "Deploy day" --time 16:00 --days Mon,Wed,Fri
 
 # Daily reminder
-/cron:add "End of day review" --time 17:00 --days daily
+/cron "End of day review" --time 17:00 --days daily
 ```
 
 **Special day values:**
@@ -167,30 +167,14 @@ Claude prompts for message, time, days, and scope.
 ### List Schedules
 
 ```bash
-/cron:list              # Show all (global + project)
-/cron:list global       # Global only
-/cron:list project      # Project only
+/cron              # Show all (global + project)
+/cron global       # Global only
+/cron project      # Project only
 ```
 
-### Disable/Enable Schedule
+### Disable / Enable / Remove
 
-```bash
-# Disable (keeps configuration)
-/cron:disable morning-standup
-/cron:disable afternoon-break global
-
-# Re-enable
-/cron:enable morning-standup
-/cron:enable afternoon-break global
-```
-
-### Remove Schedule
-
-```bash
-# Remove permanently (cannot be undone)
-/cron:remove deploy-window
-/cron:remove morning-standup global
-```
+Run `/cron` and pick the action. The skill lists existing schedules so you can pick one by id. `disable` keeps the entry (so it can be re-enabled later); `remove` deletes it.
 
 ## How It Works
 
@@ -218,17 +202,17 @@ Auto-created and managed by hook. Can be manually reset by deleting them.
 
 ### Daily Standup
 ```bash
-/cron:add "Daily standup in 5 minutes" --time 08:55 --days weekdays global
+/cron "Daily standup in 5 minutes" --time 08:55 --days weekdays global
 ```
 
 ### Lunch Break
 ```bash
-/cron:add "Time for lunch break!" --time 12:30 --days daily global
+/cron "Time for lunch break!" --time 12:30 --days daily global
 ```
 
 ### Code Review Friday
 ```bash
-/cron:add "Friday code review session" --time 14:00 --days Fri
+/cron "Friday code review session" --time 14:00 --days Fri
 ```
 
 ### Pomodoro (Project-Specific)
@@ -311,13 +295,11 @@ Submit a prompt - notifications should appear immediately.
 
 **Remember to restore the original time/day code after testing!**
 
-## Skills
+## Command
 
-- `/cron:add` - Add new schedule
-- `/cron:list` - View schedules
-- `/cron:disable` - Disable schedule
-- `/cron:enable` - Enable schedule
-- `/cron:remove` - Remove schedule
+A single unified interactive command:
+
+- `/cron` — Interactive entry point for add / list / enable / disable / remove. Uses AskUserQuestion to walk through each workflow. Accepts arguments to skip prompts (e.g. `/cron list`, `/cron add "Standup" --cron "0 9 * * 1-5" global`).
 
 ## License
 
