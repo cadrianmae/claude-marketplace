@@ -14,6 +14,11 @@
 #   catchup   - true (default): fire missed ticks on next prompt
 #               false: only fire if tick is in the current minute
 #   enabled   - boolean
+#   sound     - optional: path to audio file, true for default sound,
+#               or false/absent for silent. Played via first available of:
+#               paplay, aplay, afplay, ffplay, play (portable fallback).
+#               Top-level "defaultSound" in schedules.json overrides the
+#               built-in default used when a schedule sets sound:true.
 
 set -euo pipefail
 
@@ -36,6 +41,70 @@ for dep in jq python3; do
     exit 2
   fi
 done
+
+# Directory holding bundled sounds shipped with the plugin.
+PLUGIN_SOUNDS_DIR="$(cd "$(dirname "$0")/.." && pwd)/sounds"
+
+# Built-in fallback sounds tried in order if sound:true and no defaultSound set.
+# Bundled plugin sounds come first so the plugin works out of the box.
+DEFAULT_SOUND_CANDIDATES=(
+  "${PLUGIN_SOUNDS_DIR}/ding.wav"
+  "${PLUGIN_SOUNDS_DIR}/chime.wav"
+  "/usr/share/sounds/freedesktop/stereo/message.oga"
+  "/usr/share/sounds/freedesktop/stereo/bell.oga"
+  "/System/Library/Sounds/Ping.aiff"
+)
+
+# Global override from schedules.json top-level "defaultSound"
+DEFAULT_SOUND=""
+
+# Play an audio file in the background using the first available player.
+# Silent no-op if no player found or file missing. Never blocks the hook.
+play_sound() {
+  local file="$1"
+  [[ -z "$file" || ! -f "$file" ]] && return 0
+  local player args=()
+  if command -v paplay &>/dev/null; then
+    player=paplay
+  elif command -v aplay &>/dev/null; then
+    player=aplay; args=(-q)
+  elif command -v afplay &>/dev/null; then
+    player=afplay
+  elif command -v ffplay &>/dev/null; then
+    player=ffplay; args=(-nodisp -autoexit -loglevel quiet)
+  elif command -v play &>/dev/null; then
+    player=play; args=(-q)
+  else
+    return 0
+  fi
+  ( "$player" "${args[@]}" "$file" &>/dev/null & ) &>/dev/null
+}
+
+# Resolve a schedule's sound setting to an absolute file path, or empty.
+resolve_sound() {
+  local schedule="$1"
+  local sound
+  sound=$(echo "$schedule" | jq -r '.sound // empty')
+  [[ -z "$sound" || "$sound" == "false" || "$sound" == "null" ]] && return 0
+  if [[ "$sound" == "true" ]]; then
+    if [[ -n "$DEFAULT_SOUND" && -f "$DEFAULT_SOUND" ]]; then
+      printf '%s' "$DEFAULT_SOUND"; return 0
+    fi
+    local cand
+    for cand in "${DEFAULT_SOUND_CANDIDATES[@]}"; do
+      [[ -f "$cand" ]] && { printf '%s' "$cand"; return 0; }
+    done
+    return 0
+  fi
+  # Short-name alias for bundled sounds: "ding" -> sounds/ding.wav, etc.
+  if [[ "$sound" != */* && "$sound" != *.* ]]; then
+    local bundled="${PLUGIN_SOUNDS_DIR}/${sound}.wav"
+    if [[ -f "$bundled" ]]; then
+      printf '%s' "$bundled"; return 0
+    fi
+  fi
+  printf '%s' "$sound"
+}
 
 validate_json() {
   local file="$1"
@@ -89,7 +158,8 @@ legacy_to_cron() {
 load_schedules() {
   local schedules="[]"
   if validate_json "$GLOBAL_SCHEDULES"; then
-    schedules=$(jq -c '.' "$GLOBAL_SCHEDULES")
+    # Support both legacy array form and object form ({schedules:[...]}).
+    schedules=$(jq -c 'if type=="array" then . else (.schedules // []) end' "$GLOBAL_SCHEDULES")
   fi
   if [[ -d ".claude" ]] || git rev-parse --git-dir &>/dev/null 2>&1; then
     if validate_json "$PROJECT_SCHEDULES"; then
@@ -141,6 +211,20 @@ main() {
   local schedules
   schedules=$(load_schedules)
 
+  # Load defaultSound override: project file wins, then global.
+  if validate_json "$PROJECT_SCHEDULES"; then
+    DEFAULT_SOUND=$(jq -r 'if type=="object" then (.defaultSound // "") else "" end' "$PROJECT_SCHEDULES" 2>/dev/null || echo "")
+  fi
+  if [[ -z "$DEFAULT_SOUND" ]] && validate_json "$GLOBAL_SCHEDULES"; then
+    DEFAULT_SOUND=$(jq -r 'if type=="object" then (.defaultSound // "") else "" end' "$GLOBAL_SCHEDULES" 2>/dev/null || echo "")
+  fi
+  # Allow short-name aliases (e.g. "ding") for defaultSound as well.
+  if [[ -n "$DEFAULT_SOUND" && "$DEFAULT_SOUND" != */* && "$DEFAULT_SOUND" != *.* ]]; then
+    if [[ -f "${PLUGIN_SOUNDS_DIR}/${DEFAULT_SOUND}.wav" ]]; then
+      DEFAULT_SOUND="${PLUGIN_SOUNDS_DIR}/${DEFAULT_SOUND}.wav"
+    fi
+  fi
+
   init_state "$GLOBAL_STATE"
   if [[ -d ".claude" ]]; then
     init_state "$PROJECT_STATE"
@@ -189,10 +273,12 @@ main() {
     local last_shown
     last_shown=$(get_last_shown "$state_file" "$schedule_id")
     if [[ "$tick" -gt "$last_shown" ]]; then
-      local text
+      local text sound_file
       text=$(resolve_text "$schedule")
       notifications="${notifications}${text}"$'\n'
       update_state "$state_file" "$schedule_id" "$tick"
+      sound_file=$(resolve_sound "$schedule")
+      [[ -n "$sound_file" ]] && play_sound "$sound_file"
     fi
   done
 

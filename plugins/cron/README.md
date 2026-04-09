@@ -54,6 +54,39 @@ Operators: `*`, `a-b`, `a,b`, `*/n`, `a-b/n`. Named months (`jan`-`dec`) and day
 
 Mutually exclusive. Commands run with your shell privileges; treat `~/.claude/schedules.json` as trusted (same as `~/.bashrc`).
 
+### sound
+
+Optional per-schedule audio cue. Non-blocking — the player is detached from the hook so Claude never waits on playback.
+
+| Value | Behavior |
+|---|---|
+| absent / `false` | Silent (default). |
+| `true` | Plays the bundled default (`sounds/ding.wav`). Override with top-level `"defaultSound"` in `schedules.json`. |
+| `"ding"` / `"chime"` / `"beep"` / `"pop"` | Short name — resolves to one of the bundled stereo WAVs shipped with the plugin. |
+| `"/path/to/file"` | Plays a custom audio file. Any format your player supports. |
+
+**Bundled sounds** (in `sounds/`, stereo 32 kHz WAV):
+
+| Name | Description |
+|---|---|
+| `ding` | Warm bell with inharmonic partials and reverb tail |
+| `chime` | Sustained B major chord (B4/D#5/F#5/B5) with FM shimmer |
+| `beep` | Soft dual-tone UI blip (880 Hz + octave) |
+| `pop` | Short high-pitched sweep with reverb |
+
+Portable player detection (first match wins): `paplay` → `aplay` → `afplay` → `ffplay` → `play`. If none are installed, the schedule still fires notifications silently.
+
+Example:
+```json
+{
+  "defaultSound": "ding",
+  "schedules": [
+    { "id": "standup", "cron": "0 9 * * 1-5", "message": "Standup!", "sound": true },
+    { "id": "deploy",  "cron": "0 16 * * 5",  "message": "Deploy window", "sound": "/home/me/sounds/airhorn.wav" }
+  ]
+}
+```
+
 ## Installation
 
 This plugin is available in the cadrianmae-claude-marketplace. Enable it through your Claude Code plugin settings.
