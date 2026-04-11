@@ -1,0 +1,23 @@
+{
+  "name": "tts",
+  "version": "0.1.0",
+  "description": "Piper-based text-to-speech for Claude Code. Speaks assistant responses aloud via a Stop hook; interrupt-on-type via a UserPromptSubmit hook. Unified /tts skill for voice switching, config, and testing. Linux + PipeWire + Piper required.",
+  "author": {
+    "name": "Mae Capacite",
+    "email": "45900436+cadrianmae@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/cadrianmae/claude-marketplace",
+  "repository": "https://github.com/cadrianmae/claude-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "tts",
+    "text-to-speech",
+    "piper",
+    "accessibility",
+    "audio",
+    "hooks",
+    "pipewire",
+    "linux"
+  ],
+  "skills": "./skills/"
+}
