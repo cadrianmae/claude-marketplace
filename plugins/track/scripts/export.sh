@@ -1,6 +1,7 @@
 #!/bin/bash
 # Export tracked data to various formats
-# Part of Track Plugin v2.1 - called by /track:export skill
+# Part of Track Plugin - called by `track-export` wrapper (bin/track-export)
+# via the unified /track skill.
 # Supports both v2.0.5 (single-line) and v2.1.0 (multi-line) formats
 
 # Parse arguments
@@ -61,7 +62,7 @@ PROMPTS_FILE="claude_usage/prompts.md"
 
 # Check if files exist
 if [ ! -f "$SOURCES_FILE" ] && [ ! -f "$PROMPTS_FILE" ]; then
-    echo "Error: No tracking files found. Run /track:init first."
+    echo "Error: No tracking files found. Run /track init first."
     exit 1
 fi
 
@@ -217,7 +218,7 @@ case "$FORMAT" in
             echo ""
 
             counter=1
-            parse_sources "$SOURCES_FILE" | while IFS='|' read -r type attribution tool params summary links files; do
+            parse_sources "$SOURCES_FILE" | while IFS='|' read -r _type _attribution _tool _params _summary links _files; do
                 if [ -n "$links" ] && [ "$links" != "NONE" ]; then
                     echo "${counter}. ${links}"
                     ((counter++))
@@ -234,7 +235,7 @@ case "$FORMAT" in
             echo "## Development Process"
             echo ""
 
-            parse_prompts "$PROMPTS_FILE" | while IFS='|' read -r type prompt outcome files session; do
+            parse_prompts "$PROMPTS_FILE" | while IFS='|' read -r _type prompt outcome files session; do
                 echo "### ${prompt}"
                 echo ""
                 echo "**Outcome:** ${outcome}"
@@ -253,7 +254,7 @@ case "$FORMAT" in
         # Generate BibTeX entries from sources
         {
             counter=1
-            parse_sources "$SOURCES_FILE" | while IFS='|' read -r type attribution tool params summary links files; do
+            parse_sources "$SOURCES_FILE" | while IFS='|' read -r _type _attribution _tool params _summary links _files; do
                 if [ -n "$links" ] && [ "$links" != "NONE" ]; then
                     key="ref_${counter}"
 
@@ -280,7 +281,7 @@ case "$FORMAT" in
             echo ""
 
             counter=1
-            parse_sources "$SOURCES_FILE" | while IFS='|' read -r type attribution tool params summary links files; do
+            parse_sources "$SOURCES_FILE" | while IFS='|' read -r _type _attribution _tool _params summary links _files; do
                 echo "[${counter}] ${summary}"
                 [ -n "$links" ] && [ "$links" != "NONE" ] && echo "    ${links}"
                 echo ""
@@ -299,14 +300,14 @@ case "$FORMAT" in
 
             echo "### Research Sources"
             echo ""
-            parse_sources "$SOURCES_FILE" | while IFS='|' read -r type attribution tool params summary links files; do
+            parse_sources "$SOURCES_FILE" | while IFS='|' read -r _type attribution tool _params summary _links _files; do
                 echo "- **[$attribution] $tool**: $summary"
             done
             echo ""
 
             echo "### Development Work"
             echo ""
-            parse_prompts "$PROMPTS_FILE" | while IFS='|' read -r type prompt outcome files session; do
+            parse_prompts "$PROMPTS_FILE" | while IFS='|' read -r _type prompt outcome _files session; do
                 echo "- **Prompt**: $prompt"
                 echo "  - **Outcome**: $outcome"
                 echo "  - **Session**: $session"

@@ -20,7 +20,7 @@ Session: 2026-04-07T14:23+01:00   (timestamp from get_timestamp)
 - `minimal` - Only when explicitly requested
 
 **Usage:**
-- Export for methodology section: `/track:export methodology`
+- Export for methodology section: `/track export methodology`
 - Review recent work: `tail claude_usage/prompts.md`
 - Find specific feature: `grep "authentication" claude_usage/prompts.md`
 

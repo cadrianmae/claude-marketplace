@@ -1,6 +1,7 @@
 #!/bin/bash
 # Initialize hooks-based tracking
-# Part of Track Plugin v2.0 - called by /track:init skill
+# Part of Track Plugin - called by `track-init` wrapper (bin/track-init)
+# via the unified /track skill. Runs idempotently; safe to re-invoke.
 
 # Create claude_usage directory
 mkdir -p claude_usage
@@ -30,7 +31,7 @@ This file automatically tracks research sources discovered during development.
 **Tools tracked:** WebSearch, WebFetch, Read (documentation), Grep (documentation)
 
 **Usage:**
-- Export for academic papers: `/track:export bibliography`
+- Export for academic papers: `/track export bibliography`
 - View recent sources: `tail claude_usage/sources.md`
 - Search specific topic: `grep "topic" claude_usage/sources.md`
 
@@ -62,7 +63,7 @@ Outcome: what was accomplished
 - `minimal` - Only when explicitly requested
 
 **Usage:**
-- Export for methodology section: `/track:export methodology`
+- Export for methodology section: `/track export methodology`
 - Review recent work: `tail claude_usage/prompts.md`
 - Find specific feature: `grep "authentication" claude_usage/prompts.md`
 
@@ -112,6 +113,6 @@ echo "  - Export: exports/ directory"
 echo ""
 echo "Next steps:"
 echo "  - Work normally - hooks track automatically"
-echo "  - Use /track:config to adjust verbosity"
-echo "  - Use /track:export to generate outputs"
-echo "  - Use /track:help for documentation"
+echo "  - Use /track config to adjust verbosity"
+echo "  - Use /track export to generate outputs"
+echo "  - Use /track help for documentation"

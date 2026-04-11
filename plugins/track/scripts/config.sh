@@ -1,13 +1,14 @@
 #!/bin/bash
 # Configure tracking verbosity and export settings
-# Part of Track Plugin v2.0 - called by /track:config skill
+# Part of Track Plugin - called by `track-config` wrapper (bin/track-config)
+# via the unified /track skill.
 
 # Parse arguments
 ARGS=("$@")
 
 # Check if config file exists
 if [ ! -f .claude/.ref-config ]; then
-    echo "Error: Configuration file not found. Run /track:init first."
+    echo "Error: Configuration file not found. Run /track init first."
     exit 1
 fi
 

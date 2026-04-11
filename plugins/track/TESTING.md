@@ -15,7 +15,7 @@
 claude
 
 # Do work that triggers Stop hook
-/track:init
+/track init
 # ... do some work ...
 
 # WAIT - Don't close session!
@@ -83,7 +83,7 @@ claude --debug 2>&1 | tee /tmp/claude-debug.log
 
 ```bash
 # In Claude session:
-/track:init
+/track init
 
 # Do some work
 "create a test file called hello.txt with 'Hello World'"

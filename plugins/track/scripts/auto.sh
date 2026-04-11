@@ -1,6 +1,7 @@
 #!/bin/bash
 # Toggle or set hooks-based auto-tracking state
-# Part of Track Plugin v2.0 - called by /track:auto skill
+# Part of Track Plugin - called by `track-auto` wrapper (bin/track-auto)
+# via the unified /track skill.
 
 # Parse argument if provided
 ARG="${1:-}"
@@ -81,7 +82,7 @@ EOF
 
     echo "Hooks run automatically - no manual intervention needed."
     echo ""
-    echo "Use /track:config to adjust verbosity settings."
+    echo "Use /track config to adjust verbosity settings."
 else
     # Update config to set TRACKING_ENABLED=false
     if [ -f .claude/.ref-config ]; then
@@ -103,7 +104,7 @@ else
     echo "  - claude_usage/sources.md"
     echo "  - claude_usage/prompts.md"
     echo ""
-    echo "To re-enable: /track:auto on"
+    echo "To re-enable: /track auto on"
 fi
 
 # Show toggle message if applicable
