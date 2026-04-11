@@ -1,7 +1,7 @@
-[![Version](https://img.shields.io/badge/version-2.6.2-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![Version](https://img.shields.io/badge/version-2.7.0-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-# Track Plugin v2.6
+# Track Plugin v2.7
 
 Automatic reference and prompt tracking via Claude Code hooks for academic work and project documentation.
 
@@ -65,48 +65,42 @@ Tracks tool calls to `sources.md` in ASCII format:
 
 **Cost:** ~$0.0001 per Claude turn (1 Haiku call for prompts only, zero for sources)
 
-## Skills
+## Command
 
-All functionality is provided via user-invocable skills:
+A single unified interactive command:
 
-- **`/track:init`** - Initialize hooks-based tracking (run first)
-- **`/track:auto [on|off]`** - Toggle hooks on/off
-- **`/track:config [key=value]`** - Configure verbosity and export settings
-- **`/track:export <format> [output]`** - Export tracked data
-- **`/track:help`** - Comprehensive documentation
+- `/track` — Interactive entry point for init / config / auto / export / help. Uses AskUserQuestion to walk through each workflow. Accepts arguments to skip prompts (e.g. `/track config prompts=all`, `/track export bibliography`).
 
-**Deprecated in v2.0:**
-- `/track:update` - No longer needed (real-time tracking via hooks)
+See the subcommand grammar below for the full argument form.
 
 ## Quick Start
 
 ```bash
 # 1. Initialize tracking
-/track:init
-# Creates claude_usage/ directory with preambles
-# Enables hooks automatically
+/track init
+# Creates claude_usage/ directory with preambles and enables hooks
 
-# 2. Work normally - hooks track everything
-# - Search for docs → logged to claude_usage/sources.md
-# - Implement features → logged to claude_usage/prompts.md
+# 2. Work normally — hooks track everything
+# - Search for docs     → logged to claude_usage/sources.md
+# - Implement features  → logged to claude_usage/prompts.md
 
 # 3. Export for paper
-/track:export bibliography          # → exports/bibliography.md
-/track:export methodology           # → exports/methodology.md
-/track:export bibtex refs.bib       # → refs.bib
+/track export bibliography          # → exports/bibliography.md
+/track export methodology           # → exports/methodology.md
+/track export bibtex refs.bib       # → refs.bib
 
 # 4. Adjust verbosity if needed
-/track:config prompts=all           # Track everything
-/track:config prompts=minimal       # Track less
+/track config prompts=all           # Track everything
+/track config prompts=minimal       # Track less
 
 # 5. Toggle tracking as needed
-/track:auto off                     # Pause hooks
-/track:auto on                      # Resume hooks
+/track auto off                     # Pause hooks
+/track auto on                      # Resume hooks
 ```
 
 ## File Structure
 
-After `/track:init`:
+After `/track init`:
 
 ```
 .claude/
@@ -142,18 +136,18 @@ Located in `./.claude/.ref-config`:
 
 - **`exports/`** (default) - Default export directory
 - Can be absolute or relative path
-- Used by `/track:export` when no output specified
+- Used by `/track export` when no output specified
 
 **Configure interactively:**
 ```bash
-/track:config
+/track config
 # Uses AskUserQuestion for easy setup
 ```
 
 **Configure directly:**
 ```bash
-/track:config prompts=all sources=off
-/track:config export_path=paper/references/
+/track config prompts=all sources=off
+/track config export_path=paper/references/
 ```
 
 ## File Formats
@@ -222,43 +216,43 @@ Generate outputs for academic papers and reports:
 
 ### Bibliography
 ```bash
-/track:export bibliography
+/track export bibliography
 # → exports/bibliography.md
 ```
 Numbered list with links for works cited section.
 
 ### Methodology
 ```bash
-/track:export methodology
+/track export methodology
 # → exports/methodology.md
 ```
 Structured methodology section from prompts and outcomes.
 
 ### BibTeX
 ```bash
-/track:export bibtex references.bib
+/track export bibtex references.bib
 # → references.bib
 ```
 BibTeX entries for LaTeX papers.
 
 ### Citations
 ```bash
-/track:export citations
+/track export citations
 # → exports/citations.md
 ```
 Numbered citation list for references.
 
 ### Timeline
 ```bash
-/track:export timeline
+/track export timeline
 # → exports/timeline.md
 ```
 Chronological timeline of all tracked activity.
 
 **Custom output paths:**
 ```bash
-/track:export bibliography -                    # Print to stdout
-/track:export methodology paper/methodology.md  # Custom path
+/track export bibliography -                    # Print to stdout
+/track export methodology paper/methodology.md  # Custom path
 ```
 
 ## Academic Workflow Example
@@ -266,7 +260,7 @@ Chronological timeline of all tracked activity.
 **1. Setup project:**
 ```bash
 cd ~/research/thesis-project
-/track:init
+/track init
 ```
 
 **2. Research and develop:**
@@ -277,9 +271,9 @@ cd ~/research/thesis-project
 
 **3. Export for paper:**
 ```bash
-/track:export bibliography paper/bibliography.md
-/track:export methodology paper/methodology.md
-/track:export bibtex paper/references.bib
+/track export bibliography paper/bibliography.md
+/track export methodology paper/methodology.md
+/track export bibtex paper/references.bib
 ```
 
 **4. Review and refine:**
@@ -289,8 +283,8 @@ cd ~/research/thesis-project
 
 **5. Adjust verbosity:**
 ```bash
-/track:config prompts=minimal    # Less verbose
-/track:auto off                  # Pause during cleanup
+/track config prompts=minimal    # Less verbose
+/track auto off                  # Pause during cleanup
 ```
 
 ## Use Cases
@@ -358,7 +352,7 @@ See [MIGRATION.md](./MIGRATION.md) for detailed migration guide.
 
 **Quick migration:**
 1. Update plugin to v2.0.0
-2. Run `/track:init` (auto-detects old files)
+2. Run `/track init` (auto-detects old files)
 3. Manually migrate content:
    ```bash
    cat CLAUDE_SOURCES.md >> claude_usage/sources.md
@@ -368,12 +362,12 @@ See [MIGRATION.md](./MIGRATION.md) for detailed migration guide.
    ```bash
    rm CLAUDE_SOURCES.md CLAUDE_PROMPTS.md
    ```
-5. Remove `/track:update` from workflows
+5. Remove any `/track:update` calls from workflows (the `update` skill was removed in v2.7.0)
 
 **Breaking changes:**
 - File locations changed (root → `claude_usage/`)
 - Tracking mechanism changed (skill → hooks)
-- `/track:update` deprecated (automatic now)
+- `update` skill removed (was deprecated in v2.0; fully removed in v2.7.0 — tracking is automatic now)
 - Default behavior changed (tracking enabled by default)
 
 ## Tips
@@ -390,8 +384,8 @@ See [MIGRATION.md](./MIGRATION.md) for detailed migration guide.
 - Track decisions for documentation
 
 **For efficiency:**
-- Toggle `/track:auto off` during exploration
-- Use interactive `/track:config` for setup
+- Toggle `/track auto off` during exploration
+- Use interactive `/track config` for setup
 - Export to stdout with `-` for quick review
 
 ## Troubleshooting
@@ -402,13 +396,13 @@ See [MIGRATION.md](./MIGRATION.md) for detailed migration guide.
 grep TRACKING_ENABLED .claude/.ref-config
 
 # Re-enable if needed
-/track:auto on
+/track auto on
 ```
 
 **Files not created:**
 ```bash
 # Run init again
-/track:init
+/track init
 ```
 
 **Old files still present:**
@@ -467,4 +461,4 @@ MIT License - Copyright (c) Mae Capacite
 
 - [CHANGELOG.md](./CHANGELOG.md) - Version history and changes
 - [MIGRATION.md](./MIGRATION.md) - v1.x → v2.0 migration guide
-- `/track:help` - Comprehensive in-app documentation
+- `/track help` - Comprehensive in-app documentation
