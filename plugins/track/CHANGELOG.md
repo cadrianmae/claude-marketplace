@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.0] - 2026-04-11
+
+### Changed
+- **Unified all commands into a single interactive `/track` entry point.**
+  Replaced five separate `/track:init`, `/track:config`, `/track:auto`,
+  `/track:export`, `/track:help` skills with one `/track` skill driven by
+  AskUserQuestion. Supports a subcommand grammar
+  (`/track <init|config|auto|export|help> [args...]`) to skip prompts.
+  Mirrors the cron plugin's v2.1.0 consolidation.
+
+### Added
+- `bin/` directory with thin wrapper scripts (`track-init`, `track-config`,
+  `track-auto`, `track-export`). Claude Code puts `bin/` on `PATH`
+  automatically, so the skill can invoke bare commands without needing
+  `$CLAUDE_PLUGIN_ROOT` (which is not substituted inside SKILL.md; see
+  anthropics/claude-code#9354).
+
+### Removed
+- **BREAKING:** Individual skills `/track:init`, `/track:config`,
+  `/track:auto`, `/track:export`, `/track:help`. Use `/track <subcommand>`
+  instead.
+- Deprecated skills `migrate`, `ref-tracker`, `update`. These were flagged
+  `deprecated: true` in frontmatter as early as v2.0 but remained loadable.
+  Migration history is preserved in `MIGRATION.md`.
+
+### Technical Details
+- `skills/auto/scripts/auto.sh` → `scripts/auto.sh`
+- `skills/config/scripts/config.sh` → `scripts/config.sh`
+- All four helper scripts now colocated at `plugins/track/scripts/`.
+- Skill body written in imperative form per `plugin-dev:skill-development`
+  best practices (deviation from the cron template's second-person style).
+- Hooks (`capture-prompt.sh`, `capture-sources.sh`) unchanged.
+
 ## [2.6.2] - 2026-03-03
 
 ### Fixed
