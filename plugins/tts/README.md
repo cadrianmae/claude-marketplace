@@ -1,4 +1,4 @@
-[![Version](https://img.shields.io/badge/version-0.1.1-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![Version](https://img.shields.io/badge/version-0.1.2-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 # TTS Plugin v0.1
@@ -17,6 +17,7 @@ TTS plugin v0.1 is a minimal bash-based Piper wrapper for Claude Code. It calls 
 - **Off by default** — no surprise audio on install; user runs `/tts auto on` to enable
 - **Global config** — voice / volume / mode live at `~/.claude/.tts-config`, not per-project
 - **Multi-voice support** — use any Piper voice installed at `~/.local/share/piper-voices/`
+- **Multi-speaker voices** — `name:speaker` syntax for voices with multiple speakers (e.g. `semaine:poppy`)
 
 ## Prerequisites
 
@@ -43,8 +44,9 @@ See the subcommand grammar below for the full argument form.
 # Creates ~/.claude/.tts-config with defaults and enables hooks
 
 # 2. Pick a voice
-/tts voices                      # List installed voices
-/tts voice lessac                # Set default voice
+/tts voices                      # List installed voices (annotated with speakers)
+/tts voice lessac                # Set default voice (single-speaker)
+/tts voice semaine:poppy         # Set default voice + speaker (multi-speaker)
 
 # 3. Test it
 /tts test                        # Play a canned sample

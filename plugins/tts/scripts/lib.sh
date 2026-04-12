@@ -106,61 +106,148 @@ tts_write_config() {
 
 # ---- voices -------------------------------------------------------------
 
-# Print short voice names (one per line, alphabetically sorted), derived
-# from .onnx filenames. Strips locale prefix ("en_GB-", "en_US-") and
-# quality suffix ("-medium", "-low", "-high"). Voices without a
-# recognizable prefix (e.g. "glados_piper_medium") are emitted with the
-# trailing "_piper_SUFFIX" cleaned up.
+# Strip .onnx filename to a short voice name.
+# "en_GB-aru-medium.onnx" -> "aru"
+# "glados_piper_medium.onnx" -> "glados"
+_tts_short_name() {
+    local name="$1"
+    name="${name#en_GB-}"
+    name="${name#en_US-}"
+    name="${name%-medium}"
+    name="${name%-low}"
+    name="${name%-high}"
+    name="${name%_piper_medium}"
+    name="${name%_piper_low}"
+    name="${name%_piper_high}"
+    printf '%s' "$name"
+}
+
+# Print installed voice names, one per line, alphabetically sorted.
+# Multi-speaker voices are annotated with their speaker names in order:
+#   semaine (speakers: prudence, spike, obadiah, poppy)
 tts_list_voices() {
     local dir
     dir="$(tts_voices_dir)"
     [ -d "$dir" ] || return 0
 
-    local f name
-    for f in "$dir"/*.onnx; do
-        [ -e "$f" ] || continue
-        name="$(basename "$f" .onnx)"
-        # en_XX-voice-quality -> voice
-        name="${name#en_GB-}"
-        name="${name#en_US-}"
-        name="${name%-medium}"
-        name="${name%-low}"
-        name="${name%-high}"
-        # glados_piper_medium -> glados
-        name="${name%_piper_medium}"
-        name="${name%_piper_low}"
-        name="${name%_piper_high}"
-        printf '%s\n' "$name"
-    done | sort
+    # Build tab-separated (short_name, onnx_path) pairs, sorted by short_name.
+    local pairs
+    pairs="$(
+        local f name
+        for f in "$dir"/*.onnx; do
+            [ -e "$f" ] || continue
+            name="$(_tts_short_name "$(basename "$f" .onnx)")"
+            printf '%s\t%s\n' "$name" "$f"
+        done | sort
+    )"
+
+    # Emit each with optional speaker annotation.
+    while IFS=$'\t' read -r name onnx_path; do
+        [ -z "$name" ] && continue
+        local json_file="${onnx_path%.onnx}.onnx.json"
+        local speakers=""
+        if [ -f "$json_file" ] && command -v jq >/dev/null 2>&1; then
+            speakers="$(jq -r '
+                .speaker_id_map
+                | if . then
+                    to_entries | sort_by(.value) | map(.key) | join(", ")
+                  else empty end
+            ' "$json_file" 2>/dev/null)"
+        fi
+        if [ -n "$speakers" ]; then
+            printf '%s (speakers: %s)\n' "$name" "$speakers"
+        else
+            printf '%s\n' "$name"
+        fi
+    done <<< "$pairs"
 }
 
-# Resolve a short voice name (e.g. "aru") to its absolute .onnx path.
-# Returns empty and exit 1 if the voice is not installed.
-tts_voice_file() {
+# Resolve a voice name (with optional :speaker suffix) to an absolute
+# .onnx path plus an optional speaker id.
+#
+# Input forms:
+#   "aru"              -> single-speaker voice, no speaker id
+#   "semaine"          -> multi-speaker voice, no speaker id (piper uses 0)
+#   "semaine:prudence" -> multi-speaker voice, speaker id 0
+#   "semaine:0"        -> multi-speaker voice, speaker id 0 (integer form)
+#
+# Sets these globals on success:
+#   TTS_RESOLVED_FILE     - absolute .onnx path
+#   TTS_RESOLVED_SPEAKER  - integer speaker id, or empty string
+#
+# Returns 0 on success (voice exists, speaker valid if given), 1 otherwise.
+#
+# shellcheck disable=SC2034  # TTS_RESOLVED_* are consumed by callers that source lib.sh
+tts_resolve_voice() {
     local want="$1"
+    local voice_part speaker_part
+
+    TTS_RESOLVED_FILE=""
+    TTS_RESOLVED_SPEAKER=""
+
+    if [[ "$want" == *:* ]]; then
+        voice_part="${want%%:*}"
+        speaker_part="${want##*:}"
+    else
+        voice_part="$want"
+        speaker_part=""
+    fi
+
+    # Find voice file by short name.
     local dir
     dir="$(tts_voices_dir)"
     [ -d "$dir" ] || return 1
 
-    # Try exact short-name match first (reverse of tts_list_voices logic).
     local f name
     for f in "$dir"/*.onnx; do
         [ -e "$f" ] || continue
-        name="$(basename "$f" .onnx)"
-        name="${name#en_GB-}"
-        name="${name#en_US-}"
-        name="${name%-medium}"
-        name="${name%-low}"
-        name="${name%-high}"
-        name="${name%_piper_medium}"
-        name="${name%_piper_low}"
-        name="${name%_piper_high}"
-        if [ "$name" = "$want" ]; then
-            printf '%s' "$f"
-            return 0
+        name="$(_tts_short_name "$(basename "$f" .onnx)")"
+        if [ "$name" = "$voice_part" ]; then
+            TTS_RESOLVED_FILE="$f"
+            break
         fi
     done
-    return 1
+
+    [ -z "$TTS_RESOLVED_FILE" ] && return 1
+
+    # No speaker requested — done. (Piper uses speaker 0 by default
+    # for multi-speaker models.)
+    [ -z "$speaker_part" ] && return 0
+
+    # Speaker requested — need the companion .onnx.json + jq.
+    local json_file="${TTS_RESOLVED_FILE%.onnx}.onnx.json"
+    if [ ! -f "$json_file" ] || ! command -v jq >/dev/null 2>&1; then
+        return 1
+    fi
+
+    # Does this voice even have a speaker map?
+    local has_map
+    has_map="$(jq -r '.speaker_id_map | if . then "yes" else "no" end' "$json_file" 2>/dev/null)"
+    [ "$has_map" != "yes" ] && return 1
+
+    # Resolve speaker: integer → verify in range; name → look up.
+    local id
+    if [[ "$speaker_part" =~ ^[0-9]+$ ]]; then
+        id="$(jq -r --argjson n "$speaker_part" '
+            .speaker_id_map
+            | to_entries
+            | map(.value)
+            | if any(. == $n) then ($n | tostring) else empty end
+        ' "$json_file" 2>/dev/null)"
+    else
+        id="$(jq -r --arg n "$speaker_part" '.speaker_id_map[$n] // empty' "$json_file" 2>/dev/null)"
+    fi
+
+    [ -z "$id" ] && return 1
+    TTS_RESOLVED_SPEAKER="$id"
+    return 0
+}
+
+# Backwards-compat wrapper: return only the file path for a voice name.
+# Used by callers that don't care about speaker resolution.
+tts_voice_file() {
+    tts_resolve_voice "$1" || return 1
+    printf '%s' "$TTS_RESOLVED_FILE"
 }
 
 # ---- markdown stripping -------------------------------------------------
@@ -213,11 +300,12 @@ tts_speak() {
 
     [ -z "$text" ] && return 0
 
-    local voice_file
-    if ! voice_file="$(tts_voice_file "$TTS_VOICE")"; then
-        echo "tts: voice '$TTS_VOICE' not found in $(tts_voices_dir)" >&2
+    if ! tts_resolve_voice "$TTS_VOICE"; then
+        echo "tts: voice '$TTS_VOICE' not found or has no such speaker" >&2
         return 1
     fi
+    local voice_file="$TTS_RESOLVED_FILE"
+    local speaker_id="$TTS_RESOLVED_SPEAKER"
 
     # Apply speak mode. 'full' is a no-op. 'truncate' and 'summary' are
     # both capped at MAX_CHARS. 'summary' falls back to truncate silently
@@ -250,10 +338,18 @@ tts_speak() {
 
     [ -z "$processed" ] && return 0
 
+    # Build the piper invocation. Include --speaker N for multi-speaker
+    # voices when a specific speaker was requested in TTS_VOICE.
+    local piper_cmd="piper --model '$voice_file'"
+    if [ -n "$speaker_id" ]; then
+        piper_cmd+=" --speaker $speaker_id"
+    fi
+    piper_cmd+=" --output-raw 2>/dev/null"
+
     # Detach via setsid so audio survives Claude Code's process group.
     setsid bash -c "
         printf '%s' \"\$1\" \
-            | piper --model '$voice_file' --output-raw 2>/dev/null \
+            | $piper_cmd \
             | paplay --raw --format=s16le --rate=22050 --channels=1 --volume='$TTS_VOLUME' 2>/dev/null
     " _ "$processed" </dev/null >/dev/null 2>&1 &
     disown 2>/dev/null || true

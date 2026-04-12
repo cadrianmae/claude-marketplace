@@ -1,7 +1,7 @@
 ---
 name: tts
-description: This skill should be used when the user asks to "speak something", "read this aloud", "enable text to speech", "change voice", "try a different voice", "list available voices", "turn tts on/off", "test tts", "configure tts", "adjust tts volume", or anything involving the tts plugin for Piper-based text-to-speech. Single unified interactive entry point.
-version: 0.1.0
+description: This skill should be used when the user asks to "speak something", "read this aloud", "enable text to speech", "change voice", "try a different voice", "list available voices", "turn tts on/off", "test tts", "configure tts", "adjust tts volume", "pick a speaker", or anything involving the tts plugin for Piper-based text-to-speech. Single unified interactive entry point. Supports multi-speaker voices via voice:speaker syntax.
+version: 0.1.2
 user-invocable: true
 allowed-tools: [Bash, Read, AskUserQuestion]
 argument-hint: "[speak|test|voices|voice|config|auto|help] [args...]"
@@ -92,6 +92,18 @@ If the user wants to change the voice after seeing the list, offer to run the `v
 2. **If no name was supplied**, run `tts-voices` first so the user can see what's installed, then AUQ: `header: "Voice"`, question: "Which voice should be the new default?". Options: each installed voice name (plus `cancel`).
 3. After setting, show the wrapper's confirmation ("✓ Default voice set to: ...").
 
+### Multi-speaker voices
+
+Some Piper voices bundle multiple speakers in one `.onnx` file (e.g. `semaine` has `prudence`, `spike`, `obadiah`, `poppy`). To select a specific speaker, use `name:speaker` syntax:
+
+- `tts-voice semaine:poppy` — set speaker by name (looked up in `speaker_id_map`)
+- `tts-voice semaine:3` — set speaker by integer id
+- `tts-voice semaine` — use the voice's default speaker (Piper uses id 0)
+
+`tts-voices` annotates multi-speaker voices with their speaker list: `semaine (speakers: prudence, spike, obadiah, poppy)`. The annotation is read from the voice's sidecar `.onnx.json` file.
+
+Single-speaker voices reject the `:speaker` suffix with a clean error. Invalid speaker names or out-of-range integers also error cleanly.
+
 Note: voice changes take effect on the next speak invocation. Any audio already playing continues with the old voice.
 
 ## Workflow: CONFIG
@@ -130,8 +142,9 @@ The first positional argument is the subcommand. **If the first argument matches
 /tts                              → fully interactive (action AUQ first)
 /tts speak <text>                 → manually speak a one-off string
 /tts test                         → play a canned sample with current voice
-/tts voices                       → list installed voices
-/tts voice <name>                 → set VOICE config value
+/tts voices                       → list installed voices (annotated with speakers)
+/tts voice <name>                 → set VOICE config value (single-speaker)
+/tts voice <name>:<speaker>       → set VOICE config value (multi-speaker)
 /tts config [KEY=VALUE ...]       → view or update global config
 /tts auto [on|off]                → toggle TTS_ENABLED
 /tts help                         → subcommand grammar + config + voices
@@ -154,6 +167,8 @@ The first positional argument is the subcommand. **If the first argument matches
 ```
 /tts auto on
 /tts voice lessac
+/tts voice semaine:poppy              # multi-speaker: poppy character
+/tts voice semaine:2                  # multi-speaker: by integer id
 /tts test
 /tts config VOLUME=30000
 /tts config SPEAK_MODE=summary MAX_CHARS=500
@@ -167,7 +182,7 @@ The first positional argument is the subcommand. **If the first argument matches
 - First-install default is **off**. No surprise audio. The user explicitly runs `/tts auto on` to start hearing Claude.
 - Piper raw output is already −13.8 LUFS with +0.8 dBFS true peak. **Volume is attenuation-only via `paplay --volume=N`.** Do not advise the user to amplify via `sox -v` or similar — it causes clipping ("earrape"). 40000 is the sweet spot.
 - The plugin requires PipeWire. On Pulse-only or ALSA-direct systems, `paplay --raw` will fail silently. There is currently no fallback.
-- `semaine` is multi-speaker but this plugin exposes only its default speaker in v0.1. Multi-speaker syntax (`voice.onnx:N`) is deferred to v0.2.
+- Multi-speaker voices use `name:speaker` syntax (e.g. `semaine:poppy`, `semaine:3`). Speaker names are looked up in the voice's `.onnx.json` `speaker_id_map`. Not all voices are multi-speaker — `tts-voices` annotates those that are.
 - If the user asks for "tool-use announcements" or "speak what Claude is about to do", that's tier D from the design and was deferred. Explain that it's not in v0.1 and offer to file it as a future feature.
 - If `summary` mode is enabled but the `claude` CLI is unavailable, the plugin falls back to `truncate` silently. Mention this to the user if they're debugging why summaries aren't appearing.
 - All workflows are CWD-independent — the config file is global at `~/.claude/.tts-config`, not per-project.

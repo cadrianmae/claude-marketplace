@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-04-12
+
+### Added
+- **Multi-speaker voice support.** Piper voices that bundle multiple
+  speakers in a single `.onnx` file (e.g. `semaine` with `prudence`,
+  `spike`, `obadiah`, `poppy`, or `aru` with 12 numeric speaker ids)
+  can now be selected with `name:speaker` syntax:
+  - `/tts voice semaine:poppy` — look up speaker by name in the voice's
+    `.onnx.json` `speaker_id_map`
+  - `/tts voice semaine:3` — select speaker by integer id
+  - `/tts voice semaine` — use Piper's default (speaker id 0)
+- `tts-voices` now annotates multi-speaker voices with their speaker
+  list: `semaine (speakers: prudence, spike, obadiah, poppy)`. The
+  annotation is read from the `speaker_id_map` in each voice's sidecar
+  JSON, sorted by speaker id.
+- `tts-voice` error messages now distinguish between "voice not found"
+  and "speaker is invalid for this voice", and include a reminder
+  about the `name:speaker` syntax.
+- `tts-voices` output now distinguishes current default vs. other voices,
+  and displays the active speaker when a multi-speaker voice is selected
+  (e.g. `* semaine (speakers: ...) (current default: poppy)`).
+
+### Changed
+- `tts_speak` now passes `--speaker N` to `piper` when a speaker is
+  resolved, instead of always omitting the flag.
+- Internal: new `tts_resolve_voice` function sets `TTS_RESOLVED_FILE`
+  and `TTS_RESOLVED_SPEAKER` globals. `tts_voice_file` is retained as
+  a backwards-compat wrapper that returns only the path. A new
+  `_tts_short_name` helper deduplicates the filename-stripping logic
+  previously inlined in two places.
+
+### Technical Details
+- `scripts/lib.sh` — added `tts_resolve_voice`, `_tts_short_name`,
+  refactored `tts_list_voices` and `tts_speak` to use them.
+- `scripts/voice.sh` — uses `tts_resolve_voice` directly; reports
+  speaker id on success.
+- `scripts/voices.sh` — splits `TTS_VOICE` on `:` to find the base
+  voice for "current default" marking, appends speaker name to the
+  annotation when applicable.
+- `skills/tts/SKILL.md` — new "Multi-speaker voices" section in the
+  VOICE workflow; examples updated.
+- `README.md` — Quick Start shows `semaine:poppy` example;
+  feature list mentions multi-speaker support.
+- All existing tests pass; shellcheck clean; manual audio test
+  confirmed `--speaker 3` reaches piper for `semaine:poppy`.
+
 ## [0.1.1] - 2026-04-12
 
 ### Fixed

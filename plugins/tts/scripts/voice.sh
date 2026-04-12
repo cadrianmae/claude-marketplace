@@ -10,6 +10,7 @@ source "$SCRIPT_DIR/lib.sh"
 
 if [ $# -ne 1 ]; then
     echo "Usage: tts-voice <name>" >&2
+    echo "       tts-voice <name>:<speaker>   (for multi-speaker voices)" >&2
     echo >&2
     echo "Installed voices:" >&2
     tts_list_voices | sed 's/^/  /' >&2
@@ -18,13 +19,23 @@ fi
 
 voice="$1"
 
-if ! tts_voice_file "$voice" >/dev/null; then
-    echo "Error: voice '$voice' not found in $(tts_voices_dir)" >&2
+if ! tts_resolve_voice "$voice"; then
+    if [[ "$voice" == *:* ]]; then
+        echo "Error: voice '$voice' not found or speaker is invalid for this voice" >&2
+    else
+        echo "Error: voice '$voice' not found in $(tts_voices_dir)" >&2
+    fi
     echo >&2
     echo "Installed voices:" >&2
     tts_list_voices | sed 's/^/  /' >&2
+    echo >&2
+    echo "For multi-speaker voices, use name:speaker syntax (e.g. semaine:poppy)." >&2
     exit 1
 fi
 
 tts_write_config VOICE "$voice"
-echo "✓ Default voice set to: $voice"
+if [ -n "$TTS_RESOLVED_SPEAKER" ]; then
+    echo "✓ Default voice set to: $voice (speaker id $TTS_RESOLVED_SPEAKER)"
+else
+    echo "✓ Default voice set to: $voice"
+fi
