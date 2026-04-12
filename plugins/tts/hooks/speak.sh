@@ -19,6 +19,14 @@ source "$HOOK_DIR/../scripts/lib.sh"
 tts_load_config
 [ "$TTS_ENABLED" = "true" ] || exit 0
 
+# Check for one-shot suppress token from /tts stop. If present, consume
+# it and skip this cycle (no chime, no speech). The token is a single-use
+# flag: delete it so the NEXT response speaks normally.
+if [ -f /tmp/tts-suppress-next ]; then
+    rm -f /tmp/tts-suppress-next
+    exit 0
+fi
+
 # Play chime before speech (blocks until done so chime finishes first).
 tts_play_chime
 

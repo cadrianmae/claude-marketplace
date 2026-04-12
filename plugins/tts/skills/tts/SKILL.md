@@ -27,6 +27,7 @@ Set `header: "Action"` and offer these options:
 - `voice` — Change the default voice
 - `config` — View or update config values
 - `auto` — Toggle tts on/off
+- `stop` — Kill all in-flight speech immediately
 - `help` — Show subcommand grammar and config reference
 
 If the user's message already includes a subcommand (e.g. `/tts voice lessac`), skip the AUQ and jump straight into the matching workflow. See "Subcommand Grammar" below.
@@ -40,6 +41,7 @@ All real work is done by thin wrappers in the plugin's `bin/` directory. Claude 
 - `tts-voice <name>` — set the default voice
 - `tts-config [KEY=VALUE ...]` — view or update config
 - `tts-auto [on|off]` — toggle `TTS_ENABLED`
+- `tts-stop` — kill all in-flight speech immediately
 
 Do NOT edit `~/.claude/.tts-config` directly from this skill. Use the commands.
 
@@ -127,6 +129,12 @@ Supported keys: `VOICE`, `VOLUME`, `SPEAK_MODE`, `MAX_CHARS`, `TTS_ENABLED`, `IN
 
 `auto off` only flips `TTS_ENABLED`. It does not delete the config file or kill in-flight speech. If the user wants to interrupt speech that's already playing, run `tts-speak ""` with empty text, or wait for it to finish, or send another user prompt (which triggers the interrupt hook).
 
+## Workflow: STOP
+
+Run `tts-stop` and show its output. Takes no arguments. This kills any in-flight `paplay` process AND drops a one-shot suppress token so the Stop hook skips this response's speech. The next response after this one speaks normally.
+
+The suppress is important: without it, Claude's "Stopped" response would be immediately spoken by the Stop hook, defeating the purpose.
+
 ## Workflow: HELP
 
 Print a static reference. Do NOT call any helper script. Output:
@@ -151,6 +159,7 @@ The first positional argument is the subcommand. **If the first argument matches
 /tts voice <name>:<speaker>       → set VOICE config value (multi-speaker)
 /tts config [KEY=VALUE ...]       → view or update global config
 /tts auto [on|off]                → toggle TTS_ENABLED
+/tts stop                         → kill in-flight speech + suppress next
 /tts help                         → subcommand grammar + config + voices
 ```
 
@@ -164,6 +173,7 @@ The first positional argument is the subcommand. **If the first argument matches
 | `voice NAME` | `tts-voice NAME` |
 | `config [ARGS]` | `tts-config [ARGS]` |
 | `auto [on\|off]` | `tts-auto [on\|off]` |
+| `stop` | `tts-stop` |
 | `help` | (no helper — print static reference inline) |
 
 ### Examples
@@ -177,6 +187,7 @@ The first positional argument is the subcommand. **If the first argument matches
 /tts config VOLUME=30000
 /tts config SPEAK_MODE=summary MAX_CHARS=500
 /tts speak "Lunch break, back in twenty minutes"
+/tts stop                                 # kill speech + suppress this response
 /tts auto off
 ```
 
