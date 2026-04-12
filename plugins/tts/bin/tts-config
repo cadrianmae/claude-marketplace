@@ -1,0 +1,5 @@
+#!/bin/bash
+# Wrapper for config.sh. Resolves the plugin root via its own location
+# so the skill can call `tts-config ARGS...` without needing $CLAUDE_PLUGIN_ROOT
+# (which is not substituted inside SKILL.md; see anthropics/claude-code#9354).
+exec "$(dirname "$(readlink -f "$0")")/../scripts/config.sh" "$@"
