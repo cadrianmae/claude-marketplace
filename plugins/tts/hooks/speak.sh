@@ -59,15 +59,19 @@ latest_text="$(
     tac "$transcript_path" 2>/dev/null \
         | while IFS= read -r line; do
             role="$(printf '%s' "$line" | jq -r '.message.role // empty' 2>/dev/null)"
-            if [ "$role" = "assistant" ]; then
-                printf '%s' "$line" | jq -r '
-                    .message.content
-                    | if type == "array" then
-                        map(select(.type == "text") | .text) | join("\n")
-                      elif type == "string" then
-                        .
-                      else empty end
-                ' 2>/dev/null
+            [ "$role" = "assistant" ] || continue
+            text="$(printf '%s' "$line" | jq -r '
+                .message.content
+                | if type == "array" then
+                    map(select(.type == "text") | .text) | join("\n")
+                  elif type == "string" then
+                    .
+                  else empty end
+            ' 2>/dev/null)"
+            # Skip assistant messages that are pure tool_use (no text block).
+            # Walk back until we find a message that actually has speakable text.
+            if [ -n "$text" ]; then
+                printf '%s' "$text"
                 break
             fi
         done
