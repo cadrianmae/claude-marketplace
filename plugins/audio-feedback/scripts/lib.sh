@@ -144,6 +144,22 @@ af_sound_for_event() {
     esac
 }
 
+# Map a tool_name to its sound group. Used by af_play_event_with_subtype
+# to resolve e.g. "Read" -> "observe" so we look for pre-tool-use-observe.wav
+# instead of needing a separate file per tool.
+_af_tool_group() {
+    local tool="$1"
+    case "$tool" in
+        Bash)                                    printf 'execute' ;;
+        Read|Glob|Grep)                          printf 'observe' ;;
+        Write|Edit|NotebookEdit)                 printf 'modify' ;;
+        WebFetch|WebSearch)                      printf 'network' ;;
+        Agent)                                   printf 'dispatch' ;;
+        AskUserQuestion|ExitPlanMode)            printf 'interact' ;;
+        *)                                       printf '%s' "$(printf '%s' "$tool" | tr '[:upper:]' '[:lower:]')" ;;
+    esac
+}
+
 # Play the sound for a given event. Blocks until done.
 # Silent no-op if sound is "off" or file is missing.
 af_play_event() {
@@ -157,6 +173,59 @@ af_play_event() {
 
     local sounds_dir
     sounds_dir="$(_af_sounds_dir)"
+    local sound_file="$sounds_dir/${sound}.wav"
+    [ -f "$sound_file" ] || return 0
+
+    paplay "$sound_file" 2>/dev/null || true
+}
+
+# Play with subtype resolution. Tries a subtype-specific sound file first
+# (e.g. "notification-permission.wav"), then falls back to the generic
+# event sound (e.g. "notification.wav" via config).
+#
+# Subtype mapping: the hook passes raw subtype values from the JSON
+# (e.g. "permission_prompt", "startup"). We normalize to filename form
+# by replacing underscores with hyphens: "permission_prompt" -> "permission-prompt".
+#
+# Resolution order:
+# 1. sounds/<theme>/<event>-<normalized-subtype>.wav  (if file exists)
+# 2. Config-based generic sound via af_sound_for_event (existing behavior)
+af_play_event_with_subtype() {
+    local event="$1"
+    local subtype="$2"
+
+    af_load_config
+    [ "$AF_ENABLED" = "true" ] || return 0
+
+    local sounds_dir
+    sounds_dir="$(_af_sounds_dir)"
+
+    # Try subtype-specific file first (if subtype is non-empty).
+    if [ -n "$subtype" ]; then
+        # Normalize event: underscores -> hyphens, lowercase
+        local norm_event norm_subtype
+        norm_event="$(printf '%s' "$event" | tr '_' '-' | tr '[:upper:]' '[:lower:]')"
+
+        # For tool events, map tool_name to its group rather than using
+        # individual tool names as filenames. This avoids duplicate files.
+        if [[ "$event" == pre_tool_use || "$event" == post_tool_use ]]; then
+            norm_subtype="$(_af_tool_group "$subtype")"
+        else
+            norm_subtype="$(printf '%s' "$subtype" | tr '_' '-' | tr '[:upper:]' '[:lower:]')"
+        fi
+
+        local subtype_file="$sounds_dir/${norm_event}-${norm_subtype}.wav"
+        if [ -f "$subtype_file" ]; then
+            paplay "$subtype_file" 2>/dev/null || true
+            return 0
+        fi
+    fi
+
+    # Fall back to generic event sound from config.
+    local sound
+    sound="$(af_sound_for_event "$event")"
+    [ "$sound" = "off" ] && return 0
+
     local sound_file="$sounds_dir/${sound}.wav"
     [ -f "$sound_file" ] || return 0
 
