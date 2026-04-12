@@ -5,7 +5,7 @@
 set -e
 
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
-# shellcheck source=scripts/lib.sh
+# shellcheck source=lib.sh disable=SC1091
 source "$SCRIPT_DIR/lib.sh"
 
 voices_dir="$(tts_voices_dir)"

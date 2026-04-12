@@ -38,6 +38,8 @@ tts_default_interrupt="true"
 # Load config into shell variables. Missing keys fall back to defaults.
 # Sets: TTS_VOICE, TTS_VOLUME, TTS_SPEAK_MODE, TTS_MAX_CHARS,
 #       TTS_ENABLED, TTS_INTERRUPT_ON_TYPE
+#
+# shellcheck disable=SC2034  # these vars are consumed by files that source lib.sh
 tts_load_config() {
     local cfg
     cfg="$(tts_config_file)"
@@ -178,6 +180,9 @@ tts_strip_markdown() {
             pandoc -f markdown -t plain 2>/dev/null
         else
             # Fallback: strip inline code, emphasis, headings, link wrappers.
+            # Single-quoted sed patterns are intentional — these are literal
+            # regex expressions, not shell variables.
+            # shellcheck disable=SC2016
             sed -e 's/`\([^`]*\)`/\1/g' \
                 -e 's/\*\*\([^*]*\)\*\*/\1/g' \
                 -e 's/\*\([^*]*\)\*/\1/g' \

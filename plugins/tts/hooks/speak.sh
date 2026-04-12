@@ -13,7 +13,7 @@
 set +e  # never fail the hook — silent is safer than blocking Claude
 
 HOOK_DIR="$(dirname "$(readlink -f "$0")")"
-# shellcheck source=scripts/lib.sh
+# shellcheck source=../scripts/lib.sh disable=SC1091
 source "$HOOK_DIR/../scripts/lib.sh"
 
 tts_load_config
