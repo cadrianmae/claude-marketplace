@@ -269,7 +269,7 @@
       "name": "tts",
       "source": "./plugins/tts",
       "description": "Piper-based text-to-speech for Claude Code. Speaks assistant responses aloud via a Stop hook; interrupt-on-type via a UserPromptSubmit hook. Three speak modes (full/truncate/summary via Haiku). Single unified interactive /tts command. Requires Linux, PipeWire (paplay), and piper binary with voices at ~/.local/share/piper-voices/.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "Mae",
         "email": "45900436+cadrianmae@users.noreply.github.com"

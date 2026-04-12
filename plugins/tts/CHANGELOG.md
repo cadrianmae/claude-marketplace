@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-04-12
+
+### Fixed
+- **Stop hook text extraction was broken in two ways.** First, it stopped
+  at the first assistant message in the transcript regardless of whether
+  the message had any text content — so turns whose most recent JSONL
+  line was a pure `thinking` or `tool_use` block resulted in empty
+  speech and a silent hook.
+- **Second, the turn-boundary detection was wrong.** The hook walked
+  backwards looking for the last `role: "user"` message, but in Claude
+  Code transcripts `role: "user"` covers BOTH real human prompts AND
+  tool_result responses (tool results are modeled as user-role messages
+  in the API). The old logic would stop at the most recent tool_result,
+  missing most of the current agent turn's text.
+
+### Changed
+- **Stop hook now extracts the full current agent turn.** A single turn
+  can span many JSONL lines: text → thinking → tool_use → tool_result
+  → more text → another tool_use → final text. The new implementation
+  uses `jq -s` to slurp the transcript, finds the index of the most
+  recent REAL user message (filtering by content type: string or
+  text-block array, NOT tool_result array), then concatenates text
+  from every assistant message that comes after it. Thinking and
+  tool_use blocks contribute nothing; text blocks are joined with
+  blank lines between messages.
+
+### Technical Details
+- `hooks/speak.sh` — replaced the per-line `tac | while` walk with a
+  single `jq -rs` slurp invocation that filters, collects, and joins
+  in one pass. Includes an `is_real_user` predicate that distinguishes
+  human input from tool_result entries by inspecting
+  `.message.content` type and block types.
+
 ## [0.1.0] - 2026-04-12
 
 ### Added
