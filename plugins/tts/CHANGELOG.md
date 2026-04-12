@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-04-12
+
+### Added
+- **Stop hook chime.** Plays a short synth sound before speech starts
+  to signal "Claude finished responding." Default: `soft-chime` (warm
+  C4+E4 chord, 0.4s). Four bundled sounds: `soft-chime`, `pip`, `hum`,
+  `bell`. All generated with sox, normalized to 0dB peak, mono 44.1kHz.
+- Two new config keys:
+  - `CHIME_ENABLED` (default `true`) — toggle chime on/off
+  - `CHIME_SOUND` (default `soft-chime`) — which bundled sound to play
+- `tts-config` view mode now shows available chime sounds.
+- `config.sh` validates `CHIME_SOUND` against bundled files.
+- Chime plays only when `TTS_ENABLED=true` (no sound when TTS is off).
+- Chime plays synchronously before speech, so you hear
+  "ding... [spoken response]" with no overlap.
+
+### Technical Details
+- `scripts/lib.sh` — new `_tts_sounds_dir()`, `tts_play_chime()`,
+  `tts_list_chimes()` functions. Config defaults and loading for
+  `CHIME_ENABLED` and `CHIME_SOUND`.
+- `hooks/speak.sh` — calls `tts_play_chime` after `TTS_ENABLED` check,
+  before transcript extraction and speech.
+- `sounds/` — four bundled WAV files (292KB total), generated via sox
+  synth with normalize to 0dB peak.
+
 ## [0.1.3] - 2026-04-12
 
 ### Added

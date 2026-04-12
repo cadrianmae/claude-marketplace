@@ -45,6 +45,11 @@ tts_voices_dir() {
     printf '%s' "${HOME}/.local/share/piper-voices"
 }
 
+# Resolve the plugin's bundled sounds/ directory via this script's location.
+_tts_sounds_dir() {
+    printf '%s' "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../sounds"
+}
+
 # ---- config -------------------------------------------------------------
 
 # Default values for every known config key. Used when loading from a
@@ -59,11 +64,14 @@ tts_default_speed="1.0"
 tts_default_expressiveness="0.667"
 tts_default_pronunciation_variation="0.8"
 tts_default_sentence_silence="0.0"
+tts_default_chime_enabled="true"
+tts_default_chime_sound="soft-chime"
 
 # Load config into shell variables. Missing keys fall back to defaults.
 # Sets: TTS_VOICE, TTS_VOLUME, TTS_SPEAK_MODE, TTS_MAX_CHARS,
 #       TTS_ENABLED, TTS_INTERRUPT_ON_TYPE, TTS_SPEED,
-#       TTS_EXPRESSIVENESS, TTS_PRONUNCIATION_VARIATION, TTS_SENTENCE_SILENCE
+#       TTS_EXPRESSIVENESS, TTS_PRONUNCIATION_VARIATION, TTS_SENTENCE_SILENCE,
+#       TTS_CHIME_ENABLED, TTS_CHIME_SOUND
 #
 # shellcheck disable=SC2034  # these vars are consumed by files that source lib.sh
 tts_load_config() {
@@ -80,6 +88,8 @@ tts_load_config() {
     TTS_EXPRESSIVENESS="$tts_default_expressiveness"
     TTS_PRONUNCIATION_VARIATION="$tts_default_pronunciation_variation"
     TTS_SENTENCE_SILENCE="$tts_default_sentence_silence"
+    TTS_CHIME_ENABLED="$tts_default_chime_enabled"
+    TTS_CHIME_SOUND="$tts_default_chime_sound"
 
     [ -f "$cfg" ] || return 0
 
@@ -102,6 +112,8 @@ tts_load_config() {
             EXPRESSIVENESS) TTS_EXPRESSIVENESS="$value" ;;
             PRONUNCIATION_VARIATION) TTS_PRONUNCIATION_VARIATION="$value" ;;
             SENTENCE_SILENCE) TTS_SENTENCE_SILENCE="$value" ;;
+            CHIME_ENABLED) TTS_CHIME_ENABLED="$value" ;;
+            CHIME_SOUND) TTS_CHIME_SOUND="$value" ;;
         esac
     done < "$cfg"
 }
@@ -124,6 +136,8 @@ SPEED=$tts_default_speed
 EXPRESSIVENESS=$tts_default_expressiveness
 PRONUNCIATION_VARIATION=$tts_default_pronunciation_variation
 SENTENCE_SILENCE=$tts_default_sentence_silence
+CHIME_ENABLED=$tts_default_chime_enabled
+CHIME_SOUND=$tts_default_chime_sound
 EOF
 }
 
@@ -415,6 +429,36 @@ tts_summarize() {
 
     # Use --print for one-shot non-interactive invocation
     claude --model haiku --print "$prompt" 2>/dev/null
+}
+
+# ---- chime --------------------------------------------------------------
+
+# Play the configured chime sound synchronously (blocks until done).
+# Call this BEFORE speech so the chime finishes before piper starts.
+# Returns 0 even if the sound file is missing (silent no-op).
+tts_play_chime() {
+    tts_load_config
+    [ "$TTS_CHIME_ENABLED" = "true" ] || return 0
+
+    local sounds_dir
+    sounds_dir="$(_tts_sounds_dir)"
+    local chime_file="$sounds_dir/${TTS_CHIME_SOUND}.wav"
+
+    [ -f "$chime_file" ] || return 0
+    paplay "$chime_file" 2>/dev/null || true
+}
+
+# List available chime sound names (one per line).
+tts_list_chimes() {
+    local sounds_dir
+    sounds_dir="$(_tts_sounds_dir)"
+    [ -d "$sounds_dir" ] || return 0
+
+    local f
+    for f in "$sounds_dir"/*.wav; do
+        [ -e "$f" ] || continue
+        basename "$f" .wav
+    done | sort
 }
 
 # ---- interrupt ----------------------------------------------------------

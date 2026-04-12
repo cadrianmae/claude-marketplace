@@ -19,6 +19,9 @@ source "$HOOK_DIR/../scripts/lib.sh"
 tts_load_config
 [ "$TTS_ENABLED" = "true" ] || exit 0
 
+# Play chime before speech (blocks until done so chime finishes first).
+tts_play_chime
+
 # Read the hook JSON input from stdin. Claude Code passes transcript
 # metadata here. We need the transcript path to extract the last
 # assistant message.

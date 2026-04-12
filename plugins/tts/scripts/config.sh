@@ -27,9 +27,12 @@ if [ $# -eq 0 ]; then
     echo "  EXPRESSIVENESS=$TTS_EXPRESSIVENESS"
     echo "  PRONUNCIATION_VARIATION=$TTS_PRONUNCIATION_VARIATION"
     echo "  SENTENCE_SILENCE=$TTS_SENTENCE_SILENCE"
+    echo "  CHIME_ENABLED=$TTS_CHIME_ENABLED"
+    echo "  CHIME_SOUND=$TTS_CHIME_SOUND"
     echo
     echo "Update with: /tts config KEY=VALUE"
     echo "  Speed note: <1.0 = faster, >1.0 = slower (piper's inverted scale)"
+    echo "  Chime sounds: $(tts_list_chimes | tr '\n' ' ')"
     exit 0
 fi
 
@@ -108,9 +111,26 @@ for arg in "$@"; do
                 exit 1
             fi
             ;;
+        CHIME_ENABLED)
+            case "$value" in
+                true|false) ;;
+                *)
+                    echo "Error: CHIME_ENABLED must be true|false (got '$value')" >&2
+                    exit 1
+                    ;;
+            esac
+            ;;
+        CHIME_SOUND)
+            sounds_dir="$(_tts_sounds_dir)"
+            if [ ! -f "$sounds_dir/${value}.wav" ]; then
+                echo "Error: sound '$value' not found in $sounds_dir" >&2
+                echo "Available: $(tts_list_chimes | tr '\n' ' ')" >&2
+                exit 1
+            fi
+            ;;
         *)
             echo "Error: unknown key '$key'" >&2
-            echo "Valid keys: VOICE VOLUME SPEAK_MODE MAX_CHARS TTS_ENABLED INTERRUPT_ON_TYPE SPEED EXPRESSIVENESS PRONUNCIATION_VARIATION SENTENCE_SILENCE" >&2
+            echo "Valid keys: VOICE VOLUME SPEAK_MODE MAX_CHARS TTS_ENABLED INTERRUPT_ON_TYPE SPEED EXPRESSIVENESS PRONUNCIATION_VARIATION SENTENCE_SILENCE CHIME_ENABLED CHIME_SOUND" >&2
             exit 1
             ;;
     esac
