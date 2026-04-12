@@ -106,11 +106,11 @@ tts_write_config() {
 
 # ---- voices -------------------------------------------------------------
 
-# Print short voice names (one per line), derived from .onnx filenames.
-# Strips locale prefix ("en_GB-", "en_US-") and quality suffix
-# ("-medium", "-low", "-high"). Voices without a recognizable prefix
-# (e.g. "glados_piper_medium") are emitted with the trailing "_piper_SUFFIX"
-# cleaned up.
+# Print short voice names (one per line, alphabetically sorted), derived
+# from .onnx filenames. Strips locale prefix ("en_GB-", "en_US-") and
+# quality suffix ("-medium", "-low", "-high"). Voices without a
+# recognizable prefix (e.g. "glados_piper_medium") are emitted with the
+# trailing "_piper_SUFFIX" cleaned up.
 tts_list_voices() {
     local dir
     dir="$(tts_voices_dir)"
@@ -131,7 +131,7 @@ tts_list_voices() {
         name="${name%_piper_low}"
         name="${name%_piper_high}"
         printf '%s\n' "$name"
-    done
+    done | sort
 }
 
 # Resolve a short voice name (e.g. "aru") to its absolute .onnx path.
