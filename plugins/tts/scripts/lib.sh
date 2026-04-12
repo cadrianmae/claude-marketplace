@@ -1,6 +1,7 @@
 #!/bin/bash
 # Shared helpers for the tts plugin.
-# Sourced by every script in scripts/ — contains no top-level side effects.
+# Sourced by every script in scripts/ — contains no top-level side effects
+# EXCEPT the LD_LIBRARY_PATH setup for NVIDIA CUDA libraries below.
 #
 # Exposed functions:
 #   tts_config_file            - path to ~/.claude/.tts-config
@@ -13,6 +14,26 @@
 #   tts_strip_markdown         - read stdin, write plain text to stdout
 #   tts_speak TEXT             - fire-and-forget: strip, truncate, piper, paplay, detach
 #   tts_kill_inflight          - kill any in-flight tts paplay
+
+# ---- NVIDIA CUDA library path setup --------------------------------------
+#
+# onnxruntime-gpu needs CUDA libraries (cublas, cudnn, curand, cufft,
+# cudart) on LD_LIBRARY_PATH. When installed via pip (nvidia-cublas-cu12
+# etc.), these live in ~/.local/lib/pythonX.Y/site-packages/nvidia/*/lib/.
+# Discover and prepend them automatically so piper --cuda works without
+# manual LD_LIBRARY_PATH setup in the user's shell or the hook runner.
+_tts_nvidia_lib_root="${HOME}/.local/lib/python$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)/site-packages/nvidia"
+if [ -d "$_tts_nvidia_lib_root" ]; then
+    _tts_nv_paths=""
+    for _tts_nv_dir in "$_tts_nvidia_lib_root"/*/lib; do
+        [ -d "$_tts_nv_dir" ] && _tts_nv_paths="${_tts_nv_paths:+$_tts_nv_paths:}$_tts_nv_dir"
+    done
+    if [ -n "$_tts_nv_paths" ]; then
+        export LD_LIBRARY_PATH="${_tts_nv_paths}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    fi
+    unset _tts_nv_paths _tts_nv_dir
+fi
+unset _tts_nvidia_lib_root
 
 # ---- paths --------------------------------------------------------------
 
