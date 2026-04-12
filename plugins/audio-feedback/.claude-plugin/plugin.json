@@ -1,0 +1,24 @@
+{
+  "name": "audio-feedback",
+  "version": "0.1.0",
+  "description": "Audio feedback for Claude Code hook events. Plays short synth sounds on response complete, notifications, context compaction, and user input. Configurable per-event with bundled sounds. Requires Linux + PipeWire (paplay).",
+  "author": {
+    "name": "Mae Capacite",
+    "email": "45900436+cadrianmae@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/cadrianmae/claude-marketplace",
+  "repository": "https://github.com/cadrianmae/claude-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "audio",
+    "sounds",
+    "feedback",
+    "chime",
+    "hooks",
+    "notifications",
+    "accessibility",
+    "pipewire",
+    "linux"
+  ],
+  "skills": "./skills/"
+}

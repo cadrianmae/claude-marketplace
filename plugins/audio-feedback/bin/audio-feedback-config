@@ -1,0 +1,5 @@
+#!/bin/bash
+# Wrapper for config.sh. Resolves the plugin root via its own location
+# so the skill can call `audio-feedback-config ARGS...` without needing
+# $CLAUDE_PLUGIN_ROOT (not substituted in SKILL.md; anthropics/claude-code#9354).
+exec "$(dirname "$(readlink -f "$0")")/../scripts/config.sh" "$@"
