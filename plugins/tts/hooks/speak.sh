@@ -55,26 +55,43 @@ if ! command -v jq >/dev/null 2>&1; then
     exit 0
 fi
 
+# Extract all assistant text from the current turn.
+#
+# A single agent turn can span many JSONL lines: text → thinking → tool_use
+# → tool_result → more text → another tool_use → final text. We want to
+# speak EVERYTHING the assistant actually said in text form during the
+# current turn, concatenated in order.
+#
+# Subtlety: role="user" in the transcript is NOT just the human user. It
+# also includes tool_result messages (wrapped as user role because that's
+# how the API models tool responses). A real human user message has
+# content that is either a plain string OR an array containing a text
+# block. Tool results have arrays containing tool_result blocks.
+#
+# Strategy: find the index of the most recent REAL user message, then
+# collect text blocks from every assistant message that comes after it.
+# Pure thinking or tool_use messages contribute nothing and are skipped.
 latest_text="$(
-    tac "$transcript_path" 2>/dev/null \
-        | while IFS= read -r line; do
-            role="$(printf '%s' "$line" | jq -r '.message.role // empty' 2>/dev/null)"
-            [ "$role" = "assistant" ] || continue
-            text="$(printf '%s' "$line" | jq -r '
-                .message.content
-                | if type == "array" then
-                    map(select(.type == "text") | .text) | join("\n")
-                  elif type == "string" then
-                    .
-                  else empty end
-            ' 2>/dev/null)"
-            # Skip assistant messages that are pure tool_use (no text block).
-            # Walk back until we find a message that actually has speakable text.
-            if [ -n "$text" ]; then
-                printf '%s' "$text"
-                break
-            fi
-        done
+    jq -rs '
+        def is_real_user:
+            .message.role == "user"
+            and (.message.content
+                 | if type == "string" then true
+                   elif type == "array" then (map(.type) | any(. == "text"))
+                   else false end);
+
+        (map(is_real_user) | length - 1 - (reverse | index(true) // length)) as $idx
+        | .[$idx + 1:]
+        | map(select(.message.role == "assistant"))
+        | map(.message.content
+            | if type == "array" then
+                map(select(.type == "text") | .text) | join("\n")
+              elif type == "string" then
+                .
+              else empty end)
+        | map(select(length > 0))
+        | join("\n\n")
+    ' "$transcript_path" 2>/dev/null
 )"
 
 [ -z "$latest_text" ] && exit 0
