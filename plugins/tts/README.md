@@ -1,4 +1,4 @@
-[![Version](https://img.shields.io/badge/version-0.1.2-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![Version](https://img.shields.io/badge/version-0.1.3-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 # TTS Plugin v0.1
@@ -71,6 +71,10 @@ Global config file: `~/.claude/.tts-config`
 | `MAX_CHARS` | `1000` | integer | Char cap for `truncate` and `summary` modes |
 | `TTS_ENABLED` | `false` | `true` / `false` | Master on/off switch |
 | `INTERRUPT_ON_TYPE` | `true` | `true` / `false` | Kill in-flight paplay on UserPromptSubmit |
+| `SPEED` | `1.0` | 0.1-3.0 (float) | Speech rate. Inverted: <1.0 = faster, >1.0 = slower |
+| `EXPRESSIVENESS` | `0.667` | 0.0-1.0 (float) | Generator noise. Higher = more expressive |
+| `PRONUNCIATION_VARIATION` | `0.8` | 0.0-1.0 (float) | Phoneme width noise. Higher = more variation |
+| `SENTENCE_SILENCE` | `0.0` | 0.0-5.0 (float) | Seconds of silence between sentences |
 
 ## Speak modes
 

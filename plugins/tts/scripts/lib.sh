@@ -55,10 +55,15 @@ tts_default_speak_mode="truncate"
 tts_default_max_chars="1000"
 tts_default_enabled="false"
 tts_default_interrupt="true"
+tts_default_speed="1.0"
+tts_default_expressiveness="0.667"
+tts_default_pronunciation_variation="0.8"
+tts_default_sentence_silence="0.0"
 
 # Load config into shell variables. Missing keys fall back to defaults.
 # Sets: TTS_VOICE, TTS_VOLUME, TTS_SPEAK_MODE, TTS_MAX_CHARS,
-#       TTS_ENABLED, TTS_INTERRUPT_ON_TYPE
+#       TTS_ENABLED, TTS_INTERRUPT_ON_TYPE, TTS_SPEED,
+#       TTS_EXPRESSIVENESS, TTS_PRONUNCIATION_VARIATION, TTS_SENTENCE_SILENCE
 #
 # shellcheck disable=SC2034  # these vars are consumed by files that source lib.sh
 tts_load_config() {
@@ -71,6 +76,10 @@ tts_load_config() {
     TTS_MAX_CHARS="$tts_default_max_chars"
     TTS_ENABLED="$tts_default_enabled"
     TTS_INTERRUPT_ON_TYPE="$tts_default_interrupt"
+    TTS_SPEED="$tts_default_speed"
+    TTS_EXPRESSIVENESS="$tts_default_expressiveness"
+    TTS_PRONUNCIATION_VARIATION="$tts_default_pronunciation_variation"
+    TTS_SENTENCE_SILENCE="$tts_default_sentence_silence"
 
     [ -f "$cfg" ] || return 0
 
@@ -89,6 +98,10 @@ tts_load_config() {
             MAX_CHARS) TTS_MAX_CHARS="$value" ;;
             TTS_ENABLED) TTS_ENABLED="$value" ;;
             INTERRUPT_ON_TYPE) TTS_INTERRUPT_ON_TYPE="$value" ;;
+            SPEED) TTS_SPEED="$value" ;;
+            EXPRESSIVENESS) TTS_EXPRESSIVENESS="$value" ;;
+            PRONUNCIATION_VARIATION) TTS_PRONUNCIATION_VARIATION="$value" ;;
+            SENTENCE_SILENCE) TTS_SENTENCE_SILENCE="$value" ;;
         esac
     done < "$cfg"
 }
@@ -107,6 +120,10 @@ SPEAK_MODE=$tts_default_speak_mode
 MAX_CHARS=$tts_default_max_chars
 TTS_ENABLED=$tts_default_enabled
 INTERRUPT_ON_TYPE=$tts_default_interrupt
+SPEED=$tts_default_speed
+EXPRESSIVENESS=$tts_default_expressiveness
+PRONUNCIATION_VARIATION=$tts_default_pronunciation_variation
+SENTENCE_SILENCE=$tts_default_sentence_silence
 EOF
 }
 
@@ -367,6 +384,10 @@ tts_speak() {
     if [ -n "$speaker_id" ]; then
         piper_cmd+=" --speaker $speaker_id"
     fi
+    piper_cmd+=" --length-scale $TTS_SPEED"
+    piper_cmd+=" --noise-scale $TTS_EXPRESSIVENESS"
+    piper_cmd+=" --noise-w-scale $TTS_PRONUNCIATION_VARIATION"
+    piper_cmd+=" --sentence-silence $TTS_SENTENCE_SILENCE"
     piper_cmd+=" --output-raw 2>/dev/null"
 
     # Detach via setsid so audio survives Claude Code's process group.

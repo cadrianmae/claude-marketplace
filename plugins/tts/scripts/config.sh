@@ -23,8 +23,13 @@ if [ $# -eq 0 ]; then
     echo "  MAX_CHARS=$TTS_MAX_CHARS"
     echo "  TTS_ENABLED=$TTS_ENABLED"
     echo "  INTERRUPT_ON_TYPE=$TTS_INTERRUPT_ON_TYPE"
+    echo "  SPEED=$TTS_SPEED"
+    echo "  EXPRESSIVENESS=$TTS_EXPRESSIVENESS"
+    echo "  PRONUNCIATION_VARIATION=$TTS_PRONUNCIATION_VARIATION"
+    echo "  SENTENCE_SILENCE=$TTS_SENTENCE_SILENCE"
     echo
     echo "Update with: /tts config KEY=VALUE"
+    echo "  Speed note: <1.0 = faster, >1.0 = slower (piper's inverted scale)"
     exit 0
 fi
 
@@ -75,9 +80,37 @@ for arg in "$@"; do
                     ;;
             esac
             ;;
+        SPEED)
+            if ! [[ "$value" =~ ^[0-9]*\.?[0-9]+$ ]] || \
+               ! awk "BEGIN{exit(!($value >= 0.1 && $value <= 3.0))}"; then
+                echo "Error: SPEED must be a float 0.1-3.0 (got '$value'). Note: <1.0 = faster, >1.0 = slower" >&2
+                exit 1
+            fi
+            ;;
+        EXPRESSIVENESS)
+            if ! [[ "$value" =~ ^[0-9]*\.?[0-9]+$ ]] || \
+               ! awk "BEGIN{exit(!($value >= 0.0 && $value <= 1.0))}"; then
+                echo "Error: EXPRESSIVENESS must be a float 0.0-1.0 (got '$value')" >&2
+                exit 1
+            fi
+            ;;
+        PRONUNCIATION_VARIATION)
+            if ! [[ "$value" =~ ^[0-9]*\.?[0-9]+$ ]] || \
+               ! awk "BEGIN{exit(!($value >= 0.0 && $value <= 1.0))}"; then
+                echo "Error: PRONUNCIATION_VARIATION must be a float 0.0-1.0 (got '$value')" >&2
+                exit 1
+            fi
+            ;;
+        SENTENCE_SILENCE)
+            if ! [[ "$value" =~ ^[0-9]*\.?[0-9]+$ ]] || \
+               ! awk "BEGIN{exit(!($value >= 0.0 && $value <= 5.0))}"; then
+                echo "Error: SENTENCE_SILENCE must be a float 0.0-5.0 (got '$value')" >&2
+                exit 1
+            fi
+            ;;
         *)
             echo "Error: unknown key '$key'" >&2
-            echo "Valid keys: VOICE VOLUME SPEAK_MODE MAX_CHARS TTS_ENABLED INTERRUPT_ON_TYPE" >&2
+            echo "Valid keys: VOICE VOLUME SPEAK_MODE MAX_CHARS TTS_ENABLED INTERRUPT_ON_TYPE SPEED EXPRESSIVENESS PRONUNCIATION_VARIATION SENTENCE_SILENCE" >&2
             exit 1
             ;;
     esac

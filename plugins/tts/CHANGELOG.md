@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-04-12
+
+### Added
+- **Voice configuration parameters.** Four new config keys for tuning
+  piper's voice output:
+  - `SPEED` (default `1.0`, range 0.1-3.0) — maps to `--length-scale`.
+    **Inverted scale**: <1.0 = faster, >1.0 = slower. 0.7 is a good
+    fast default.
+  - `EXPRESSIVENESS` (default `0.667`, range 0.0-1.0) — maps to
+    `--noise-scale`. Higher = more expressive/varied speech.
+  - `PRONUNCIATION_VARIATION` (default `0.8`, range 0.0-1.0) — maps to
+    `--noise-w-scale`. Higher = more variation in phoneme timing.
+  - `SENTENCE_SILENCE` (default `0.0`, range 0.0-5.0) — maps to
+    `--sentence-silence`. Seconds of silence between sentences.
+- `tts-config` view mode now displays all 10 config keys (was 6).
+- Float validation in `config.sh` using awk for range checking.
+- Speed note in `tts-config` output reminding about the inverted scale.
+
+### Technical Details
+- `scripts/lib.sh` — 4 new default vars, 4 new case entries in
+  `tts_load_config`, 4 new lines in `tts_ensure_config` heredoc,
+  4 new `--length-scale`/`--noise-scale`/`--noise-w-scale`/
+  `--sentence-silence` flags in `tts_speak`'s piper command string.
+- `scripts/config.sh` — 4 new validation cases using regex + awk
+  float range checks. Updated view mode and error message key list.
+- `skills/tts/SKILL.md` — updated Configuration Reference table and
+  Important Notes section with speed scale explanation.
+- `README.md` — updated Configuration table.
+
 ## [0.1.2] - 2026-04-12
 
 ### Added

@@ -1,7 +1,7 @@
 ---
 name: tts
 description: This skill should be used when the user asks to "speak something", "read this aloud", "enable text to speech", "change voice", "try a different voice", "list available voices", "turn tts on/off", "test tts", "configure tts", "adjust tts volume", "pick a speaker", or anything involving the tts plugin for Piper-based text-to-speech. Single unified interactive entry point. Supports multi-speaker voices via voice:speaker syntax.
-version: 0.1.2
+version: 0.1.3
 user-invocable: true
 allowed-tools: [Bash, Read, AskUserQuestion]
 argument-hint: "[speak|test|voices|voice|config|auto|help] [args...]"
@@ -55,6 +55,10 @@ The global config file is `~/.claude/.tts-config`. Both this skill and the hooks
 | `MAX_CHARS` | `1000` | positive integer | Char cap for `truncate` and `summary` modes |
 | `TTS_ENABLED` | `false` | `true` / `false` | Master on/off switch — hooks are no-ops when false |
 | `INTERRUPT_ON_TYPE` | `true` | `true` / `false` | Kill in-flight `paplay` on UserPromptSubmit |
+| `SPEED` | `1.0` | 0.1–3.0 (float) | Speech rate via piper `--length-scale`. **Inverted**: <1.0 = faster, >1.0 = slower |
+| `EXPRESSIVENESS` | `0.667` | 0.0–1.0 (float) | Generator noise via `--noise-scale`. Higher = more expressive |
+| `PRONUNCIATION_VARIATION` | `0.8` | 0.0–1.0 (float) | Phoneme width noise via `--noise-w-scale`. Higher = more variation |
+| `SENTENCE_SILENCE` | `0.0` | 0.0–5.0 (float) | Seconds of silence between sentences via `--sentence-silence` |
 
 **First-install state:** `TTS_ENABLED=false`. The user opts in via `/tts auto on`.
 
@@ -181,6 +185,7 @@ The first positional argument is the subcommand. **If the first argument matches
 - The Stop hook is a no-op when `TTS_ENABLED=false`. The config file holds the authoritative state — flip it via `/tts auto`, not by editing the file.
 - First-install default is **off**. No surprise audio. The user explicitly runs `/tts auto on` to start hearing Claude.
 - Piper raw output is already −13.8 LUFS with +0.8 dBFS true peak. **Volume is attenuation-only via `paplay --volume=N`.** Do not advise the user to amplify via `sox -v` or similar — it causes clipping ("earrape"). 40000 is the sweet spot.
+- **SPEED uses piper's inverted `--length-scale`:** values below 1.0 are faster, above 1.0 are slower. 0.7 is noticeably faster; 0.5 is very fast but may sound robotic. 1.3 is a relaxed pace.
 - The plugin requires PipeWire. On Pulse-only or ALSA-direct systems, `paplay --raw` will fail silently. There is currently no fallback.
 - Multi-speaker voices use `name:speaker` syntax (e.g. `semaine:poppy`, `semaine:3`). Speaker names are looked up in the voice's `.onnx.json` `speaker_id_map`. Not all voices are multi-speaker — `tts-voices` annotates those that are.
 - If the user asks for "tool-use announcements" or "speak what Claude is about to do", that's tier D from the design and was deferred. Explain that it's not in v0.1 and offer to file it as a future feature.
