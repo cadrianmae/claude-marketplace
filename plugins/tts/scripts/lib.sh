@@ -338,9 +338,11 @@ tts_speak() {
 
     [ -z "$processed" ] && return 0
 
-    # Build the piper invocation. Include --speaker N for multi-speaker
-    # voices when a specific speaker was requested in TTS_VOICE.
-    local piper_cmd="piper --model '$voice_file'"
+    # Build the piper invocation. Always pass --cuda so piper uses GPU
+    # when CUDAExecutionProvider is available in onnxruntime; it falls
+    # back to CPU gracefully with a stderr warning if CUDA is absent.
+    # Include --speaker N for multi-speaker voices.
+    local piper_cmd="piper --model '$voice_file' --cuda"
     if [ -n "$speaker_id" ]; then
         piper_cmd+=" --speaker $speaker_id"
     fi
