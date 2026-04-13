@@ -2,7 +2,9 @@
   "name": "cadrianmae-integration",
   "version": "1.0.3",
   "description": "Integrate marketplace plugins into CLAUDE.md with user/project scope selection",
-  "author": "cadrianmae",
+  "author": {
+    "name": "Mae"
+  },
   "homepage": "https://github.com/cadrianmae/claude-marketplace",
   "repository": "https://github.com/cadrianmae/claude-marketplace",
   "license": "MIT",
