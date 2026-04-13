@@ -1,6 +1,7 @@
 ---
 name: pandoc
 description: Automatically assist with Pandoc document conversions when user mentions converting markdown to PDF/DOCX/HTML or other formats. Validate YAML frontmatter, check dependencies (bibliography, images), and provide format-specific conversion guidance. Use when user asks about citations, academic papers, presentations, or document generation from markdown.
+context: fork
 allowed-tools: Bash, Read, Write
 ---
 

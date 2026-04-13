@@ -3,7 +3,7 @@ name: track
 description: This skill should be used when the user asks to "initialize tracking", "enable/disable tracking", "toggle auto-tracking", "configure tracking verbosity", "export bibliography", "export methodology", "generate BibTeX", "create citation timeline", or anything involving the track plugin for reference and prompt tracking. Single unified interactive entry point.
 version: 2.7.0
 user-invocable: true
-allowed-tools: [Bash, Read, Write, AskUserQuestion]
+allowed-tools: Bash, Read, Write, AskUserQuestion
 argument-hint: "[init|config|auto|export|help] [args...]"
 ---
 

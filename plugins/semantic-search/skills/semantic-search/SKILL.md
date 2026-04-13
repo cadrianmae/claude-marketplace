@@ -1,6 +1,7 @@
 ---
 name: semantic-search
 description: Use semantic search to find relevant code and documentation when user asks about specific functionality, features, or implementation patterns. Automatically invoke when user asks "where is...", "how does... work", "find code that...", or similar conceptual queries. More powerful than grep for concept-based searches. Uses odino CLI with BGE embeddings for fully local semantic search.
+context: fork
 allowed-tools: Bash, Read
 ---
 

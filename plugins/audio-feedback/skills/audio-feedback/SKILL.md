@@ -3,7 +3,7 @@ name: audio-feedback
 description: This skill should be used when the user asks to "configure audio feedback", "change sound settings", "enable/disable sounds", "set notification sound", "mute audio", "turn off sounds", "change the chime", "audio settings", or anything involving the audio-feedback plugin for hook event sounds.
 version: 0.1.0
 user-invocable: true
-allowed-tools: [Bash, AskUserQuestion]
+allowed-tools: Bash, AskUserQuestion
 argument-hint: "[config|sounds|test|help] [args...]"
 ---
 
