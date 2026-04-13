@@ -1,0 +1,13 @@
+{
+  "name": "cadrianmae-issues",
+  "version": "1.0.0",
+  "description": "File bugs and feature requests as GitHub issues on cadrianmae/claude-marketplace via gh CLI.",
+  "author": {
+    "name": "Mae",
+    "email": "45900436+cadrianmae@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/cadrianmae/claude-marketplace",
+  "repository": "https://github.com/cadrianmae/claude-marketplace",
+  "keywords": ["issues", "bugs", "features", "github", "tracking"],
+  "license": "MIT"
+}
