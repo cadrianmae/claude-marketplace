@@ -371,11 +371,10 @@ tts_speak() {
             ;;
         summary)
             local summary
-            summary="$(tts_summarize "$processed" "$TTS_MAX_CHARS" 2>/dev/null || true)"
-            if [ -n "$summary" ]; then
+            if summary="$(tts_summarize "$processed" "$TTS_MAX_CHARS" 2>/dev/null)" && [ -n "$summary" ]; then
                 processed="$summary"
             else
-                # Fall through to truncate
+                # Summarize failed — fall through to truncate.
                 if [ "${#processed}" -gt "$TTS_MAX_CHARS" ]; then
                     processed="${processed:0:$TTS_MAX_CHARS}…"
                 fi
@@ -420,15 +419,33 @@ tts_summarize() {
     local max_chars="$2"
 
     command -v claude >/dev/null 2>&1 || return 1
+    command -v jq >/dev/null 2>&1 || return 1
 
     local prompt
-    prompt="Summarize the following assistant response for text-to-speech playback. "
-    prompt+="Constraints: under ${max_chars} characters, no markdown, no code, "
-    prompt+="no preamble, natural spoken language. Just output the summary directly:"$'\n\n'
+    prompt="You are a text summariser. Read the text below and write a spoken-language summary. "
+    prompt+="Put your summary in the \"summary\" field. Under ${max_chars} characters. "
+    prompt+="No markdown. No code. No preamble. Natural speech only."$'\n\n'
     prompt+="$text"
 
-    # Use --print for one-shot non-interactive invocation
-    claude --model haiku --print "$prompt" 2>/dev/null
+    local schema
+    schema='{"type":"object","properties":{"summary":{"type":"string","description":"The spoken-language summary of the input text"}},"required":["summary"]}'
+
+    # One-shot Haiku call: JSON schema output, no tools, no session.
+    local output
+    output="$(printf '%s' "$prompt" | claude --model haiku --print \
+        --output-format json \
+        --json-schema "$schema" \
+        --allowed-tools "" \
+        --no-session-persistence \
+        --disable-slash-commands \
+        2>/dev/null)" || return 1
+
+    # Extract structured summary from JSON output.
+    local summary
+    summary="$(printf '%s' "$output" | jq -r '.structured_output.summary // empty' 2>/dev/null)"
+    [ -n "$summary" ] || return 1
+
+    printf '%s' "$summary"
 }
 
 # ---- chime --------------------------------------------------------------
