@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Click Sound Designer</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    padding: 20px;
+    min-height: 100vh;
+  }
+  h1 { color: #e94560; margin-bottom: 4px; font-size: 1.4em; }
+  h1 + p { color: #666; font-size: 0.85em; margin-bottom: 20px; }
+  h2 {
+    color: #0f3460;
+    background: #16213e;
+    padding: 8px 12px;
+    border-left: 3px solid #e94560;
+    margin: 16px 0 8px;
+    font-size: 0.95em;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 32px;
+  }
+  .param {
+    display: grid;
+    grid-template-columns: 140px 1fr 60px;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+  }
+  .param label { font-size: 0.82em; color: #aaa; }
+  .param input[type=range] {
+    width: 100%;
+    accent-color: #e94560;
+    cursor: pointer;
+  }
+  .param .val {
+    font-size: 0.82em;
+    color: #e94560;
+    font-family: monospace;
+    text-align: right;
+  }
+  .buttons {
+    display: flex;
+    gap: 12px;
+    margin: 20px 0;
+    position: sticky;
+    top: 0;
+    background: #1a1a2e;
+    padding: 12px 0;
+    z-index: 10;
+    border-bottom: 1px solid #16213e;
+  }
+  button {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: opacity 0.15s;
+  }
+  button:active { opacity: 0.7; }
+  button.primary { background: #e94560; color: white; }
+  button.secondary { background: #16213e; color: #e0e0e0; border: 1px solid #333; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .status { font-size: 0.8em; color: #666; align-self: center; }
+  .preset-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .preset-bar button {
+    padding: 5px 12px;
+    font-size: 0.78em;
+    background: #16213e;
+    color: #aaa;
+    border: 1px solid #333;
+    border-radius: 4px;
+  }
+  .preset-bar button:hover { color: #e94560; border-color: #e94560; }
+  .export { background: #16213e; padding: 12px; border-radius: 6px; margin-top: 16px; }
+  .export h3 { font-size: 0.85em; color: #888; margin-bottom: 8px; }
+  .export pre {
+    font-size: 0.75em;
+    color: #0f3460;
+    background: #0d1b2a;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+</style>
+</head>
+<body>
+
+<h1>Click Sound Designer</h1>
+<p>Audio-feedback plugin -- ED station UI click sounds</p>
+
+<div class="buttons">
+  <button class="primary" onclick="play('sequence')">Play Sequence</button>
+  <button class="secondary" onclick="play('single')">Play Single</button>
+  <span class="status" id="status"></span>
+</div>
+
+<div class="preset-bar">
+  <button onclick="loadPreset('current')">Current</button>
+  <button onclick="loadPreset('glass')">Glass</button>
+  <button onclick="loadPreset('mechanical')">Mechanical</button>
+  <button onclick="loadPreset('soft')">Soft Pad</button>
+  <button onclick="loadPreset('bright')">Bright</button>
+</div>
+
+<div class="grid">
+<div>
+
+<h2>Tones</h2>
+<div class="param">
+  <label>Lo Freq</label>
+  <input type="range" id="lo_freq" min="1000" max="6000" value="3000" step="50">
+  <span class="val" id="lo_freq_val"></span>
+</div>
+<div class="param">
+  <label>Hi Freq</label>
+  <input type="range" id="hi_freq" min="3000" max="10000" value="7000" step="50">
+  <span class="val" id="hi_freq_val"></span>
+</div>
+<div class="param">
+  <label>Shimmer Freq</label>
+  <input type="range" id="shimmer_freq" min="2000" max="8000" value="5000" step="50">
+  <span class="val" id="shimmer_freq_val"></span>
+</div>
+<div class="param">
+  <label>Lo Amplitude</label>
+  <input type="range" id="lo_amp" min="0" max="3000" value="1800" step="50">
+  <span class="val" id="lo_amp_val"></span>
+</div>
+<div class="param">
+  <label>Hi Amplitude</label>
+  <input type="range" id="hi_amp" min="0" max="3000" value="1400" step="50">
+  <span class="val" id="hi_amp_val"></span>
+</div>
+<div class="param">
+  <label>Shimmer Amp</label>
+  <input type="range" id="shimmer_amp" min="0" max="1500" value="800" step="50">
+  <span class="val" id="shimmer_amp_val"></span>
+</div>
+
+<h2>Decay</h2>
+<div class="param">
+  <label>Lo Decay</label>
+  <input type="range" id="lo_decay" min="20" max="300" value="60" step="5">
+  <span class="val" id="lo_decay_val"></span>
+</div>
+<div class="param">
+  <label>Hi Decay</label>
+  <input type="range" id="hi_decay" min="50" max="600" value="120" step="5">
+  <span class="val" id="hi_decay_val"></span>
+</div>
+<div class="param">
+  <label>Shimmer Decay</label>
+  <input type="range" id="shimmer_decay" min="50" max="600" value="180" step="5">
+  <span class="val" id="shimmer_decay_val"></span>
+</div>
+
+</div>
+<div>
+
+<h2>Envelope</h2>
+<div class="param">
+  <label>Attack Time</label>
+  <input type="range" id="attack_time" min="0.001" max="0.030" value="0.015" step="0.001">
+  <span class="val" id="attack_time_val"></span>
+</div>
+<div class="param">
+  <label>Click Duration</label>
+  <input type="range" id="click_dur" min="0.020" max="0.100" value="0.055" step="0.005">
+  <span class="val" id="click_dur_val"></span>
+</div>
+
+<h2>Noise / Friction</h2>
+<div class="param">
+  <label>Friction Amount</label>
+  <input type="range" id="friction_amt" min="0" max="1500" value="600" step="50">
+  <span class="val" id="friction_amt_val"></span>
+</div>
+<div class="param">
+  <label>Friction Decay</label>
+  <input type="range" id="friction_decay" min="30" max="300" value="100" step="5">
+  <span class="val" id="friction_decay_val"></span>
+</div>
+<div class="param">
+  <label>Smooth Passes</label>
+  <input type="range" id="smooth_passes" min="1" max="5" value="3" step="1">
+  <span class="val" id="smooth_passes_val"></span>
+</div>
+
+<h2>Impulse</h2>
+<div class="param">
+  <label>Impulse Amp</label>
+  <input type="range" id="impulse_amp" min="0" max="5000" value="0" step="100">
+  <span class="val" id="impulse_amp_val"></span>
+</div>
+
+<h2>Reverb</h2>
+<div class="param">
+  <label>Reverb On</label>
+  <input type="range" id="reverb_on" min="0" max="1" value="1" step="1">
+  <span class="val" id="reverb_on_val"></span>
+</div>
+<div class="param">
+  <label>Reverberance</label>
+  <input type="range" id="reverb_verb" min="0" max="100" value="40" step="5">
+  <span class="val" id="reverb_verb_val"></span>
+</div>
+<div class="param">
+  <label>HF Damping</label>
+  <input type="range" id="reverb_hf" min="0" max="100" value="50" step="5">
+  <span class="val" id="reverb_hf_val"></span>
+</div>
+<div class="param">
+  <label>Room Scale</label>
+  <input type="range" id="reverb_room" min="0" max="100" value="80" step="5">
+  <span class="val" id="reverb_room_val"></span>
+</div>
+
+<h2>Sequence</h2>
+<div class="param">
+  <label>Max Duration</label>
+  <input type="range" id="max_dur" min="0.5" max="3.0" value="2.0" step="0.1">
+  <span class="val" id="max_dur_val"></span>
+</div>
+<div class="param">
+  <label>Start Rate (cps)</label>
+  <input type="range" id="start_rate" min="8" max="24" value="16" step="1">
+  <span class="val" id="start_rate_val"></span>
+</div>
+
+</div>
+</div>
+
+<div class="export">
+  <h3>Export (copy these values for lib.sh)</h3>
+  <pre id="export"></pre>
+</div>
+
+<script>
+const params = [
+  'lo_freq','hi_freq','shimmer_freq',
+  'lo_amp','hi_amp','shimmer_amp',
+  'lo_decay','hi_decay','shimmer_decay',
+  'attack_time','click_dur',
+  'friction_amt','friction_decay','smooth_passes',
+  'impulse_amp',
+  'reverb_on','reverb_verb','reverb_hf','reverb_room',
+  'max_dur','start_rate'
+];
+
+const floatParams = new Set(['attack_time','click_dur','max_dur']);
+
+const presets = {
+  current: {
+    lo_freq:3000, hi_freq:7000, shimmer_freq:5000,
+    lo_amp:1800, hi_amp:1400, shimmer_amp:800,
+    lo_decay:60, hi_decay:120, shimmer_decay:180,
+    attack_time:0.015, click_dur:0.055,
+    friction_amt:600, friction_decay:100, smooth_passes:3,
+    impulse_amp:0, reverb_on:1, reverb_verb:40, reverb_hf:50, reverb_room:80,
+    max_dur:2.0, start_rate:16
+  },
+  glass: {
+    lo_freq:4000, hi_freq:8500, shimmer_freq:6000,
+    lo_amp:1200, hi_amp:1800, shimmer_amp:1000,
+    lo_decay:40, hi_decay:80, shimmer_decay:120,
+    attack_time:0.010, click_dur:0.070,
+    friction_amt:300, friction_decay:80, smooth_passes:4,
+    impulse_amp:0, reverb_on:1, reverb_verb:40, reverb_hf:50, reverb_room:80,
+    max_dur:2.0, start_rate:14
+  },
+  mechanical: {
+    lo_freq:2000, hi_freq:5000, shimmer_freq:3500,
+    lo_amp:2000, hi_amp:1000, shimmer_amp:400,
+    lo_decay:120, hi_decay:200, shimmer_decay:250,
+    attack_time:0.003, click_dur:0.035,
+    friction_amt:800, friction_decay:150, smooth_passes:2,
+    impulse_amp:1500, reverb_on:1, reverb_verb:40, reverb_hf:50, reverb_room:80,
+    max_dur:2.0, start_rate:16
+  },
+  soft: {
+    lo_freq:2500, hi_freq:5500, shimmer_freq:4000,
+    lo_amp:1200, hi_amp:800, shimmer_amp:600,
+    lo_decay:40, hi_decay:80, shimmer_decay:100,
+    attack_time:0.025, click_dur:0.080,
+    friction_amt:400, friction_decay:60, smooth_passes:5,
+    impulse_amp:0, reverb_on:1, reverb_verb:50, reverb_hf:60, reverb_room:90,
+    max_dur:2.5, start_rate:12
+  },
+  bright: {
+    lo_freq:3500, hi_freq:9000, shimmer_freq:6500,
+    lo_amp:1600, hi_amp:2000, shimmer_amp:1200,
+    lo_decay:80, hi_decay:150, shimmer_decay:200,
+    attack_time:0.005, click_dur:0.040,
+    friction_amt:200, friction_decay:120, smooth_passes:3,
+    impulse_amp:500, reverb_on:1, reverb_verb:30, reverb_hf:40, reverb_room:70,
+    max_dur:1.8, start_rate:18
+  }
+};
+
+function getValues() {
+  const v = {};
+  params.forEach(p => {
+    v[p] = floatParams.has(p) ? parseFloat(document.getElementById(p).value) : parseInt(document.getElementById(p).value);
+  });
+  return v;
+}
+
+function updateDisplay() {
+  params.forEach(p => {
+    const el = document.getElementById(p);
+    const val = el.value;
+    const unit = p === 'reverb_on' ? (val === '1' ? 'on' : 'off') : p.includes('freq') ? ' Hz' : p.includes('decay') && !p.includes('friction') ? '' : p.includes('time') || p.includes('dur') ? ' s' : p === 'max_dur' ? ' s' : p === 'start_rate' ? ' cps' : p.startsWith('reverb_') ? '%' : '';
+    document.getElementById(p + '_val').textContent = val + unit;
+  });
+  updateExport();
+}
+
+function updateExport() {
+  const v = getValues();
+  document.getElementById('export').textContent =
+`lo_freq=${v.lo_freq} hi_freq=${v.hi_freq} shimmer_freq=${v.shimmer_freq}
+lo_amp=${v.lo_amp} hi_amp=${v.hi_amp} shimmer_amp=${v.shimmer_amp}
+lo_decay=${v.lo_decay} hi_decay=${v.hi_decay} shimmer_decay=${v.shimmer_decay}
+attack_time=${v.attack_time} click_dur=${v.click_dur}
+friction_amt=${v.friction_amt} friction_decay=${v.friction_decay} smooth_passes=${v.smooth_passes}
+impulse_amp=${v.impulse_amp}
+reverb=${v.reverb_on ? `${v.reverb_verb} ${v.reverb_hf} ${v.reverb_room}` : 'off'}
+max_dur=${v.max_dur} start_rate=${v.start_rate}`;
+}
+
+function loadPreset(name) {
+  const p = presets[name];
+  if (!p) return;
+  Object.keys(p).forEach(k => {
+    const el = document.getElementById(k);
+    if (el) el.value = p[k];
+  });
+  updateDisplay();
+}
+
+async function play(mode) {
+  const status = document.getElementById('status');
+  const btns = document.querySelectorAll('button');
+  btns.forEach(b => b.disabled = true);
+  status.textContent = 'Playing...';
+
+  try {
+    const v = getValues();
+    v.mode = mode;
+    const res = await fetch('/play', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(v)
+    });
+    const data = await res.json();
+    status.textContent = data.ok ? '' : data.error;
+  } catch (e) {
+    status.textContent = 'Error: ' + e.message;
+  }
+  btns.forEach(b => b.disabled = false);
+}
+
+// Wire up live display updates
+params.forEach(p => {
+  document.getElementById(p).addEventListener('input', updateDisplay);
+});
+updateDisplay();
+</script>
+</body>
+</html>

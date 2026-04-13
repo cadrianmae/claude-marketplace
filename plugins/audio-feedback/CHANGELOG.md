@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-13
+
+### Added
+- Click sounds: Elite Dangerous station UI-inspired click sequences that
+  play after Stop, PostToolUse, and SubagentStop events. Click rate is
+  proportional to response word count with ease-out timing (starts at
+  16 clicks/sec, decelerates). Each click is a noise impulse with
+  dissonant resonance and reverb, generated at runtime via sox.
+- `CLICKS_ENABLED` config key (default `true`) to toggle click sounds
+  independently of event sounds.
+- Background sound sequencing: event sound + clicks play in a backgrounded
+  subshell so hooks return instantly.
+
+### Changed
+- Stop, PostToolUse, and SubagentStop hooks now extract word count from
+  JSON payload (`assistant_message`, `tool_response`, `result` fields).
+
 ## [0.1.0] - 2026-04-12
 
 ### Added

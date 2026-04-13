@@ -27,6 +27,7 @@ _af_sounds_dir() {
 # (without .wav) inside that theme directory. "off" = no sound.
 af_default_theme="default"
 af_default_enabled="true"
+af_default_clicks_enabled="true"
 af_default_stop="stop"
 af_default_notification="notification"
 af_default_pre_compact="pre-compact"
@@ -45,6 +46,7 @@ af_load_config() {
 
     AF_THEME="$af_default_theme"
     AF_ENABLED="$af_default_enabled"
+    AF_CLICKS_ENABLED="$af_default_clicks_enabled"
     AF_STOP_SOUND="$af_default_stop"
     AF_NOTIFICATION_SOUND="$af_default_notification"
     AF_PRE_COMPACT_SOUND="$af_default_pre_compact"
@@ -66,6 +68,7 @@ af_load_config() {
         case "$key" in
             THEME) AF_THEME="$value" ;;
             ENABLED) AF_ENABLED="$value" ;;
+            CLICKS_ENABLED) AF_CLICKS_ENABLED="$value" ;;
             STOP_SOUND) AF_STOP_SOUND="$value" ;;
             NOTIFICATION_SOUND) AF_NOTIFICATION_SOUND="$value" ;;
             PRE_COMPACT_SOUND) AF_PRE_COMPACT_SOUND="$value" ;;
@@ -88,6 +91,7 @@ af_ensure_config() {
     cat > "$cfg" <<EOF
 THEME=$af_default_theme
 ENABLED=$af_default_enabled
+CLICKS_ENABLED=$af_default_clicks_enabled
 STOP_SOUND=$af_default_stop
 NOTIFICATION_SOUND=$af_default_notification
 PRE_COMPACT_SOUND=$af_default_pre_compact
@@ -230,4 +234,109 @@ af_play_event_with_subtype() {
     [ -f "$sound_file" ] || return 0
 
     paplay "$sound_file" 2>/dev/null || true
+}
+
+# ---- click sounds -------------------------------------------------------
+
+# Generate and play an ease-out click sequence proportional to word count.
+# Sound: glassy tri-tone (lo/hi/shimmer sines) + filtered noise friction
+# + impulse transient + reverb. Inspired by Elite Dangerous station UI.
+#
+# Scaling: 13 clicks/sec starting rate, ease-out curve (quadratic
+# deceleration). Duration is logarithmic from word count, clamped
+# to [0.3, 1.5].
+#
+# Usage: af_play_clicks <word_count>
+af_play_clicks() {
+    local words="${1:-0}"
+    [ "$words" -le 0 ] 2>/dev/null && return 0
+    [ "$AF_CLICKS_ENABLED" = "true" ] || return 0
+    command -v sox >/dev/null 2>&1 || return 0
+
+    # Logarithmic duration scaling from word count.
+    local max_dur
+    max_dur="$(awk -v w="$words" 'BEGIN {
+        d = log(w / 5) / log(2) * 0.3 + 0.3
+        if (d < 0.3) d = 0.3
+        if (d > 1.5) d = 1.5
+        printf "%.2f", d
+    }')"
+
+    # Click sound parameters.
+    local click_dur="0.02"
+    local start_rate=13
+    local base_gap
+    base_gap="$(awk -v r="$start_rate" -v cd="$click_dur" 'BEGIN {
+        g = 1/r - cd
+        if (g < 0.001) g = 0.001
+        printf "%.4f", g
+    }')"
+
+    local tmpdir
+    tmpdir="$(mktemp -d)"
+
+    local t=0 i=0
+    local lo_freq hi_freq sh_freq gap d
+
+    while (( $(awk -v t="$t" -v m="$max_dur" 'BEGIN { print (t < m) ? 1 : 0 }') )); do
+        # Random frequency variation per click.
+        lo_freq=$(( 5050 + RANDOM % 301 - 150 ))
+        hi_freq=$(( 10000 + RANDOM % 501 - 250 ))
+        sh_freq=$(( 3500 + RANDOM % 401 - 200 ))
+
+        # Ease-out: gap grows quadratically with elapsed time.
+        gap="$(awk -v bg="$base_gap" -v t="$t" -v m="$max_dur" 'BEGIN {
+            ratio = t / m
+            g = bg * (1 + ratio * ratio * 4)
+            printf "%.4f", g
+        }')"
+
+        d="$tmpdir/c$(printf '%03d' "$i")"
+
+        # Lo tone (5050 Hz base, slow decay).
+        sox -n -r 44100 -c 1 "${d}_lo.wav" \
+            synth "$click_dur" sine "$lo_freq" \
+            fade q 0.0002 "$click_dur" 0.015 \
+            vol 0.02 2>/dev/null
+
+        # Hi tone (10000 Hz base, faster decay).
+        sox -n -r 44100 -c 1 "${d}_hi.wav" \
+            synth "$click_dur" sine "$hi_freq" \
+            fade q 0.0002 "$click_dur" 0.008 \
+            vol 0.015 2>/dev/null
+
+        # Shimmer tone (3500 Hz base).
+        sox -n -r 44100 -c 1 "${d}_sh.wav" \
+            synth "$click_dur" sine "$sh_freq" \
+            fade q 0.0002 "$click_dur" 0.006 \
+            vol 0.012 2>/dev/null
+
+        # Friction (filtered noise).
+        sox -n -r 44100 -c 1 "${d}_n.wav" \
+            synth "$click_dur" noise \
+            fade q 0.0002 "$click_dur" 0.010 \
+            vol 0.025 2>/dev/null
+
+        # Impulse transient (short noise burst).
+        sox -n -r 44100 -c 1 "${d}_i.wav" \
+            synth 0.002 noise \
+            fade q 0 0.002 0.001 \
+            vol 0.015 \
+            pad 0 0.018 2>/dev/null
+
+        # Mix all layers, pad with gap.
+        sox -m "${d}_lo.wav" "${d}_hi.wav" "${d}_sh.wav" "${d}_n.wav" "${d}_i.wav" "${d}.wav" \
+            pad 0 "$gap" 2>/dev/null
+
+        t="$(awk -v t="$t" -v cd="$click_dur" -v g="$gap" 'BEGIN { printf "%.4f", t + cd + g }')"
+        i=$((i + 1))
+    done
+
+    # Concatenate all clicks, apply reverb over the whole sequence, play.
+    if [ "$i" -gt 0 ]; then
+        sox "$tmpdir"/c???.wav "$tmpdir/full.wav" 2>/dev/null
+        sox "$tmpdir/full.wav" -t wav - reverb 40 50 80 2>/dev/null | paplay 2>/dev/null || true
+    fi
+
+    rm -rf "$tmpdir"
 }
