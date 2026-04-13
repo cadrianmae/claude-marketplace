@@ -240,7 +240,7 @@ af_play_event_with_subtype() {
 
 # Generate and play an ease-out click sequence proportional to word count.
 # Sound: glassy tri-tone (lo/hi/shimmer sines) + filtered noise friction
-# + impulse transient + reverb. Inspired by Elite Dangerous station UI.
+# + impulse transient + reverb. Glassy sci-fi aesthetic.
 #
 # Scaling: 13 clicks/sec starting rate, ease-out curve (quadratic
 # deceleration). Duration is logarithmic from word count, clamped

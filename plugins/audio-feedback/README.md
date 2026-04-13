@@ -13,7 +13,7 @@ Registers hooks on all 8 Claude Code events. Each event maps to a sound file (or
 - **Per-event sounds** — each hook event has its own configurable sound
 - **Theme system** — sounds live in `sounds/<theme>/` subdirectories, switchable via `THEME` config
 - **Master switch** — `ENABLED=true/false` silences everything at once
-- **Click sounds** — ED station UI-inspired click sequences proportional to response word count, with ease-out timing and dissonant resonance. Plays on Stop, PostToolUse, SubagentStop. Requires `sox` at runtime.
+- **Click sounds** — glassy sci-fi click sequences proportional to response word count, with ease-out timing. Plays on Stop, PostToolUse, SubagentStop. Requires `sox` at runtime.
 - **Lo-fi minimal default theme** — 8 sox-generated sounds with reverb, 0dB peak, mono 44.1kHz
 - **Independent of tts** — purely non-speech audio cues
 

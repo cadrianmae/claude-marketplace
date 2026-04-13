@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.0] - 2026-04-13
 
 ### Added
-- Click sounds: Elite Dangerous station UI-inspired click sequences that
+- Click sounds: glassy sci-fi click sequences that
   play after Stop, PostToolUse, and SubagentStop events. Click rate is
   proportional to response word count with ease-out timing (starts at
   16 clicks/sec, decelerates). Each click is a noise impulse with
