@@ -175,7 +175,7 @@ CONTEXT_EOF
 )
 
         # Call Claude for summary (no structured output needed, just text)
-        summary=$(echo "$context" | claude --model haiku --print --no-session-persistence 2>>/tmp/track-llm-error.log | head -c 200)
+        summary=$(echo "$context" | claude --model haiku --print --no-session-persistence 2>>${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log | head -c 200)
     fi
 
     # Fallback to headings if LLM fails

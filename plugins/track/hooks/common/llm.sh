@@ -1,6 +1,9 @@
 #!/bin/bash
 # LLM summarization functions using Claude Haiku with structured outputs
 
+# Ensure plugin data directory exists for error logs
+mkdir -p "${CLAUDE_PLUGIN_DATA:-/tmp}" 2>/dev/null
+
 # Summarize outcome for prompts.md using Claude Haiku
 summarize_outcome() {
     local prompt="$1"
