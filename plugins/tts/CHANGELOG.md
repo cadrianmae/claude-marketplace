@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-04-13
+
+### Fixed
+- **Summary mode no longer speaks error messages.** Previously, if
+  the Haiku call failed (e.g. "Credit balance too low"), the error
+  text was treated as a summary and spoken aloud. Now checks exit
+  code properly and falls back to truncate silently.
+- **Summary mode no longer over-compresses short responses.** Only
+  calls Haiku when text exceeds `MAX_CHARS`. Responses under the
+  threshold pass through with just markdown stripped.
+
+### Changed
+- **Summary mode uses JSON schema output.** The Haiku call now uses
+  `--output-format json --json-schema` for structured output, ensuring
+  only the summary text is extracted (no preamble, no fluff).
+- **Summary Haiku call is leaner.** Uses `--allowed-tools ""
+  --no-session-persistence --disable-slash-commands` to minimise
+  overhead and prevent tool use.
+- **Summary prompt rewritten.** Now instructs Haiku to "rewrite for
+  spoken delivery, keep as much detail as possible, use most of the
+  character budget" instead of "summarize under N characters" which
+  caused aggressive compression.
+
 ## [0.1.4] - 2026-04-12
 
 ### Added

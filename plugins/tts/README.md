@@ -1,7 +1,7 @@
-[![Version](https://img.shields.io/badge/version-0.1.4-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![Version](https://img.shields.io/badge/version-0.1.5-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-# TTS Plugin v0.1
+# TTS Plugin v0.1.5
 
 Piper-based text-to-speech for Claude Code. Speaks Claude's responses aloud via Stop hook, interrupts speech on user input via UserPromptSubmit hook. Replacement for AgentVibes with fewer dependencies and no MCP server.
 
@@ -13,7 +13,7 @@ TTS plugin v0.1 is a minimal bash-based Piper wrapper for Claude Code. It calls 
 - **Unified `/tts` skill** — one interactive entry point, subcommand grammar, follows cron/track plugin pattern
 - **Stop hook** — speaks each assistant response automatically when `TTS_ENABLED=true`
 - **UserPromptSubmit hook** — kills in-flight `paplay` so typing interrupts Claude mid-sentence
-- **Three speak modes** — `full`, `truncate` (default, 1000 chars), `summary` (via Claude Haiku)
+- **Three speak modes** — `full`, `truncate` (default), `summary` (via Claude Haiku with JSON schema)
 - **Off by default** — no surprise audio on install; user runs `/tts auto on` to enable
 - **Global config** — voice / volume / mode live at `~/.claude/.tts-config`, not per-project
 - **Multi-voice support** — use any Piper voice installed at `~/.local/share/piper-voices/`
@@ -80,7 +80,7 @@ Global config file: `~/.claude/.tts-config`
 
 - **`full`** — Entire assistant response. Markdown stripped (via `pandoc -f markdown -t plain` if available, else `sed`). Code blocks removed. Can be 30+ seconds for long answers; interrupt by typing.
 - **`truncate`** (default) — Same pipeline as `full`, but hard-cut at `MAX_CHARS` with `…` suffix. Safer default.
-- **`summary`** — Calls Claude Haiku to summarize the response for speech in under `MAX_CHARS` characters. Falls back to `truncate` mode silently if the Haiku call fails (error logged to stderr, visible only in `claude --debug`).
+- **`summary`** — Only activates when text exceeds `MAX_CHARS`. Calls Claude Haiku (via `claude --print` with `--json-schema` for structured output, no tools, no session persistence) to rewrite the response for spoken delivery while preserving detail. Falls back to `truncate` silently on failure. Responses under `MAX_CHARS` pass through as-is with just markdown stripped.
 
 ## Subcommand Grammar
 
