@@ -11,7 +11,7 @@ Generate documentation for installed marketplace plugins and add to CLAUDE.md.
 ## Quick Example
 
 ```bash
-# Scans ~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/
+# Scans ${CLAUDE_PLUGIN_ROOT}/../ (marketplace plugins directory)
 # Generates marketplace-plugins.md with skills and commands from each plugin
 # Adds import to ~/.claude/CLAUDE.md
 ```
@@ -47,7 +47,7 @@ Options:
 ### 2. Scan Installed Plugins
 
 ```bash
-MARKETPLACE_DIR=~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins
+MARKETPLACE_DIR="${CLAUDE_PLUGIN_ROOT}/.."
 
 # List all installed plugins
 for plugin in "$MARKETPLACE_DIR"/*/; do
@@ -212,7 +212,7 @@ Verify with: /memory
 **No plugins installed:**
 ```
 No marketplace plugins found in:
-  ~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/
+  ${CLAUDE_PLUGIN_ROOT}/../
 
 Install plugins first, then run this skill.
 ```
@@ -282,4 +282,4 @@ and pandoc for generating reports.
 
 - Global CLAUDE.md: `~/.claude/CLAUDE.md`
 - Project CLAUDE.md: `./CLAUDE.md` (workspace root)
-- Plugin directory: `~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/`
+- Plugin directory: `${CLAUDE_PLUGIN_ROOT}/../` (parent of any installed plugin)

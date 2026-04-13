@@ -75,7 +75,7 @@ Users can copy these to their project without downloading separately.
 
 ```bash
 # Path to validation script
-PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="${CLAUDE_PLUGIN_ROOT}"
 VALIDATE_SCRIPT="$PLUGIN_DIR/skills/pandoc/scripts/validate.py"
 
 # Run validation
@@ -92,7 +92,7 @@ python3 "$VALIDATE_SCRIPT" document.md
 
 ```bash
 # Path to templates
-PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="${CLAUDE_PLUGIN_ROOT}"
 TEMPLATE="$PLUGIN_DIR/skills/pandoc/assets/templates/academic-paper.yaml"
 
 # Copy template to user's file
@@ -117,7 +117,7 @@ echo "  - bibliography: Path to your .bib file"
 
 ```bash
 # Validate first
-PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="${CLAUDE_PLUGIN_ROOT}"
 python3 "$PLUGIN_DIR/skills/pandoc/scripts/validate.py" document.md
 
 if [[ $? -eq 0 ]]; then
@@ -153,7 +153,7 @@ fi
 
 ```bash
 FILE="document.md"
-PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="${CLAUDE_PLUGIN_ROOT}"
 TEMPLATE="$PLUGIN_DIR/skills/pandoc/assets/templates/academic-paper.yaml"
 
 # Check if already has frontmatter
@@ -189,7 +189,7 @@ fi
 
 1. **Create bibliography file:**
    ```bash
-   PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+   PLUGIN_DIR="${CLAUDE_PLUGIN_ROOT}"
    BIB_TEMPLATE="$PLUGIN_DIR/skills/pandoc/assets/templates/references.bib"
 
    cp "$BIB_TEMPLATE" references.bib
@@ -198,7 +198,7 @@ fi
 
 2. **Copy CSL file (bundled with plugin):**
    ```bash
-   PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+   PLUGIN_DIR="${CLAUDE_PLUGIN_ROOT}"
 
    # Choose one:
    cp "$PLUGIN_DIR/skills/pandoc/assets/csl/harvard.csl" .
@@ -229,7 +229,7 @@ fi
 **Workflow using tools directly:**
 
 ```bash
-PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="${CLAUDE_PLUGIN_ROOT}"
 INPUT_FILE="document.md"
 TARGET_STYLE="academic-paper"  # or thesis, article, etc.
 
@@ -385,7 +385,7 @@ Load these when needed for detailed information:
 
 **Plugin directory:**
 ```bash
-PLUGIN_DIR="~/.claude/marketplaces/cadrianmae-claude-marketplace/plugins/pandoc"
+PLUGIN_DIR="${CLAUDE_PLUGIN_ROOT}"
 ```
 
 **Validation:**
