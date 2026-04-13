@@ -370,12 +370,13 @@ tts_speak() {
             : # keep full processed text
             ;;
         summary)
-            local summary
-            if summary="$(tts_summarize "$processed" "$TTS_MAX_CHARS" 2>/dev/null)" && [ -n "$summary" ]; then
-                processed="$summary"
-            else
-                # Summarize failed — fall through to truncate.
-                if [ "${#processed}" -gt "$TTS_MAX_CHARS" ]; then
+            if [ "${#processed}" -gt "$TTS_MAX_CHARS" ]; then
+                # Only summarise if text exceeds the limit.
+                local summary
+                if summary="$(tts_summarize "$processed" "$TTS_MAX_CHARS" 2>/dev/null)" && [ -n "$summary" ]; then
+                    processed="$summary"
+                else
+                    # Summarize failed — fall through to truncate.
                     processed="${processed:0:$TTS_MAX_CHARS}…"
                 fi
             fi
@@ -422,9 +423,10 @@ tts_summarize() {
     command -v jq >/dev/null 2>&1 || return 1
 
     local prompt
-    prompt="You are a text summariser. Read the text below and write a spoken-language summary. "
-    prompt+="Put your summary in the \"summary\" field. Under ${max_chars} characters. "
-    prompt+="No markdown. No code. No preamble. Natural speech only."$'\n\n'
+    prompt="Rewrite the text below for spoken delivery. Keep as much detail as possible. "
+    prompt+="Maximum ${max_chars} characters — use most of that budget, do not over-compress. "
+    prompt+="Remove markdown, code blocks, and formatting. Natural spoken language only. "
+    prompt+="Put the result in the \"summary\" field."$'\n\n'
     prompt+="$text"
 
     local schema
