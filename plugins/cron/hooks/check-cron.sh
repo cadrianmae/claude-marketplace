@@ -26,7 +26,7 @@ GLOBAL_SCHEDULES="$HOME/.claude/schedules.json"
 PROJECT_SCHEDULES=".claude/schedules.json"
 GLOBAL_STATE="$HOME/.claude/.schedule-state.json"
 PROJECT_STATE=".claude/.schedule-state.json"
-CRON_MATCH="$(dirname "$0")/../scripts/cron-match.py"
+CRON_MATCH="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd -P)}/scripts/cron-match.py"
 
 # Dependency checks. If jq itself is missing we can't use it to emit the
 # error, so fall back to a literal JSON string via printf.
