@@ -31,6 +31,9 @@ cd "$PROJECT_DIR" || hook_exit "failed to cd to $PROJECT_DIR"
 # Load common utilities (now that we're in project dir)
 source "$SCRIPT_DIR/common.sh"
 
+# Ensure plugin data directory exists for error logs
+mkdir -p "${CLAUDE_PLUGIN_DATA:-/tmp}" 2>/dev/null
+
 # Exit if tracking not enabled
 is_tracking_enabled || hook_exit "tracking not enabled (.ref-autotrack not found)"
 
@@ -102,7 +105,7 @@ if [ "$PROMPTS_VERBOSITY" != "off" ]; then
     TOOL_USES=$(extract_tool_uses "$TRANSCRIPT_PATH" | jq -s '.')
 
     # Try LLM summarization with error capture
-    OUTCOME_SUMMARY=$(summarize_outcome "$USER_PROMPT" "$ASSISTANT_RESPONSE" "$TOOL_USES" 2>/tmp/track-llm-error.log)
+    OUTCOME_SUMMARY=$(summarize_outcome "$USER_PROMPT" "$ASSISTANT_RESPONSE" "$TOOL_USES" 2>>${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log)
     LLM_EXIT_CODE=$?
 
     if [ $LLM_EXIT_CODE -eq 0 ] && [ -n "$OUTCOME_SUMMARY" ]; then
@@ -131,7 +134,7 @@ if [ "$PROMPTS_VERBOSITY" != "off" ]; then
 
             # Summarize long prompts (>500 chars = ~1 paragraph)
             if [ ${#USER_PROMPT} -gt 500 ]; then
-                PROMPT_SUMMARY=$(summarize_long_prompt "$USER_PROMPT" 2>>/tmp/track-llm-error.log)
+                PROMPT_SUMMARY=$(summarize_long_prompt "$USER_PROMPT" 2>>${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log)
                 if [ $? -eq 0 ] && [ -n "$PROMPT_SUMMARY" ]; then
                     PROMPT_DISPLAY="$PROMPT_SUMMARY (summarized from ${#USER_PROMPT} chars)"
                 else
@@ -178,7 +181,7 @@ if [ "$SOURCES_VERBOSITY" != "off" ]; then
                 seen_tools[$DEDUP_KEY]=1
 
                 # Try LLM summarization with error capture
-                TOOL_SUMMARY=$(summarize_tool_call "$TOOL_NAME" "$TOOL_INPUT" "$USER_PROMPT" "$ASSISTANT_RESPONSE" 2>>/tmp/track-llm-error.log)
+                TOOL_SUMMARY=$(summarize_tool_call "$TOOL_NAME" "$TOOL_INPUT" "$USER_PROMPT" "$ASSISTANT_RESPONSE" 2>>${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log)
                 TOOL_LLM_EXIT=$?
 
                 if [ $TOOL_LLM_EXIT -eq 0 ] && [ -n "$TOOL_SUMMARY" ]; then
