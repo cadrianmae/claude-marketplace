@@ -3,8 +3,11 @@
   "version": "2.2.1",
   "description": "Hook-based scheduled notifications using crontab(5) syntax. Per-prompt evaluation with anacron-style catch-up.",
   "author": {
-    "name": "cadrianmae"
+    "name": "Mae",
+    "email": "45900436+cadrianmae@users.noreply.github.com"
   },
+  "homepage": "https://github.com/cadrianmae/claude-marketplace",
+  "repository": "https://github.com/cadrianmae/claude-marketplace",
   "keywords": ["scheduling", "notifications", "reminders", "hooks"],
   "license": "MIT"
 }

@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/check-cron.sh\"",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/check-cron.sh",
             "timeout": 5000,
             "statusMessage": "Checking cron schedules..."
           }
