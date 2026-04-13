@@ -1,3 +1,3 @@
 #!/bin/bash
-# Wrapper for skills/list/scripts/list.sh
-exec "$(dirname "$(readlink -f "$0")")/../skills/list/scripts/list.sh" "$@"
+# Wrapper for scripts/nvr-list.sh
+exec "$(dirname "$(readlink -f "$0")")/../scripts/nvr-list.sh" "$@"

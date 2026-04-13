@@ -1,3 +1,3 @@
 #!/bin/bash
-# Wrapper for skills/status/scripts/status.sh
-exec "$(dirname "$(readlink -f "$0")")/../skills/status/scripts/status.sh" "$@"
+# Wrapper for scripts/nvr-status.sh
+exec "$(dirname "$(readlink -f "$0")")/../scripts/nvr-status.sh" "$@"
