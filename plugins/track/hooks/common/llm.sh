@@ -49,7 +49,7 @@ EOF
 
     # Call Claude with structured output and extract just the structured_output field
     local output
-    output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output // empty')
+    output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log | jq -r '.structured_output // empty')
 
     # Return output. Optionally also tee to a debug log when TRACK_LLM_DEBUG_LOG
     # is set to a writable path. The previous unconditional append to a fixed
@@ -114,7 +114,7 @@ EOF
 
     # Call Claude with structured output and extract just the structured_output field
     local output
-    output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output // empty')
+    output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log | jq -r '.structured_output // empty')
 
     # Return output. Optionally also tee to a debug log when TRACK_LLM_DEBUG_LOG
     # is set to a writable path. The previous unconditional append to a fixed
@@ -159,7 +159,7 @@ CONTEXT_EOF
 
     # Call Claude with structured output and extract just the Summary field
     local output
-    output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output.Summary // empty')
+    output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log | jq -r '.structured_output.Summary // empty')
 
     # Return output. Optionally also tee to a debug log when TRACK_LLM_DEBUG_LOG
     # is set to a writable path. The previous unconditional append to a fixed

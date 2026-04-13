@@ -19,11 +19,13 @@ source "$HOOK_DIR/../scripts/lib.sh"
 tts_load_config
 [ "$TTS_ENABLED" = "true" ] || exit 0
 
+mkdir -p "${CLAUDE_PLUGIN_DATA:-/tmp}" 2>/dev/null
+
 # Check for one-shot suppress token from /tts stop. If present, consume
 # it and skip this cycle (no chime, no speech). The token is a single-use
 # flag: delete it so the NEXT response speaks normally.
-if [ -f /tmp/tts-suppress-next ]; then
-    rm -f /tmp/tts-suppress-next
+if [ -f "${CLAUDE_PLUGIN_DATA:-/tmp}/tts-suppress-next" ]; then
+    rm -f "${CLAUDE_PLUGIN_DATA:-/tmp}/tts-suppress-next"
     exit 0
 fi
 
