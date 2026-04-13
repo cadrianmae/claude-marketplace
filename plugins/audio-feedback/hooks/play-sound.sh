@@ -40,9 +40,12 @@ if [ -n "$HOOK_JSON" ] && command -v jq >/dev/null 2>&1; then
     esac
 fi
 
-# Events that support click sounds: extract word count from response text.
+# Load config for click event checking.
+af_load_config
+
+# Extract word count from response text for click-enabled events.
 WORD_COUNT=0
-if command -v jq >/dev/null 2>&1; then
+if af_clicks_enabled_for "$EVENT" && command -v jq >/dev/null 2>&1; then
     case "$EVENT" in
         stop)
             WORD_COUNT="$(printf '%s' "$HOOK_JSON" | jq -r '.assistant_message // empty' 2>/dev/null | wc -w)"
@@ -53,22 +56,26 @@ if command -v jq >/dev/null 2>&1; then
         subagent_stop)
             WORD_COUNT="$(printf '%s' "$HOOK_JSON" | jq -r '.result // empty' 2>/dev/null | wc -w)"
             ;;
+        notification)
+            WORD_COUNT="$(printf '%s' "$HOOK_JSON" | jq -r '.message // empty' 2>/dev/null | wc -w)"
+            ;;
+        pre_compact)
+            # Use a fixed word count to give a consistent "crunching" feel.
+            WORD_COUNT=200
+            ;;
     esac
+    WORD_COUNT="${WORD_COUNT##* }"  # trim whitespace from wc output
 fi
-WORD_COUNT="${WORD_COUNT##* }"  # trim whitespace from wc output
 
-# For click-enabled events, background the entire sound sequence
-# (event sound then clicks) so the hook returns instantly.
-case "$EVENT" in
-    stop|post_tool_use|subagent_stop)
-        {
-            af_play_event_with_subtype "$EVENT" "$SUBTYPE"
-            af_play_clicks "$WORD_COUNT"
-        } &
-        ;;
-    *)
+# If clicks are enabled for this event, background the entire sound
+# sequence (event sound then clicks) so the hook returns instantly.
+if af_clicks_enabled_for "$EVENT" && [ "$WORD_COUNT" -gt 0 ] 2>/dev/null; then
+    {
         af_play_event_with_subtype "$EVENT" "$SUBTYPE"
-        ;;
-esac
+        af_play_clicks "$WORD_COUNT"
+    } &
+else
+    af_play_event_with_subtype "$EVENT" "$SUBTYPE"
+fi
 
 exit 0

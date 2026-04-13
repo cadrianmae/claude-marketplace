@@ -57,7 +57,8 @@ Global config: `~/.claude/.audio-feedback-config`
 |---|---|---|
 | `THEME` | `default` | Sound theme (subdirectory of `sounds/`) |
 | `ENABLED` | `true` | Master switch |
-| `CLICKS_ENABLED` | `true` | Click sounds on Stop/PostToolUse/SubagentStop |
+| `CLICKS_ENABLED` | `true` | Master switch for click sounds |
+| `CLICKS_EVENTS` | `stop,post_tool_use,subagent_stop` | Comma-separated list of events that trigger clicks. Valid: `stop`, `post_tool_use`, `subagent_stop`, `notification`, `pre_compact` |
 | `STOP_SOUND` | `stop` | Response complete |
 | `NOTIFICATION_SOUND` | `notification` | Cron/alert fired |
 | `PRE_COMPACT_SOUND` | `pre-compact` | Context compacting |

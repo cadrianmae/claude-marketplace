@@ -28,6 +28,7 @@ _af_sounds_dir() {
 af_default_theme="default"
 af_default_enabled="true"
 af_default_clicks_enabled="true"
+af_default_clicks_events="stop,post_tool_use,subagent_stop"
 af_default_stop="stop"
 af_default_notification="notification"
 af_default_pre_compact="pre-compact"
@@ -47,6 +48,7 @@ af_load_config() {
     AF_THEME="$af_default_theme"
     AF_ENABLED="$af_default_enabled"
     AF_CLICKS_ENABLED="$af_default_clicks_enabled"
+    AF_CLICKS_EVENTS="$af_default_clicks_events"
     AF_STOP_SOUND="$af_default_stop"
     AF_NOTIFICATION_SOUND="$af_default_notification"
     AF_PRE_COMPACT_SOUND="$af_default_pre_compact"
@@ -69,6 +71,7 @@ af_load_config() {
             THEME) AF_THEME="$value" ;;
             ENABLED) AF_ENABLED="$value" ;;
             CLICKS_ENABLED) AF_CLICKS_ENABLED="$value" ;;
+            CLICKS_EVENTS) AF_CLICKS_EVENTS="$value" ;;
             STOP_SOUND) AF_STOP_SOUND="$value" ;;
             NOTIFICATION_SOUND) AF_NOTIFICATION_SOUND="$value" ;;
             PRE_COMPACT_SOUND) AF_PRE_COMPACT_SOUND="$value" ;;
@@ -92,6 +95,7 @@ af_ensure_config() {
 THEME=$af_default_theme
 ENABLED=$af_default_enabled
 CLICKS_ENABLED=$af_default_clicks_enabled
+CLICKS_EVENTS=$af_default_clicks_events
 STOP_SOUND=$af_default_stop
 NOTIFICATION_SOUND=$af_default_notification
 PRE_COMPACT_SOUND=$af_default_pre_compact
@@ -237,6 +241,17 @@ af_play_event_with_subtype() {
 }
 
 # ---- click sounds -------------------------------------------------------
+
+# Check if an event has clicks enabled.
+# Usage: af_clicks_enabled_for "stop" && echo "yes"
+af_clicks_enabled_for() {
+    local event="$1"
+    [ "$AF_CLICKS_ENABLED" = "true" ] || return 1
+    case ",$AF_CLICKS_EVENTS," in
+        *,"$event",*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
 
 # Generate and play an ease-out click sequence proportional to word count.
 # Sound: glassy tri-tone (lo/hi/shimmer sines) + filtered noise friction

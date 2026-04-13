@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dissonant resonance and reverb, generated at runtime via sox.
 - `CLICKS_ENABLED` config key (default `true`) to toggle click sounds
   independently of event sounds.
+- `CLICKS_EVENTS` config key — comma-separated list of events that
+  trigger clicks. Default: `stop,post_tool_use,subagent_stop`.
+  Also supports `notification` and `pre_compact`.
 - Background sound sequencing: event sound + clicks play in a backgrounded
   subshell so hooks return instantly.
 
