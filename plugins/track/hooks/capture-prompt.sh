@@ -29,7 +29,8 @@ STOP_HOOK_ACTIVE=$(echo "$HOOK_INPUT" | jq -r '.stop_hook_active // false')
 # clobber each other's debounce file.
 DEBOUNCE_KEY_RAW=$(echo "$HOOK_INPUT" | jq -r '.session_id // .cwd // "default"')
 DEBOUNCE_KEY=$(printf '%s' "$DEBOUNCE_KEY_RAW" | sha1sum | cut -c1-16)
-DEBOUNCE_FILE="/tmp/track-capture-prompt-debounce-${DEBOUNCE_KEY}"
+mkdir -p "${CLAUDE_PLUGIN_DATA:-/tmp}" 2>/dev/null
+DEBOUNCE_FILE="${CLAUDE_PLUGIN_DATA:-/tmp}/track-capture-prompt-debounce-${DEBOUNCE_KEY}"
 DEBOUNCE_DELAY=5
 MY_TIME=$(date +%s%N)
 echo "$MY_TIME" > "$DEBOUNCE_FILE"
@@ -159,7 +160,7 @@ fi
 TOOL_USES=$(extract_tool_uses "$TRANSCRIPT_PATH" | jq -s '.')
 
 # Try LLM summarization with error capture
-if OUTCOME_SUMMARY=$(summarize_outcome "$USER_PROMPT" "$ASSISTANT_RESPONSE" "$TOOL_USES" 2>/tmp/track-llm-error.log) && [ -n "$OUTCOME_SUMMARY" ]; then
+if OUTCOME_SUMMARY=$(summarize_outcome "$USER_PROMPT" "$ASSISTANT_RESPONSE" "$TOOL_USES" 2>${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log) && [ -n "$OUTCOME_SUMMARY" ]; then
     # Parse JSON output using jq
     OUTCOME_TEXT=$(echo "$OUTCOME_SUMMARY" | jq -r '.Outcome // empty')
     FILES_TEXT=$(echo "$OUTCOME_SUMMARY" | jq -r '.Files // "NONE"')
@@ -185,7 +186,7 @@ if OUTCOME_SUMMARY=$(summarize_outcome "$USER_PROMPT" "$ASSISTANT_RESPONSE" "$TO
 
         # Summarize long prompts (>500 chars = ~1 paragraph)
         if [ ${#USER_PROMPT} -gt 500 ]; then
-            if PROMPT_SUMMARY=$(summarize_long_prompt "$USER_PROMPT" 2>>/tmp/track-llm-error.log) && [ -n "$PROMPT_SUMMARY" ]; then
+            if PROMPT_SUMMARY=$(summarize_long_prompt "$USER_PROMPT" 2>>${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log) && [ -n "$PROMPT_SUMMARY" ]; then
                 PROMPT_DISPLAY="$PROMPT_SUMMARY (summarized from ${#USER_PROMPT} chars)"
             else
                 # Fallback to verbatim if LLM fails

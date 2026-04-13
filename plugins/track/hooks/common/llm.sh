@@ -1,6 +1,9 @@
 #!/bin/bash
 # LLM summarization functions using Claude Haiku with structured outputs
 
+# Ensure plugin data directory exists for error logs
+mkdir -p "${CLAUDE_PLUGIN_DATA:-/tmp}" 2>/dev/null
+
 # Summarize outcome for prompts.md using Claude Haiku
 summarize_outcome() {
     local prompt="$1"
@@ -49,7 +52,7 @@ EOF
 
     # Call Claude with structured output and extract just the structured_output field
     local output
-    output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output // empty')
+    output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log | jq -r '.structured_output // empty')
 
     # Return output. Optionally also tee to a debug log when TRACK_LLM_DEBUG_LOG
     # is set to a writable path. The previous unconditional append to a fixed
@@ -114,7 +117,7 @@ EOF
 
     # Call Claude with structured output and extract just the structured_output field
     local output
-    output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output // empty')
+    output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log | jq -r '.structured_output // empty')
 
     # Return output. Optionally also tee to a debug log when TRACK_LLM_DEBUG_LOG
     # is set to a writable path. The previous unconditional append to a fixed
@@ -159,7 +162,7 @@ CONTEXT_EOF
 
     # Call Claude with structured output and extract just the Summary field
     local output
-    output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>/tmp/track-llm-error.log | jq -r '.structured_output.Summary // empty')
+    output=$(echo "$context" | claude --model haiku --print --no-session-persistence --output-format json --json-schema "$schema" 2>>${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log | jq -r '.structured_output.Summary // empty')
 
     # Return output. Optionally also tee to a debug log when TRACK_LLM_DEBUG_LOG
     # is set to a writable path. The previous unconditional append to a fixed

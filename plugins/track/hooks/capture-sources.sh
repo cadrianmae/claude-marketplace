@@ -27,6 +27,9 @@ cd "$CWD" || exit 0
 # Load common utilities
 source "$SCRIPT_DIR/common.sh"
 
+# Ensure plugin data directory exists for error logs
+mkdir -p "${CLAUDE_PLUGIN_DATA:-/tmp}" 2>/dev/null
+
 # Exit if tracking not enabled
 is_tracking_enabled || exit 0
 
@@ -175,7 +178,7 @@ CONTEXT_EOF
 )
 
         # Call Claude for summary (no structured output needed, just text)
-        summary=$(echo "$context" | claude --model haiku --print --no-session-persistence 2>>/tmp/track-llm-error.log | head -c 200)
+        summary=$(echo "$context" | claude --model haiku --print --no-session-persistence 2>>${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log | head -c 200)
     fi
 
     # Fallback to headings if LLM fails

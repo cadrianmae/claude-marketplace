@@ -36,12 +36,12 @@ If you press Ctrl+C during Claude's response, the Stop hook **will not fire**.
 
 ### 3. LLM Error Logging
 
-Haiku call errors are logged to `/tmp/track-llm-error.log`.
+Haiku call errors are logged to `${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log`.
 
 **Check for failures:**
 ```bash
 # After testing, check for LLM errors
-cat /tmp/track-llm-error.log
+cat "${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log"
 
 # Common errors:
 # - "Authentication failed" - Claude CLI not configured
@@ -100,7 +100,7 @@ claude --debug 2>&1 | tee /tmp/claude-debug.log
 ```bash
 # Exit Claude session
 # Check LLM error log
-cat /tmp/track-llm-error.log
+cat "${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log"
 
 # If empty: Haiku calls succeeded
 # If contains errors: Fix authentication or system prompt paths
@@ -217,7 +217,7 @@ claude --model haiku "Test summarization"
 ls -la plugins/track/hooks/prompts/
 
 # Check error log
-cat /tmp/track-llm-error.log
+cat "${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log"
 ```
 
 ## Success Criteria
@@ -228,7 +228,7 @@ cat /tmp/track-llm-error.log
 ✅ Has prompt: yes, Has response: yes
 ✅ Entries appear in claude_usage/prompts.md
 ✅ Entries appear in claude_usage/sources.md (if tools used)
-✅ /tmp/track-llm-error.log is empty
+✅ `${CLAUDE_PLUGIN_DATA:-/tmp}/track-llm-error.log` is empty
 
 ## Next Steps
 

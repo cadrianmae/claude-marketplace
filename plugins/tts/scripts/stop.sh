@@ -13,6 +13,6 @@ source "$SCRIPT_DIR/lib.sh"
 tts_kill_inflight
 
 # Drop a one-shot suppress token so the next Stop hook skips speech.
-touch /tmp/tts-suppress-next 2>/dev/null || true
+mkdir -p "${CLAUDE_PLUGIN_DATA:-/tmp}" 2>/dev/null; touch "${CLAUDE_PLUGIN_DATA:-/tmp}/tts-suppress-next" 2>/dev/null || true
 
 echo "✓ Stopped all in-flight tts audio (next response will not be spoken)"
