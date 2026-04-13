@@ -3,7 +3,7 @@ name: tts
 description: This skill should be used when the user asks to "speak something", "read this aloud", "enable text to speech", "change voice", "try a different voice", "list available voices", "turn tts on/off", "test tts", "configure tts", "adjust tts volume", "pick a speaker", or anything involving the tts plugin for Piper-based text-to-speech. Single unified interactive entry point. Supports multi-speaker voices via voice:speaker syntax.
 version: 0.1.4
 user-invocable: true
-allowed-tools: [Bash, Read, AskUserQuestion]
+allowed-tools: Bash, Read, AskUserQuestion
 argument-hint: "[speak|test|voices|voice|config|auto|help] [args...]"
 ---
 

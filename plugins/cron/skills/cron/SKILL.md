@@ -3,7 +3,7 @@ name: cron
 description: This skill should be used when the user asks to manage scheduled notifications - "add a cron job", "schedule a reminder", "list schedules", "enable/disable/remove a schedule", "set up a notification", or anything involving the cron plugin. Single unified interactive entry point.
 version: 2.1.0
 user-invocable: true
-allowed-tools: [Bash, AskUserQuestion]
+allowed-tools: Bash, AskUserQuestion
 argument-hint: "[add|list|enable|disable|remove] [args...]"
 ---
 
