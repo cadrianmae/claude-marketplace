@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-04-13
+
+### Fixed
+- Replace /tmp/tts-suppress-next with ${CLAUDE_PLUGIN_DATA} path
+- Add mkdir -p to ensure plugin data directory exists
+- Normalise allowed-tools frontmatter format in skill
+
 ## [0.1.5] - 2026-04-13
 
 ### Fixed

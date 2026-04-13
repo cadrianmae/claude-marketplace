@@ -1,6 +1,6 @@
 {
   "name": "tts",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Piper-based text-to-speech for Claude Code. Speaks assistant responses aloud via a Stop hook; interrupt-on-type via a UserPromptSubmit hook. Unified /tts skill for voice switching, config, and testing. Linux + PipeWire + Piper required.",
   "author": {
     "name": "Mae Capacite",

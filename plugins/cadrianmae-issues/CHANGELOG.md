@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-04-13
+
+### Fixed
+- Standardise author name in plugin manifest
+- Add homepage and repository fields
+
 ## [1.0.0] - 2026-04-12
 ### Added
 - /cadrianmae-issues:bug command to file bug reports as GitHub issues

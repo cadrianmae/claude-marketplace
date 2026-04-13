@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.5] - 2026-04-13
+
+### Fixed
+- Fix tools: -> allowed-tools: in pandoc-guide agent frontmatter
+- Condense verbose agent description, move examples to body
+
 ## [1.0.2] - 2026-01-27
 ### Added
 - CHANGELOG.md following Keep a Changelog format

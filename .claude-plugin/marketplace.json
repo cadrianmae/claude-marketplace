@@ -1,6 +1,6 @@
 {
   "name": "cadrianmae-claude-marketplace",
-  "description": "Personal marketplace for academic workflow automation, session management, and development productivity tools. Includes tracking, documentation generation, semantic search, and integration utilities.",
+  "description": "Personal marketplace for academic workflow automation, session management, and development productivity tools. Includes tracking, documentation generation, audio feedback, and integration utilities.",
   "owner": {
     "name": "Mae",
     "email": "45900436+cadrianmae@users.noreply.github.com"
@@ -44,7 +44,7 @@
       "name": "track",
       "source": "./plugins/track",
       "description": "Automatic reference and prompt tracking via hooks for academic work. Prompts tracked via Stop hook with LLM summaries, sources tracked via PostToolUse hook with ASCII format. Export to bibliography, methodology, BibTeX, timeline.",
-      "version": "2.7.0",
+      "version": "2.7.1",
       "author": {
         "name": "Mae",
         "email": "45900436+cadrianmae@users.noreply.github.com"
@@ -106,30 +106,10 @@
       ]
     },
     {
-      "name": "semantic-search",
-      "source": "./plugins/semantic-search",
-      "description": "Natural language semantic search for codebases and notes using odino CLI with BGE embeddings. Auto-invoked skill for conceptual queries ('where is...', 'how does... work'). Slash commands (/semq:search, /semq:index, /semq:status, /semq:here) with automatic directory traversal. Fully local, 100% offline after setup.",
-      "version": "1.1.1",
-      "author": {
-        "name": "Mae",
-        "email": "45900436+cadrianmae@users.noreply.github.com"
-      },
-      "license": "MIT",
-      "keywords": [
-        "search",
-        "semantic",
-        "embeddings",
-        "codebase",
-        "natural-language",
-        "ml",
-        "odino"
-      ]
-    },
-    {
       "name": "pandoc",
       "source": "./plugins/pandoc",
       "description": "Document conversion toolkit for Pandoc with templates, validation, and format-specific helpers. Convert markdown to PDF, DOCX, HTML, and presentations with smart defaults and YAML frontmatter validation. Includes academic paper templates, BibTeX examples, and Makefile for automation.",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "author": {
         "name": "Mae",
         "email": "45900436+cadrianmae@users.noreply.github.com"
@@ -151,7 +131,7 @@
       "name": "cadrianmae-integration",
       "source": "./plugins/cadrianmae-integration",
       "description": "Integrate marketplace plugins into CLAUDE.md using @ imports. Scans installed plugins, generates documentation with skills and commands, creates marketplace-plugins.md, and adds import to user-level or project-level CLAUDE.md. Uses /integrate command with scope selection.",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "author": {
         "name": "Mae",
         "email": "45900436+cadrianmae@users.noreply.github.com"
@@ -170,7 +150,7 @@
       "name": "cadrianmae-issues",
       "source": "./plugins/cadrianmae-issues",
       "description": "File bugs and feature requests for marketplace plugins as GitHub issues on cadrianmae/claude-marketplace via gh CLI. Use /cadrianmae-issues:bug and /cadrianmae-issues:feature.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "Mae",
         "email": "45900436+cadrianmae@users.noreply.github.com"
@@ -209,7 +189,7 @@
       "name": "tool-docs",
       "source": "./plugins/tool-docs",
       "description": "Documentation agents for command-line tools (pandoc, postgres, git, docker). Provides pandoc-guide agent for expert documentation lookup with WebFetch integration and tool-lookup skill for offline quick references. Auto-triggers on tool queries.",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "author": {
         "name": "Mae",
         "email": "45900436+cadrianmae@users.noreply.github.com"
@@ -226,8 +206,8 @@
     {
       "name": "nvr",
       "source": "./plugins/nvr",
-      "description": "Neovim Remote integration - automatically open files in the correct neovim instance based on working directory. Auto-discovers sockets across multiple projects with natural language interface.",
-      "version": "1.0.2",
+      "description": "Neovim Remote integration for Claude Code. Unified /nvr command with open, list, status, workspace subcommands. Git-root-aware socket discovery.",
+      "version": "2.0.1",
       "author": {
         "name": "Mae",
         "email": "45900436+cadrianmae@users.noreply.github.com"
@@ -248,7 +228,7 @@
       "name": "cron",
       "source": "./plugins/cron",
       "description": "Hook-based scheduled notifications using crontab(5) syntax. Anacron-style catch-up with per-tick deduplication. Global and per-project schedules with add/replace modes. Single unified interactive /cron command. Requires python3 and jq.",
-      "version": "2.2.1",
+      "version": "2.2.2",
       "author": {
         "name": "Mae",
         "email": "45900436+cadrianmae@users.noreply.github.com"
@@ -269,7 +249,7 @@
       "name": "tts",
       "source": "./plugins/tts",
       "description": "Piper-based text-to-speech for Claude Code. Speaks assistant responses aloud via a Stop hook; interrupt-on-type via a UserPromptSubmit hook. Three speak modes (full/truncate/summary via Haiku). Multi-speaker voice support via name:speaker syntax. Single unified interactive /tts command. Requires Linux, PipeWire (paplay), and piper binary with voices at ~/.local/share/piper-voices/.",
-      "version": "0.1.4",
+      "version": "0.1.6",
       "author": {
         "name": "Mae",
         "email": "45900436+cadrianmae@users.noreply.github.com"
@@ -290,7 +270,7 @@
       "name": "audio-feedback",
       "source": "./plugins/audio-feedback",
       "description": "Audio feedback for Claude Code hook events. Plays short synth sounds on response complete, notifications, context compaction, user input, and more. Per-event configuration with theme support. Requires Linux + PipeWire (paplay).",
-      "version": "0.1.0",
+      "version": "0.2.1",
       "author": {
         "name": "Mae",
         "email": "45900436+cadrianmae@users.noreply.github.com"

@@ -1,6 +1,6 @@
 {
   "name": "cadrianmae-integration",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Integrate marketplace plugins into CLAUDE.md with user/project scope selection",
   "author": {
     "name": "Mae",

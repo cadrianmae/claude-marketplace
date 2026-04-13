@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.2] - 2026-04-13
+
+### Fixed
+- Standardise author name in plugin manifest
+- Add homepage and repository fields to plugin manifest
+- Remove unnecessary escaped quotes in hook command
+- Use CLAUDE_PLUGIN_ROOT for script path resolution with portable cd/pwd fallback
+- Normalise allowed-tools frontmatter format in skill
+
 ## [2.2.1] - 2026-04-07
 ### Fixed
 - **Hook jq-bootstrap error.** If `jq` itself was missing, the dependency check still tried to emit its error message via `jq -n`, which obviously failed and hid the real cause. The `jq`-missing branch now prints a literal JSON string via `printf`. (Copilot review)

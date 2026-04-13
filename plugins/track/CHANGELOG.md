@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.1] - 2026-04-13
+
+### Fixed
+- Replace /tmp paths with ${CLAUDE_PLUGIN_DATA} for debounce files and LLM error logs
+- Add mkdir -p to ensure plugin data directory exists before stderr redirections
+- Fix remaining /tmp reference in capture-sources.sh
+- Normalise allowed-tools frontmatter format in skill
+
 ## [2.7.0] - 2026-04-11
 
 ### Changed

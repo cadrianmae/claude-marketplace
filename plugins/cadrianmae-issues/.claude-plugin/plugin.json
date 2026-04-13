@@ -1,6 +1,6 @@
 {
   "name": "cadrianmae-issues",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "File bugs and feature requests as GitHub issues on cadrianmae/claude-marketplace via gh CLI.",
   "author": {
     "name": "Mae",

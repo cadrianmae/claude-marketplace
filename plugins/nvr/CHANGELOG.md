@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-04-13
+
+### Fixed
+- Standardise author name in plugin manifest
+
 ## [2.0.0] - 2026-04-13
 
 ### Added

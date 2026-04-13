@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-04-13
+
+### Fixed
+- Standardise author field to object format in plugin manifest
+- Replace hardcoded marketplace paths with portable env vars in skill
+
 ## [1.0.2] - 2026-01-27
 ### Added
 - CHANGELOG.md following Keep a Changelog format

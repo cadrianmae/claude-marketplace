@@ -1,6 +1,6 @@
 {
   "name": "nvr",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Neovim Remote integration for Claude Code. Unified /nvr command with open, list, status, workspace subcommands. Git-root-aware socket discovery.",
   "author": {
     "name": "Mae",
