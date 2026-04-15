@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-04-15
+
+### Added
+- Token-driven click scaling: click start rate is now derived from
+  output tokens rather than word count, so the audio signal reflects
+  actual model work.
+  - `Stop`: exact `output_tokens` from the last assistant entry in
+    `transcript_path`.
+  - `SubagentStop`: **sum** of `output_tokens` across the subagent's
+    `agent_transcript_path` (cumulative subagent work).
+  - `PostToolUse` / `Notification`: estimated from text length
+    (chars / 4 ≈ tokens).
+- `CLICKS_RATE`, `CLICKS_RATE_AT`, `CLICKS_RATE_GROWTH` config keys
+  controlling the log curve:
+  `start_rate = CLICKS_RATE + CLICKS_RATE_GROWTH * log2(tokens / CLICKS_RATE_AT)`
+  (floored at 5 cps). Defaults: 25 cps anchored at 50 tokens,
+  growth 4.
+- `af_tokens_from_transcript <path> <last|sum>` helper in `lib.sh`.
+
+### Changed
+- Hooks are fully non-blocking: event sound + clicks always run in a
+  detached background subshell, so `play-sound.sh` returns in ~50ms
+  regardless of sox/paplay latency.
+- `af_play_clicks` signature: now takes a token count (was word count).
+
 ## [0.2.1] - 2026-04-13
 
 ### Fixed

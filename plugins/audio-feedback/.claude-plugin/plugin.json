@@ -1,6 +1,6 @@
 {
   "name": "audio-feedback",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Audio feedback for Claude Code hook events. Plays short synth sounds on response complete, notifications, context compaction, and user input. Configurable per-event with bundled sounds. Requires Linux + PipeWire (paplay).",
   "author": {
     "name": "Mae Capacite",

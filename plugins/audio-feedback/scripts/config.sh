@@ -13,7 +13,7 @@ source "$SCRIPT_DIR/lib.sh"
 af_ensure_config
 af_load_config
 
-VALID_KEYS="THEME ENABLED CLICKS_ENABLED CLICKS_EVENTS STOP_SOUND NOTIFICATION_SOUND PRE_COMPACT_SOUND USER_PROMPT_SOUND SESSION_START_SOUND SUBAGENT_STOP_SOUND PRE_TOOL_USE_SOUND POST_TOOL_USE_SOUND"
+VALID_KEYS="THEME ENABLED CLICKS_ENABLED CLICKS_EVENTS CLICKS_RATE CLICKS_RATE_AT CLICKS_RATE_GROWTH STOP_SOUND NOTIFICATION_SOUND PRE_COMPACT_SOUND USER_PROMPT_SOUND SESSION_START_SOUND SUBAGENT_STOP_SOUND PRE_TOOL_USE_SOUND POST_TOOL_USE_SOUND"
 
 if [ $# -eq 0 ]; then
     echo "audio-feedback configuration ($(af_config_file)):"
@@ -22,6 +22,9 @@ if [ $# -eq 0 ]; then
     echo "  ENABLED=$AF_ENABLED"
     echo "  CLICKS_ENABLED=$AF_CLICKS_ENABLED"
     echo "  CLICKS_EVENTS=$AF_CLICKS_EVENTS"
+    echo "  CLICKS_RATE=$AF_CLICKS_RATE"
+    echo "  CLICKS_RATE_AT=$AF_CLICKS_RATE_AT"
+    echo "  CLICKS_RATE_GROWTH=$AF_CLICKS_RATE_GROWTH"
     echo
     echo "  Event sounds (set to 'off' to disable):"
     echo "  STOP_SOUND=$AF_STOP_SOUND"
@@ -70,6 +73,24 @@ for arg in "$@"; do
                     exit 1
                     ;;
             esac
+            ;;
+        CLICKS_RATE)
+            if ! [[ "$value" =~ ^[0-9]+$ ]] || [ "$value" -lt 1 ] || [ "$value" -gt 50 ]; then
+                echo "Error: CLICKS_RATE must be an integer in [1, 50] (got '$value')" >&2
+                exit 1
+            fi
+            ;;
+        CLICKS_RATE_AT)
+            if ! [[ "$value" =~ ^[0-9]+$ ]] || [ "$value" -lt 1 ]; then
+                echo "Error: CLICKS_RATE_AT must be a positive integer (got '$value')" >&2
+                exit 1
+            fi
+            ;;
+        CLICKS_RATE_GROWTH)
+            if ! [[ "$value" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+                echo "Error: CLICKS_RATE_GROWTH must be a non-negative number (got '$value')" >&2
+                exit 1
+            fi
             ;;
         CLICKS_EVENTS)
             local valid_events="stop,post_tool_use,subagent_stop,notification,pre_compact"

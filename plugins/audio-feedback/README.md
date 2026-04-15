@@ -1,4 +1,4 @@
-[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![Version](https://img.shields.io/badge/version-0.2.2-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 # Audio Feedback Plugin v0.2
