@@ -1,0 +1,25 @@
+{
+  "name": "formalizer",
+  "version": "1.0.0",
+  "description": "Rewrite text into a different tone or register (21 tones) with optional 1-5 intensity anchored to Joos's Five Clocks.",
+  "author": {
+    "name": "Mae Capacite",
+    "email": "cadrianmae@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/cadrianmae/claude-marketplace",
+  "repository": "https://github.com/cadrianmae/claude-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "text",
+    "tone",
+    "rewrite",
+    "register",
+    "formal",
+    "professional",
+    "academic",
+    "writing",
+    "style"
+  ],
+  "commands": "./commands/",
+  "skills": "./skills/"
+}
