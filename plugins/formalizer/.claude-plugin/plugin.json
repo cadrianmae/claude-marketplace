@@ -1,6 +1,6 @@
 {
   "name": "formalizer",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Rewrite text into a different tone or register (21 tones) with optional 1-5 intensity anchored to Joos's Five Clocks.",
   "author": {
     "name": "Mae Capacite",

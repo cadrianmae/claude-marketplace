@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-04-20
+
+### Fixed
+
+- Moved `formalizer-compare` agent from `skills/formalizer/agents/` to the top-level `agents/` directory so Claude Code auto-discovers it. Agent was not loading before this fix.
+
 ## [1.0.1] - 2026-04-20
 
 ### Added
