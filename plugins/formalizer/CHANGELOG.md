@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-04-20
+
+### Added
+
+- `argument-hint` frontmatter on `SKILL.md`, `commands/rewrite.md`, and `commands/compare.md` for inline CLI discoverability, each with a concrete example.
+
 ## [1.0.0] - 2026-04-20
 
 ### Added

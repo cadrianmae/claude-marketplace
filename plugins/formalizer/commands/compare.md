@@ -1,6 +1,6 @@
 ---
 description: Compare multiple tone variants or register levels side-by-side via the formalizer-compare agent
-argument-hint: "[tones...] [levels...] [--iterate] [text]"
+argument-hint: "<tones,...> [levels,...] [--iterate] <text>  e.g. professional,concise 3 The report is overdue."
 allowed-tools: Read, AskUserQuestion, Agent
 ---
 

@@ -293,7 +293,7 @@
       "name": "formalizer",
       "source": "./plugins/formalizer",
       "description": "Rewrite text into a different tone or register (21 tones: professional, academic, concise, empathetic, diplomatic, Irish English, etc.) with optional 1-5 intensity anchored to Joos's Five Clocks. Skill for inline rewrites, isolated agent for batch/compare and iterative refinement, namespaced commands.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "Mae",
         "email": "45900436+cadrianmae@users.noreply.github.com"

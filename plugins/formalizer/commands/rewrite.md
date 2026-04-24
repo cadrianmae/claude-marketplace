@@ -1,6 +1,6 @@
 ---
 description: Rewrite text into a specified tone and register level using the formalizer skill
-argument-hint: "[tone] [level] [text]"
+argument-hint: "<tone> [level 1-5] <text>  e.g. professional 4 The report is overdue."
 allowed-tools: Read, AskUserQuestion
 ---
 

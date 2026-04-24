@@ -1,6 +1,7 @@
 ---
 name: formalizer
 description: Rewrite text into a different tone or register. Triggered by rewrite verbs (rewrite, reword, polish, soften, sharpen, formalise, unwaffle, tidy, anglicise, de-Americanise) combined with a tone or by phrases like "make this more professional", "best synonym for X", "British/Irish spelling". Supports 21 tones (professional, formal, technical, academic, legal, informal, polite, less snarky, angry, calm, passionate, sarcastic, sociable, empathetic, diplomatic, accessible, readable, concise, grammatical, bullets, thesaurus, marketing, irish-english) at register levels 1-5 anchored to Joos's Five Clocks. Not for drafting new content from scratch — this is a rewriter, not a generator.
+argument-hint: "[tone] [level 1-5] <text>  |  help"
 allowed-tools: Read
 ---
 
