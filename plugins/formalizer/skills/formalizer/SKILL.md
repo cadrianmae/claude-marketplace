@@ -113,6 +113,14 @@ Output ONLY the rewritten text. No preamble. No labels. No surrounding quotes. N
 - For **thesaurus**: output a single word or very short phrase only.
 - If the text is already in the target tone, return a clean, polished version of it anyway.
 
+## Chaining tones
+
+For multi-stage edits where tones should compound (e.g. `grammatical -> readable -> concise`), direct the user to the pipeline agent (`/formalizer:pipeline`) rather than applying stages inline. The pipeline agent runs in an isolated context, preserves rules across every stage, and returns one merged output.
+
+Example: `/formalizer:pipeline grammatical:3 concise:5 irish-english <text>` applies grammar fixes at level 3, then cuts padding aggressively at level 5, then anglicises spelling — one final paragraph comes back.
+
+Side-by-side comparison of alternatives is handled by `/formalizer:compare`.
+
 ## When consistency matters
 
 If you are unsure how a particular tone should sound, read `references/tone-examples.md` for one before/after per tone. Load it only when needed — do not pull it on every invocation.

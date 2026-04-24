@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-04-24
+
+### Added
+
+- **Pipeline mode** — apply multiple tones sequentially to the same text and return one merged output. Resolves #29.
+  - `agents/formalizer-pipeline.md` — isolated subagent chaining tones in order; each stage feeds into the next.
+  - `commands/pipeline.md` — `/formalizer:pipeline <tones...> [level | tone:level] [--show-stages] <text>`.
+  - Supports uniform register level or per-stage `tone:level` overrides.
+  - Accepts both space- and comma-separated tone lists.
+  - `--show-stages` flag exposes intermediate outputs for verification; default returns only the final.
+- **Contradiction guardrail** — refuses pipelines with adjacent contradictory tones (e.g. `formal → informal`, `angry → calm`), naming the conflicting pair and suggesting a reorder.
+- **Pipeline constraints** — minimum 2 tones (single-tone pipelines redirect to `/formalizer:rewrite`), maximum 8 stages.
+
 ## [1.0.2] - 2026-04-20
 
 ### Fixed

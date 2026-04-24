@@ -1,4 +1,4 @@
-[![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 # formalizer Plugin
@@ -22,7 +22,8 @@ A skill, two commands, and an isolated subagent for tone-shifting prose. Trigger
 ## Commands
 
 - `/formalizer:rewrite [tone] [level] [text]` — single-tone inline rewrite
-- `/formalizer:compare [tones...] [levels...] [--iterate] [text]` — batch/compare via subagent
+- `/formalizer:compare [tones...] [levels...] [--iterate] [text]` — batch/compare via subagent (side-by-side variants)
+- `/formalizer:pipeline <tones...> [level | tone:level] [--show-stages] [text]` — chain tones sequentially, return one merged output
 
 ## Tones (21 total)
 
@@ -57,11 +58,20 @@ See `skills/formalizer/SKILL.md` for full definitions and `skills/formalizer/ref
 /formalizer:rewrite concise   The thing is, the report is overdue and I need it today.
 → The report is a week late. Send it today.
 
-# Compare via command
+# Compare via command (side-by-side variants)
 /formalizer:compare professional,diplomatic,concise   The report is overdue.
 
 # Iterate via command
 /formalizer:compare diplomatic --iterate   The report is overdue.
+
+# Pipeline via command (chain tones into one merged output)
+/formalizer:pipeline grammatical readable concise   The report is overdue.
+
+# Pipeline with per-stage levels
+/formalizer:pipeline grammatical:3 concise:5   The report is overdue.
+
+# Pipeline with staged verification
+/formalizer:pipeline grammatical readable concise --show-stages   The report is overdue.
 ```
 
 ## Triggering
