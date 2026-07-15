@@ -58,3 +58,15 @@ def test_verify_fails_wrong_note(sox_wav):
     t = analyze.load_targets()["stop"]
     r = analyze.verify(w, t)
     assert not r["ok"]
+
+
+def test_palette_loudness_reports_spread(sox_wav, tmp_path):
+    import subprocess
+    d = tmp_path / "pal"; d.mkdir()
+    for f, g in [("a.wav", "-3"), ("b.wav", "-3.5")]:
+        subprocess.run(["sox", "-n", "-r", "44100", "-c", "1", "-b", "16", "--no-dither", str(d / f),
+                        "synth", "0.4", "sine", "440", "gain", g, "norm", "-1"],
+                       check=True, capture_output=True)
+    r = analyze.palette_loudness(str(d))
+    assert r["files"] == 2
+    assert r["rms_spread_db"] < 3

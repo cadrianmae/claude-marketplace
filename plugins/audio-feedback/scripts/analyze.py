@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Objective audio measurement + target verification for the audio-feedback
 default theme. Dev-time tool only (numpy/scipy); never invoked by hooks."""
+import glob
 import json
 import os
+import sys
 
 import numpy as np
 from scipy.io import wavfile
@@ -104,3 +106,48 @@ def verify(path, target):
                    "measured": round(raw_peak, 1), "expected": f"<= {target['peak_dbfs_max']}"})
 
     return {"ok": all(c["ok"] for c in checks), "checks": checks}
+
+
+def palette_loudness(directory):
+    rms = []
+    peak_max = -120.0
+    files = sorted(glob.glob(os.path.join(directory, "*.wav")))
+    for p in files:
+        sr, x = load(p)
+        rms.append(20 * np.log10(np.sqrt(np.mean(x ** 2)) + 1e-9))
+        _, raw = wavfile.read(p)
+        raw = (raw.mean(1) if raw.ndim > 1 else raw).astype(float)
+        raw = raw / 32768.0 if raw.max() > 1.5 else raw
+        peak_max = max(peak_max, peak_dbfs(raw))
+    spread = (max(rms) - min(rms)) if rms else 0.0
+    return {"files": len(files), "rms_spread_db": round(spread, 2),
+            "peak_max_dbfs": round(peak_max, 2)}
+
+
+def main(argv=None):
+    argv = argv if argv is not None else sys.argv[1:]
+    if argv and argv[0] == "--palette":
+        r = palette_loudness(argv[1])
+        print(f"palette: {r['files']} files, RMS spread {r['rms_spread_db']} dB, "
+              f"peak max {r['peak_max_dbfs']} dBFS")
+        return 0 if r["rms_spread_db"] <= 3.0 and r["peak_max_dbfs"] <= -0.7 else 1
+    if not argv:
+        print("usage: analyze.py <wav> [event] | analyze.py --palette <dir>")
+        return 2
+    path = argv[0]
+    event = argv[1] if len(argv) > 1 else os.path.splitext(os.path.basename(path))[0]
+    targets = load_targets()
+    if event not in targets:
+        sr, x = load(path)
+        print(f"{event}: partials {peaks(sr, x)}, envelope {envelope(sr, x)}")
+        return 0
+    r = verify(path, targets[event])
+    for c in r["checks"]:
+        tag = "[OK]  " if c["ok"] else "[WARN]"
+        print(f"{tag} {c['name']}: measured {c['measured']} expected {c['expected']}")
+    print("[OK] PASS" if r["ok"] else "[WARN] FAIL")
+    return 0 if r["ok"] else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
