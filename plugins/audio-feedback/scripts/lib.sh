@@ -290,37 +290,28 @@ af_tokens_from_transcript() {
     printf '%s' "${result:-0}"
 }
 
-# Generate and play an ease-out click sequence proportional to token count.
-# Sound: glassy tri-tone (lo/hi/shimmer sines) + filtered noise friction
-# + impulse transient + reverb. Glassy sci-fi aesthetic.
-#
-# Scaling:
-#   start_rate = CLICKS_RATE + CLICKS_RATE_GROWTH * log2(tokens / CLICKS_RATE_AT)
-#   floored at 5 cps. Duration grows logarithmically from tokens, clamped
-#   to [0.3, 1.5]s. Ease-out: gap grows quadratically (4x at the tail).
-#
-# Usage: af_play_clicks <tokens>
-af_play_clicks() {
-    local tokens="${1:-0}"
-    [ "$tokens" -le 0 ] 2>/dev/null && return 0
-    [ "$AF_CLICKS_ENABLED" = "true" ] || return 0
-    command -v sox >/dev/null 2>&1 || return 0
-
-    # Logarithmic duration scaling from token count.
-    # Anchored so ~65 tokens ~ 0.9s (was: 20 words ~ 0.9s, roughly the
-    # same ratio given ~1.3 tokens/word).
-    local max_dur
-    max_dur="$(awk -v t="$tokens" 'BEGIN {
+# af_clicks_duration TOKENS
+# Logarithmic duration scaling from token count. Anchored so ~65 tokens
+# ~ 0.9s (was: 20 words ~ 0.9s, roughly the same ratio given ~1.3
+# tokens/word). Clamped to [0.3, 1.5]s.
+af_clicks_duration() {
+    local tokens="$1"
+    awk -v t="$tokens" 'BEGIN {
         d = log(t / 7) / log(2) * 0.3 + 0.3
         if (d < 0.3) d = 0.3
         if (d > 1.5) d = 1.5
         printf "%.2f", d
-    }')"
+    }'
+}
 
-    # Click sound parameters.
+# af_clicks_base_gap TOKENS
+# Compute start rate from token count: linear-looking at low tokens,
+# log-compressed at high tokens. Floored at 5 cps. Returns the base gap
+# (seconds) between clicks at t=0, before the ease-out quadratic growth.
+#   start_rate = CLICKS_RATE + CLICKS_RATE_GROWTH * log2(tokens / CLICKS_RATE_AT)
+af_clicks_base_gap() {
+    local tokens="$1"
     local click_dur="0.02"
-    # Compute start rate from token count: linear-looking at low tokens,
-    # log-compressed at high tokens. Floored at 5 cps.
     local start_rate
     start_rate="$(awk \
         -v t="$tokens" \
@@ -332,78 +323,62 @@ af_play_clicks() {
             if (r < 5) r = 5
             printf "%.2f", r
         }')"
-    local base_gap
-    base_gap="$(awk -v r="$start_rate" -v cd="$click_dur" 'BEGIN {
+    awk -v r="$start_rate" -v cd="$click_dur" 'BEGIN {
         g = 1/r - cd
         if (g < 0.001) g = 0.001
         printf "%.4f", g
-    }')"
+    }'
+}
 
-    local tmpdir
-    tmpdir="$(mktemp -d)"
-
-    local t=0 i=0
-    local lo_freq hi_freq sh_freq gap d
-
-    while (( $(awk -v t="$t" -v m="$max_dur" 'BEGIN { print (t < m) ? 1 : 0 }') )); do
-        # Random frequency variation per click.
-        lo_freq=$(( 5050 + RANDOM % 301 - 150 ))
-        hi_freq=$(( 10000 + RANDOM % 501 - 250 ))
-        sh_freq=$(( 3500 + RANDOM % 401 - 200 ))
-
-        # Ease-out: gap grows quadratically with elapsed time.
-        gap="$(awk -v bg="$base_gap" -v t="$t" -v m="$max_dur" 'BEGIN {
-            ratio = t / m
-            g = bg * (1 + ratio * ratio * 4)
-            printf "%.4f", g
-        }')"
-
+# af_render_clicks TOKENS OUTFILE
+# Synthesize the token-scaled glassy click sequence to OUTFILE (mono 44.1k).
+# Premium tuning vs the old inline version:
+#   - softer per-click fades (fade q) to remove ticks/clicks-on-clicks
+#   - gentle high-shelf roll-off (lowpass) to tame fizz
+#   - reverb with short pre-delay + lower wet, then normalise with headroom
+#
+# Scaling: ease-out gap growth quadratic in elapsed time (4x at the tail),
+# duration/rate curve from af_clicks_duration / af_clicks_base_gap.
+af_render_clicks() {
+    local tokens="$1" outfile="$2"
+    local tmpdir; tmpdir="$(mktemp -d)"
+    local max_dur; max_dur="$(af_clicks_duration "$tokens")"   # existing rate curve
+    local base_gap; base_gap="$(af_clicks_base_gap "$tokens")" # existing
+    local click_dur=0.03 t=0 i=0 lo hi sh gap d
+    while (( $(awk -v t="$t" -v m="$max_dur" 'BEGIN{print (t<m)?1:0}') )); do
+        lo=$(( 5050 + RANDOM % 301 - 150 ))
+        hi=$(( 10000 + RANDOM % 501 - 250 ))
+        sh=$(( 3500 + RANDOM % 401 - 200 ))
+        gap="$(awk -v bg="$base_gap" -v t="$t" -v m="$max_dur" 'BEGIN{r=t/m;printf "%.4f", bg*(1+r*r*4)}')"
         d="$tmpdir/c$(printf '%03d' "$i")"
-
-        # Lo tone (5050 Hz base, slow decay).
-        sox -n -r 44100 -c 1 "${d}_lo.wav" \
-            synth "$click_dur" sine "$lo_freq" \
-            fade q 0.0002 "$click_dur" 0.015 \
-            vol 0.02 2>/dev/null
-
-        # Hi tone (10000 Hz base, faster decay).
-        sox -n -r 44100 -c 1 "${d}_hi.wav" \
-            synth "$click_dur" sine "$hi_freq" \
-            fade q 0.0002 "$click_dur" 0.008 \
-            vol 0.015 2>/dev/null
-
-        # Shimmer tone (3500 Hz base).
-        sox -n -r 44100 -c 1 "${d}_sh.wav" \
-            synth "$click_dur" sine "$sh_freq" \
-            fade q 0.0002 "$click_dur" 0.006 \
-            vol 0.012 2>/dev/null
-
-        # Friction (filtered noise).
-        sox -n -r 44100 -c 1 "${d}_n.wav" \
-            synth "$click_dur" noise \
-            fade q 0.0002 "$click_dur" 0.010 \
-            vol 0.025 2>/dev/null
-
-        # Impulse transient (short noise burst).
-        sox -n -r 44100 -c 1 "${d}_i.wav" \
-            synth 0.002 noise \
-            fade q 0 0.002 0.001 \
-            vol 0.015 \
-            pad 0 0.018 2>/dev/null
-
-        # Mix all layers, pad with gap.
-        sox -m "${d}_lo.wav" "${d}_hi.wav" "${d}_sh.wav" "${d}_n.wav" "${d}_i.wav" "${d}.wav" \
-            pad 0 "$gap" 2>/dev/null
-
-        t="$(awk -v t="$t" -v cd="$click_dur" -v g="$gap" 'BEGIN { printf "%.4f", t + cd + g }')"
+        sox -n -r 44100 -c 1 "${d}_lo.wav" synth "$click_dur" sine "$lo" fade q 0.0004 "$click_dur" 0.015 vol 0.018 2>/dev/null
+        sox -n -r 44100 -c 1 "${d}_hi.wav" synth "$click_dur" sine "$hi" fade q 0.0004 "$click_dur" 0.008 vol 0.012 2>/dev/null
+        sox -n -r 44100 -c 1 "${d}_sh.wav" synth "$click_dur" sine "$sh" fade q 0.0004 "$click_dur" 0.006 vol 0.010 2>/dev/null
+        sox -n -r 44100 -c 1 "${d}_n.wav"  synth "$click_dur" pinknoise fade q 0.0004 "$click_dur" 0.010 lowpass 6000 vol 0.020 2>/dev/null
+        sox -m "${d}_lo.wav" "${d}_hi.wav" "${d}_sh.wav" "${d}_n.wav" "${d}.wav" pad 0 "$gap" 2>/dev/null
+        t="$(awk -v t="$t" -v g="$gap" -v c="$click_dur" 'BEGIN{printf "%.4f", t+g+c}')"
         i=$((i + 1))
     done
-
-    # Concatenate all clicks, apply reverb over the whole sequence, play.
-    if [ "$i" -gt 0 ]; then
-        sox "$tmpdir"/c???.wav "$tmpdir/full.wav" 2>/dev/null
-        sox "$tmpdir/full.wav" -t wav - reverb 40 50 80 2>/dev/null | paplay 2>/dev/null || true
-    fi
-
+    sox "$tmpdir"/c???.wav "$tmpdir/full.wav" 2>/dev/null
+    # premium bus: tame fizz, short-predelay reverb, headroom
+    sox "$tmpdir/full.wav" "$outfile" lowpass 12000 reverb 28 50 70 100 8 0 gain -n -1 2>/dev/null
     rm -rf "$tmpdir"
+}
+
+# Generate and play an ease-out click sequence proportional to token count.
+# Sound: glassy tri-tone (lo/hi/shimmer sines) + filtered pinknoise friction
+# + reverb. Glassy sci-fi aesthetic. See af_render_clicks for the synth.
+#
+# Usage: af_play_clicks <tokens>
+af_play_clicks() {
+    local tokens="${1:-0}"
+    [ "$tokens" -le 0 ] 2>/dev/null && return 0
+    [ "$AF_CLICKS_ENABLED" = "true" ] || return 0
+    command -v sox >/dev/null 2>&1 || return 0
+
+    local _af_click_tmp
+    _af_click_tmp="$(mktemp --suffix=.wav)"
+    af_render_clicks "$tokens" "$_af_click_tmp"
+    paplay "$_af_click_tmp" 2>/dev/null || true
+    rm -f "$_af_click_tmp"
 }
