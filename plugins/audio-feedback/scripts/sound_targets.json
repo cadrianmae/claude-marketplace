@@ -1,0 +1,10 @@
+{
+  "stop":               {"partials_hz": [262, 392], "dominant_hz": 262, "second_max_db": -4.0, "attack_ms": [120, 260], "decay_ms": [500, 900], "peak_dbfs_max": -1.0},
+  "notification":       {"partials_hz": [440, 523], "dominant_hz": 523, "second_max_db": -10.0, "attack_ms": [200, 360], "decay_ms": [150, 450], "peak_dbfs_max": -1.0},
+  "session-start":      {"partials_hz": [262, 330, 392], "dominant_hz": 392, "second_max_db": -1.0, "attack_ms": [0, 200], "decay_ms": [300, 900], "peak_dbfs_max": -1.0},
+  "subagent-stop":      {"partials_hz": [659], "dominant_hz": 659, "second_max_db": -1.0, "attack_ms": [0, 150], "decay_ms": [150, 600], "peak_dbfs_max": -1.0},
+  "pre-compact":        {"partials_hz": [196], "dominant_hz": 196, "second_max_db": -1.0, "attack_ms": [0, 250], "decay_ms": [400, 1200], "peak_dbfs_max": -1.0},
+  "user-prompt-submit": {"partials_hz": [880], "dominant_hz": 880, "second_max_db": -1.0, "attack_ms": [0, 100], "decay_ms": [100, 500], "peak_dbfs_max": -1.0},
+  "pre-tool-use":       {"partials_hz": [500], "dominant_hz": 500, "second_max_db": -1.0, "attack_ms": [0, 120], "decay_ms": [80, 500], "peak_dbfs_max": -1.0},
+  "post-tool-use":      {"partials_hz": [700], "dominant_hz": 700, "second_max_db": -1.0, "attack_ms": [0, 120], "decay_ms": [80, 500], "peak_dbfs_max": -1.0}
+}
