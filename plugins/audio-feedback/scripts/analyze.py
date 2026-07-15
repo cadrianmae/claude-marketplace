@@ -89,7 +89,9 @@ def verify(path, target):
                    "measured": top[0], "expected": dom})
 
     if len(target["partials_hz"]) > 1:
-        others = [h for h in target["partials_hz"] if h != dom]
+        # dominant_hz may be a rounded-to-1dp float while partials_hz are
+        # rounded ints, so exclude by proximity rather than exact equality.
+        others = [h for h in target["partials_hz"] if abs(h - dom) > 1]
         sec_lv = max(_nearest_level(pk, h) for h in others)
         checks.append({"name": "second_level_db", "ok": sec_lv <= target["second_max_db"] + 3,
                        "measured": sec_lv, "expected": f"<= {target['second_max_db']}"})

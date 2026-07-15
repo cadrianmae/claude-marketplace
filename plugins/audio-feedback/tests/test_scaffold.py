@@ -46,3 +46,55 @@ def test_build_rpp_is_reaper_project_with_regions():
         matching_ends = [l for l in ends if int(l.split()[1]) == region_id]
         assert len(matching_ends) == 1
         assert '""' in matching_ends[0]
+
+
+def test_note_map_covers_all_base_events():
+    base = ["stop", "notification", "session-start", "subagent-stop",
+            "pre-compact", "user-prompt-submit", "pre-tool-use", "post-tool-use"]
+    for name in base:
+        assert name in s.NOTE_MAP
+        entry = s.NOTE_MAP[name]
+        assert entry["mode"] in ("seq", "chord")
+        assert len(entry["notes"]) >= 1
+
+
+def test_base_event_maps_variants():
+    assert s.base_event("pre-tool-use-execute") == "pre-tool-use"
+    assert s.base_event("post-tool-use-network") == "post-tool-use"
+    assert s.base_event("notification-permission") == "notification"
+    assert s.base_event("session-start-resume") == "session-start"
+    assert s.base_event("stop") == "stop"
+
+
+def test_build_rpp_stop_track_has_midi_item_with_five_notes():
+    txt = s.build_rpp(["stop"])
+    # Isolate the stop track block.
+    start = txt.index('NAME "stop"')
+    track_txt = txt[start:]
+    assert "<SOURCE MIDI" in track_txt
+    note_ons = [l for l in track_txt.splitlines() if l.strip().startswith("E ") and " 90 " in l]
+    assert len(note_ons) == 5
+    assert note_ons[0].strip() == "E 0 90 48 60"
+    assert track_txt.strip().splitlines()[-1].strip() == ">" or "E 0 b0 7b 00" in track_txt
+
+
+def test_build_rpp_pre_compact_chord_notes_on_before_off():
+    txt = s.build_rpp(["pre-compact"])
+    start = txt.index('NAME "pre-compact"')
+    track_txt = txt[start:]
+    event_lines = [l.strip() for l in track_txt.splitlines() if l.strip().startswith("E ")]
+    on_lines = [l for l in event_lines if " 90 " in l]
+    off_lines = [l for l in event_lines if " 80 " in l]
+    assert on_lines[:2] == ["E 0 90 2b 60", "E 0 90 2e 60"]
+    # both note-ons occur before any note-off
+    first_off_index = event_lines.index(off_lines[0])
+    assert event_lines.index(on_lines[0]) < first_off_index
+    assert event_lines.index(on_lines[1]) < first_off_index
+
+
+def test_build_rpp_variant_inherits_base_event_notes():
+    txt = s.build_rpp(["post-tool-use-network"])
+    start = txt.index('NAME "post-tool-use-network"')
+    track_txt = txt[start:]
+    note_ons = [l.strip() for l in track_txt.splitlines() if l.strip().startswith("E ") and " 90 " in l]
+    assert note_ons[0] == "E 0 90 48 60"

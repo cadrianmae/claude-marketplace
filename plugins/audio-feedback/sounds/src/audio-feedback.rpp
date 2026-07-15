@@ -56,83 +56,444 @@
   MARKER 27 53.5 "" 1
   <TRACK
     NAME "stop"
+    <ITEM
+      POSITION 0.0
+      LENGTH 2.5
+      NAME "stop"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 48 60
+        E 960 80 48 00
+        E 0 90 47 60
+        E 960 80 47 00
+        E 0 90 43 60
+        E 960 80 43 00
+        E 0 90 40 60
+        E 960 80 40 00
+        E 0 90 3c 60
+        E 960 80 3c 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "notification"
+    <ITEM
+      POSITION 2.0
+      LENGTH 1.5
+      NAME "notification"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 3c 60
+        E 960 80 3c 00
+        E 0 90 43 60
+        E 960 80 43 00
+        E 0 90 46 60
+        E 960 80 46 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "session-start"
+    <ITEM
+      POSITION 4.0
+      LENGTH 2.5
+      NAME "session-start"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 30 60
+        E 960 80 30 00
+        E 0 90 34 60
+        E 960 80 34 00
+        E 0 90 37 60
+        E 960 80 37 00
+        E 0 90 3a 60
+        E 960 80 3a 00
+        E 0 90 3c 60
+        E 960 80 3c 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "subagent-stop"
+    <ITEM
+      POSITION 6.0
+      LENGTH 1.5
+      NAME "subagent-stop"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 40 60
+        E 960 80 40 00
+        E 0 90 3c 60
+        E 960 80 3c 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "pre-compact"
+    <ITEM
+      POSITION 8.0
+      LENGTH 1.5
+      NAME "pre-compact"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 2b 60
+        E 0 90 2e 60
+        E 960 80 2b 00
+        E 0 80 2e 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "user-prompt-submit"
+    <ITEM
+      POSITION 10.0
+      LENGTH 1.5
+      NAME "user-prompt-submit"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 43 60
+        E 960 80 43 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "pre-tool-use"
+    <ITEM
+      POSITION 12.0
+      LENGTH 1.5
+      NAME "pre-tool-use"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 46 60
+        E 960 80 46 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "post-tool-use"
+    <ITEM
+      POSITION 14.0
+      LENGTH 1.5
+      NAME "post-tool-use"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 48 60
+        E 960 80 48 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "pre-tool-use-execute"
+    <ITEM
+      POSITION 16.0
+      LENGTH 1.5
+      NAME "pre-tool-use-execute"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 46 60
+        E 960 80 46 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "pre-tool-use-modify"
+    <ITEM
+      POSITION 18.0
+      LENGTH 1.5
+      NAME "pre-tool-use-modify"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 46 60
+        E 960 80 46 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "pre-tool-use-network"
+    <ITEM
+      POSITION 20.0
+      LENGTH 1.5
+      NAME "pre-tool-use-network"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 46 60
+        E 960 80 46 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "pre-tool-use-observe"
+    <ITEM
+      POSITION 22.0
+      LENGTH 1.5
+      NAME "pre-tool-use-observe"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 46 60
+        E 960 80 46 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "pre-tool-use-dispatch"
+    <ITEM
+      POSITION 24.0
+      LENGTH 1.5
+      NAME "pre-tool-use-dispatch"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 46 60
+        E 960 80 46 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "pre-tool-use-interact"
+    <ITEM
+      POSITION 26.0
+      LENGTH 1.5
+      NAME "pre-tool-use-interact"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 46 60
+        E 960 80 46 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "post-tool-use-execute"
+    <ITEM
+      POSITION 28.0
+      LENGTH 1.5
+      NAME "post-tool-use-execute"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 48 60
+        E 960 80 48 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "post-tool-use-modify"
+    <ITEM
+      POSITION 30.0
+      LENGTH 1.5
+      NAME "post-tool-use-modify"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 48 60
+        E 960 80 48 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "post-tool-use-network"
+    <ITEM
+      POSITION 32.0
+      LENGTH 1.5
+      NAME "post-tool-use-network"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 48 60
+        E 960 80 48 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "post-tool-use-observe"
+    <ITEM
+      POSITION 34.0
+      LENGTH 1.5
+      NAME "post-tool-use-observe"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 48 60
+        E 960 80 48 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "post-tool-use-dispatch"
+    <ITEM
+      POSITION 36.0
+      LENGTH 1.5
+      NAME "post-tool-use-dispatch"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 48 60
+        E 960 80 48 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "post-tool-use-interact"
+    <ITEM
+      POSITION 38.0
+      LENGTH 1.5
+      NAME "post-tool-use-interact"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 48 60
+        E 960 80 48 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "notification-auth"
+    <ITEM
+      POSITION 40.0
+      LENGTH 1.5
+      NAME "notification-auth"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 3c 60
+        E 960 80 3c 00
+        E 0 90 43 60
+        E 960 80 43 00
+        E 0 90 46 60
+        E 960 80 46 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "notification-elicitation"
+    <ITEM
+      POSITION 42.0
+      LENGTH 1.5
+      NAME "notification-elicitation"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 3c 60
+        E 960 80 3c 00
+        E 0 90 43 60
+        E 960 80 43 00
+        E 0 90 46 60
+        E 960 80 46 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "notification-idle"
+    <ITEM
+      POSITION 44.0
+      LENGTH 1.5
+      NAME "notification-idle"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 3c 60
+        E 960 80 3c 00
+        E 0 90 43 60
+        E 960 80 43 00
+        E 0 90 46 60
+        E 960 80 46 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "notification-permission"
+    <ITEM
+      POSITION 46.0
+      LENGTH 1.5
+      NAME "notification-permission"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 3c 60
+        E 960 80 3c 00
+        E 0 90 43 60
+        E 960 80 43 00
+        E 0 90 46 60
+        E 960 80 46 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "session-start-clear"
+    <ITEM
+      POSITION 48.0
+      LENGTH 2.5
+      NAME "session-start-clear"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 30 60
+        E 960 80 30 00
+        E 0 90 34 60
+        E 960 80 34 00
+        E 0 90 37 60
+        E 960 80 37 00
+        E 0 90 3a 60
+        E 960 80 3a 00
+        E 0 90 3c 60
+        E 960 80 3c 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "session-start-compact"
+    <ITEM
+      POSITION 50.0
+      LENGTH 2.5
+      NAME "session-start-compact"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 30 60
+        E 960 80 30 00
+        E 0 90 34 60
+        E 960 80 34 00
+        E 0 90 37 60
+        E 960 80 37 00
+        E 0 90 3a 60
+        E 960 80 3a 00
+        E 0 90 3c 60
+        E 960 80 3c 00
+        E 0 b0 7b 00
+      >
+    >
   >
   <TRACK
     NAME "session-start-resume"
+    <ITEM
+      POSITION 52.0
+      LENGTH 2.5
+      NAME "session-start-resume"
+      <SOURCE MIDI
+        HASDATA 1 960 QN
+        E 0 90 30 60
+        E 960 80 30 00
+        E 0 90 34 60
+        E 960 80 34 00
+        E 0 90 37 60
+        E 960 80 37 00
+        E 0 90 3a 60
+        E 960 80 3a 00
+        E 0 90 3c 60
+        E 960 80 3c 00
+        E 0 b0 7b 00
+      >
+    >
   >
 >
