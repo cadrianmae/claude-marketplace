@@ -127,7 +127,14 @@ def palette_loudness(directory):
 def main(argv=None):
     argv = argv if argv is not None else sys.argv[1:]
     if argv and argv[0] == "--palette":
-        r = palette_loudness(argv[1])
+        if len(argv) < 2:
+            print("usage: analyze.py --palette <dir>", file=sys.stderr)
+            return 2
+        directory = argv[1]
+        r = palette_loudness(directory)
+        if r["files"] == 0:
+            print(f"[WARN] no .wav files found in palette directory: {directory}")
+            return 2
         print(f"palette: {r['files']} files, RMS spread {r['rms_spread_db']} dB, "
               f"peak max {r['peak_max_dbfs']} dBFS")
         return 0 if r["rms_spread_db"] <= 3.0 and r["peak_max_dbfs"] <= -0.7 else 1

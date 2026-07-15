@@ -61,12 +61,29 @@ def test_verify_fails_wrong_note(sox_wav):
 
 
 def test_palette_loudness_reports_spread(sox_wav, tmp_path):
+    # NOTE: analyze.load() peak-normalizes every file, so differing sox "gain"
+    # values alone are cancelled out and never reach palette_loudness's RMS
+    # calc. To get a genuine, deterministic RMS difference post-normalization
+    # we vary duty cycle instead: a full-duration tone vs. the same tone
+    # padded with trailing silence to a quarter of the duration. That changes
+    # the RMS/peak ratio (crest factor) even after peak-normalization.
     import subprocess
     d = tmp_path / "pal"; d.mkdir()
-    for f, g in [("a.wav", "-3"), ("b.wav", "-3.5")]:
-        subprocess.run(["sox", "-n", "-r", "44100", "-c", "1", "-b", "16", "--no-dither", str(d / f),
-                        "synth", "0.4", "sine", "440", "gain", g, "norm", "-1"],
-                       check=True, capture_output=True)
+    # a.wav: tone fills the whole 0.4s file -> RMS ~ -3 dB relative to peak.
+    subprocess.run(["sox", "-n", "-r", "44100", "-c", "1", "-b", "16", "--no-dither", str(d / "a.wav"),
+                    "synth", "0.4", "sine", "440"], check=True, capture_output=True)
+    # b.wav: same peak amplitude, but tone only fills a quarter of the 0.4s
+    # file (rest is silence) -> RMS ~6 dB lower relative to peak than a.wav.
+    subprocess.run(["sox", "-n", "-r", "44100", "-c", "1", "-b", "16", "--no-dither", str(d / "b.wav"),
+                    "synth", "0.1", "sine", "440", "pad", "0", "0.3"], check=True, capture_output=True)
     r = analyze.palette_loudness(str(d))
     assert r["files"] == 2
-    assert r["rms_spread_db"] < 3
+    assert r["rms_spread_db"] > 3  # ~6 dB crest-factor difference should be clearly detected
+
+    d2 = tmp_path / "pal_equal"; d2.mkdir()
+    for f in ["c.wav", "d.wav"]:
+        subprocess.run(["sox", "-n", "-r", "44100", "-c", "1", "-b", "16", "--no-dither", str(d2 / f),
+                        "synth", "0.4", "sine", "440"], check=True, capture_output=True)
+    r2 = analyze.palette_loudness(str(d2))
+    assert r2["files"] == 2
+    assert r2["rms_spread_db"] < 1  # identical-loudness files -> near-zero spread
