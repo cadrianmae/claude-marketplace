@@ -15,3 +15,9 @@ peak="$(sox "$out" -n stat 2>&1 | awk '/Maximum amplitude/ {print $3}')"
 awk -v p="$peak" 'BEGIN { exit !(p < 1.0 && p > 0.05) }' \
   || { echo "[FAIL] peak $peak out of range"; exit 1; }
 echo "[OK] clicks render, peak $peak"
+
+# format must be mono 44.1kHz
+ch="$(soxi -c "$out")"; sr="$(soxi -r "$out")"
+[ "$ch" = "1" ] && [ "$sr" = "44100" ] \
+  || { echo "[FAIL] expected mono 44100, got ${ch}ch ${sr}Hz"; exit 1; }
+echo "[OK] format mono 44100Hz"

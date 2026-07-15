@@ -304,6 +304,12 @@ af_clicks_duration() {
     }'
 }
 
+# Per-click synth duration (seconds), shared between the gap-derivation
+# math in af_clicks_base_gap and the actual synth call in af_render_clicks.
+# Keeping these in sync is what makes the real click cadence match
+# CLICKS_RATE (see Task 7 review Finding 1).
+AF_CLICK_DUR="${AF_CLICK_DUR:-0.03}"
+
 # af_clicks_base_gap TOKENS
 # Compute start rate from token count: linear-looking at low tokens,
 # log-compressed at high tokens. Floored at 5 cps. Returns the base gap
@@ -311,7 +317,7 @@ af_clicks_duration() {
 #   start_rate = CLICKS_RATE + CLICKS_RATE_GROWTH * log2(tokens / CLICKS_RATE_AT)
 af_clicks_base_gap() {
     local tokens="$1"
-    local click_dur="0.02"
+    local click_dur="$AF_CLICK_DUR"
     local start_rate
     start_rate="$(awk \
         -v t="$tokens" \
@@ -341,10 +347,17 @@ af_clicks_base_gap() {
 # duration/rate curve from af_clicks_duration / af_clicks_base_gap.
 af_render_clicks() {
     local tokens="$1" outfile="$2"
+    # Guard: non-positive tokens produce no click loop iterations, which
+    # would leave the concat glob matching nothing (a hard error). Emit a
+    # short valid silent WAV instead so callers always get a playable file.
+    if ! awk -v t="$tokens" 'BEGIN { exit !(t > 0) }' 2>/dev/null; then
+        sox -n -r 44100 -c 1 "$outfile" trim 0 0.05 2>/dev/null
+        return 0
+    fi
     local tmpdir; tmpdir="$(mktemp -d)"
     local max_dur; max_dur="$(af_clicks_duration "$tokens")"   # existing rate curve
     local base_gap; base_gap="$(af_clicks_base_gap "$tokens")" # existing
-    local click_dur=0.03 t=0 i=0 lo hi sh gap d
+    local click_dur="$AF_CLICK_DUR" t=0 i=0 lo hi sh gap d
     while (( $(awk -v t="$t" -v m="$max_dur" 'BEGIN{print (t<m)?1:0}') )); do
         lo=$(( 5050 + RANDOM % 301 - 150 ))
         hi=$(( 10000 + RANDOM % 501 - 250 ))
