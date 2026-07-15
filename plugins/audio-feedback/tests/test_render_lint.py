@@ -1,4 +1,4 @@
-import os, py_compile, pytest
+import os, py_compile
 
 SCRIPT = os.path.join(os.path.dirname(__file__), "..", "scripts", "render-sounds.py")
 
