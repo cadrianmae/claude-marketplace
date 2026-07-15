@@ -360,8 +360,10 @@ af_render_clicks() {
         i=$((i + 1))
     done
     sox "$tmpdir"/c???.wav "$tmpdir/full.wav" 2>/dev/null
-    # premium bus: tame fizz, short-predelay reverb, headroom
-    sox "$tmpdir/full.wav" "$outfile" lowpass 12000 reverb 28 50 70 100 8 0 gain -n -1 2>/dev/null
+    # premium bus: roll off the piercing top (7.5kHz), gentle short-predelay
+    # reverb, then bring the whole click bed DOWN to a quiet -20 dBFS peak so
+    # it sits under the event sounds instead of shouting over them.
+    sox "$tmpdir/full.wav" "$outfile" lowpass 7500 reverb 22 55 60 100 8 0 gain -n -20 2>/dev/null
     rm -rf "$tmpdir"
 }
 
