@@ -9,5 +9,5 @@ def test_render_targets_default_dir_and_settings():
     src = open(SCRIPT).read()
     assert "sounds/default" in src
     assert "44100" in src
-    # renders per-region and normalizes
+    # renders per-region and normalises
     assert "RegionRenderMatrix" in src or "GetSetProjectInfo_String" in src
