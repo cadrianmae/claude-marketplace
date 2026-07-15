@@ -1,59 +1,59 @@
 <REAPER_PROJECT 0.1 "7.0" 0
   SAMPLERATE 44100 0 0
-  MARKER 1.0 0.0 "stop" 1 0 1 R {stop}
-  MARKER 2.0 1.5 "" 1
-  MARKER 3.0 2.0 "notification" 1 0 1 R {notification}
-  MARKER 4.0 3.5 "" 1
-  MARKER 5.0 4.0 "session-start" 1 0 1 R {session-start}
-  MARKER 6.0 5.5 "" 1
-  MARKER 7.0 6.0 "subagent-stop" 1 0 1 R {subagent-stop}
-  MARKER 8.0 7.5 "" 1
-  MARKER 9.0 8.0 "pre-compact" 1 0 1 R {pre-compact}
-  MARKER 10.0 9.5 "" 1
-  MARKER 11.0 10.0 "user-prompt-submit" 1 0 1 R {user-prompt-submit}
-  MARKER 12.0 11.5 "" 1
-  MARKER 13.0 12.0 "pre-tool-use" 1 0 1 R {pre-tool-use}
-  MARKER 14.0 13.5 "" 1
-  MARKER 15.0 14.0 "post-tool-use" 1 0 1 R {post-tool-use}
-  MARKER 16.0 15.5 "" 1
-  MARKER 17.0 16.0 "pre-tool-use-execute" 1 0 1 R {pre-tool-use-execute}
-  MARKER 18.0 17.5 "" 1
-  MARKER 19.0 18.0 "pre-tool-use-modify" 1 0 1 R {pre-tool-use-modify}
-  MARKER 20.0 19.5 "" 1
-  MARKER 21.0 20.0 "pre-tool-use-network" 1 0 1 R {pre-tool-use-network}
-  MARKER 22.0 21.5 "" 1
-  MARKER 23.0 22.0 "pre-tool-use-observe" 1 0 1 R {pre-tool-use-observe}
-  MARKER 24.0 23.5 "" 1
-  MARKER 25.0 24.0 "pre-tool-use-dispatch" 1 0 1 R {pre-tool-use-dispatch}
-  MARKER 26.0 25.5 "" 1
-  MARKER 27.0 26.0 "pre-tool-use-interact" 1 0 1 R {pre-tool-use-interact}
-  MARKER 28.0 27.5 "" 1
-  MARKER 29.0 28.0 "post-tool-use-execute" 1 0 1 R {post-tool-use-execute}
-  MARKER 30.0 29.5 "" 1
-  MARKER 31.0 30.0 "post-tool-use-modify" 1 0 1 R {post-tool-use-modify}
-  MARKER 32.0 31.5 "" 1
-  MARKER 33.0 32.0 "post-tool-use-network" 1 0 1 R {post-tool-use-network}
-  MARKER 34.0 33.5 "" 1
-  MARKER 35.0 34.0 "post-tool-use-observe" 1 0 1 R {post-tool-use-observe}
-  MARKER 36.0 35.5 "" 1
-  MARKER 37.0 36.0 "post-tool-use-dispatch" 1 0 1 R {post-tool-use-dispatch}
-  MARKER 38.0 37.5 "" 1
-  MARKER 39.0 38.0 "post-tool-use-interact" 1 0 1 R {post-tool-use-interact}
-  MARKER 40.0 39.5 "" 1
-  MARKER 41.0 40.0 "notification-auth" 1 0 1 R {notification-auth}
-  MARKER 42.0 41.5 "" 1
-  MARKER 43.0 42.0 "notification-elicitation" 1 0 1 R {notification-elicitation}
-  MARKER 44.0 43.5 "" 1
-  MARKER 45.0 44.0 "notification-idle" 1 0 1 R {notification-idle}
-  MARKER 46.0 45.5 "" 1
-  MARKER 47.0 46.0 "notification-permission" 1 0 1 R {notification-permission}
-  MARKER 48.0 47.5 "" 1
-  MARKER 49.0 48.0 "session-start-clear" 1 0 1 R {session-start-clear}
-  MARKER 50.0 49.5 "" 1
-  MARKER 51.0 50.0 "session-start-compact" 1 0 1 R {session-start-compact}
-  MARKER 52.0 51.5 "" 1
-  MARKER 53.0 52.0 "session-start-resume" 1 0 1 R {session-start-resume}
-  MARKER 54.0 53.5 "" 1
+  MARKER 1 0.0 "stop" 1 0 1 R {00000000-0000-0000-0000-000000000000}
+  MARKER 1 1.5 "" 1
+  MARKER 2 2.0 "notification" 1 0 1 R {00000000-0000-0000-0000-000000000001}
+  MARKER 2 3.5 "" 1
+  MARKER 3 4.0 "session-start" 1 0 1 R {00000000-0000-0000-0000-000000000002}
+  MARKER 3 5.5 "" 1
+  MARKER 4 6.0 "subagent-stop" 1 0 1 R {00000000-0000-0000-0000-000000000003}
+  MARKER 4 7.5 "" 1
+  MARKER 5 8.0 "pre-compact" 1 0 1 R {00000000-0000-0000-0000-000000000004}
+  MARKER 5 9.5 "" 1
+  MARKER 6 10.0 "user-prompt-submit" 1 0 1 R {00000000-0000-0000-0000-000000000005}
+  MARKER 6 11.5 "" 1
+  MARKER 7 12.0 "pre-tool-use" 1 0 1 R {00000000-0000-0000-0000-000000000006}
+  MARKER 7 13.5 "" 1
+  MARKER 8 14.0 "post-tool-use" 1 0 1 R {00000000-0000-0000-0000-000000000007}
+  MARKER 8 15.5 "" 1
+  MARKER 9 16.0 "pre-tool-use-execute" 1 0 1 R {00000000-0000-0000-0000-000000000008}
+  MARKER 9 17.5 "" 1
+  MARKER 10 18.0 "pre-tool-use-modify" 1 0 1 R {00000000-0000-0000-0000-000000000009}
+  MARKER 10 19.5 "" 1
+  MARKER 11 20.0 "pre-tool-use-network" 1 0 1 R {00000000-0000-0000-0000-000000000010}
+  MARKER 11 21.5 "" 1
+  MARKER 12 22.0 "pre-tool-use-observe" 1 0 1 R {00000000-0000-0000-0000-000000000011}
+  MARKER 12 23.5 "" 1
+  MARKER 13 24.0 "pre-tool-use-dispatch" 1 0 1 R {00000000-0000-0000-0000-000000000012}
+  MARKER 13 25.5 "" 1
+  MARKER 14 26.0 "pre-tool-use-interact" 1 0 1 R {00000000-0000-0000-0000-000000000013}
+  MARKER 14 27.5 "" 1
+  MARKER 15 28.0 "post-tool-use-execute" 1 0 1 R {00000000-0000-0000-0000-000000000014}
+  MARKER 15 29.5 "" 1
+  MARKER 16 30.0 "post-tool-use-modify" 1 0 1 R {00000000-0000-0000-0000-000000000015}
+  MARKER 16 31.5 "" 1
+  MARKER 17 32.0 "post-tool-use-network" 1 0 1 R {00000000-0000-0000-0000-000000000016}
+  MARKER 17 33.5 "" 1
+  MARKER 18 34.0 "post-tool-use-observe" 1 0 1 R {00000000-0000-0000-0000-000000000017}
+  MARKER 18 35.5 "" 1
+  MARKER 19 36.0 "post-tool-use-dispatch" 1 0 1 R {00000000-0000-0000-0000-000000000018}
+  MARKER 19 37.5 "" 1
+  MARKER 20 38.0 "post-tool-use-interact" 1 0 1 R {00000000-0000-0000-0000-000000000019}
+  MARKER 20 39.5 "" 1
+  MARKER 21 40.0 "notification-auth" 1 0 1 R {00000000-0000-0000-0000-000000000020}
+  MARKER 21 41.5 "" 1
+  MARKER 22 42.0 "notification-elicitation" 1 0 1 R {00000000-0000-0000-0000-000000000021}
+  MARKER 22 43.5 "" 1
+  MARKER 23 44.0 "notification-idle" 1 0 1 R {00000000-0000-0000-0000-000000000022}
+  MARKER 23 45.5 "" 1
+  MARKER 24 46.0 "notification-permission" 1 0 1 R {00000000-0000-0000-0000-000000000023}
+  MARKER 24 47.5 "" 1
+  MARKER 25 48.0 "session-start-clear" 1 0 1 R {00000000-0000-0000-0000-000000000024}
+  MARKER 25 49.5 "" 1
+  MARKER 26 50.0 "session-start-compact" 1 0 1 R {00000000-0000-0000-0000-000000000025}
+  MARKER 26 51.5 "" 1
+  MARKER 27 52.0 "session-start-resume" 1 0 1 R {00000000-0000-0000-0000-000000000026}
+  MARKER 27 53.5 "" 1
   <TRACK
     NAME "stop"
   >
