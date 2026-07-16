@@ -68,8 +68,9 @@ def test_base_event_maps_variants():
 
 def test_build_rpp_stop_track_has_midi_item_with_five_notes():
     txt = s.build_rpp(["stop"])
-    # Isolate the stop track block.
-    start = txt.index('NAME "stop"')
+    # Isolate the stop track block. Hyphenated names have no spaces, so rpp
+    # dumps them unquoted (`NAME stop`, not `NAME "stop"`).
+    start = txt.index("NAME stop")
     track_txt = txt[start:]
     assert "<SOURCE MIDI" in track_txt
     note_ons = [l for l in track_txt.splitlines() if l.strip().startswith("E ") and " 90 " in l]
@@ -80,7 +81,7 @@ def test_build_rpp_stop_track_has_midi_item_with_five_notes():
 
 def test_build_rpp_pre_compact_chord_notes_on_before_off():
     txt = s.build_rpp(["pre-compact"])
-    start = txt.index('NAME "pre-compact"')
+    start = txt.index("NAME pre-compact")
     track_txt = txt[start:]
     event_lines = [l.strip() for l in track_txt.splitlines() if l.strip().startswith("E ")]
     on_lines = [l for l in event_lines if " 90 " in l]
@@ -94,7 +95,7 @@ def test_build_rpp_pre_compact_chord_notes_on_before_off():
 
 def test_build_rpp_variant_inherits_base_event_notes():
     txt = s.build_rpp(["post-tool-use-network"])
-    start = txt.index('NAME "post-tool-use-network"')
+    start = txt.index("NAME post-tool-use-network")
     track_txt = txt[start:]
     note_ons = [l.strip() for l in track_txt.splitlines() if l.strip().startswith("E ") and " 90 " in l]
     assert note_ons[0] == "E 0 90 48 60"

@@ -1,65 +1,65 @@
-<REAPER_PROJECT 0.1 "7.0" 0
+<REAPER_PROJECT 0.1 7.0 0
   SAMPLERATE 44100 0 0
-  MARKER 1 0.0 "stop" 1 0 1 R {00000000-0000-0000-0000-000000000000}
+  MARKER 1 0.0 stop 1 0 1 R {00000000-0000-0000-0000-000000000000}
   MARKER 1 1.5 "" 1
-  MARKER 2 2.0 "notification" 1 0 1 R {00000000-0000-0000-0000-000000000001}
+  MARKER 2 2.0 notification 1 0 1 R {00000000-0000-0000-0000-000000000001}
   MARKER 2 3.5 "" 1
-  MARKER 3 4.0 "session-start" 1 0 1 R {00000000-0000-0000-0000-000000000002}
+  MARKER 3 4.0 session-start 1 0 1 R {00000000-0000-0000-0000-000000000002}
   MARKER 3 5.5 "" 1
-  MARKER 4 6.0 "subagent-stop" 1 0 1 R {00000000-0000-0000-0000-000000000003}
+  MARKER 4 6.0 subagent-stop 1 0 1 R {00000000-0000-0000-0000-000000000003}
   MARKER 4 7.5 "" 1
-  MARKER 5 8.0 "pre-compact" 1 0 1 R {00000000-0000-0000-0000-000000000004}
+  MARKER 5 8.0 pre-compact 1 0 1 R {00000000-0000-0000-0000-000000000004}
   MARKER 5 9.5 "" 1
-  MARKER 6 10.0 "user-prompt-submit" 1 0 1 R {00000000-0000-0000-0000-000000000005}
+  MARKER 6 10.0 user-prompt-submit 1 0 1 R {00000000-0000-0000-0000-000000000005}
   MARKER 6 11.5 "" 1
-  MARKER 7 12.0 "pre-tool-use" 1 0 1 R {00000000-0000-0000-0000-000000000006}
+  MARKER 7 12.0 pre-tool-use 1 0 1 R {00000000-0000-0000-0000-000000000006}
   MARKER 7 13.5 "" 1
-  MARKER 8 14.0 "post-tool-use" 1 0 1 R {00000000-0000-0000-0000-000000000007}
+  MARKER 8 14.0 post-tool-use 1 0 1 R {00000000-0000-0000-0000-000000000007}
   MARKER 8 15.5 "" 1
-  MARKER 9 16.0 "pre-tool-use-execute" 1 0 1 R {00000000-0000-0000-0000-000000000008}
+  MARKER 9 16.0 pre-tool-use-execute 1 0 1 R {00000000-0000-0000-0000-000000000008}
   MARKER 9 17.5 "" 1
-  MARKER 10 18.0 "pre-tool-use-modify" 1 0 1 R {00000000-0000-0000-0000-000000000009}
+  MARKER 10 18.0 pre-tool-use-modify 1 0 1 R {00000000-0000-0000-0000-000000000009}
   MARKER 10 19.5 "" 1
-  MARKER 11 20.0 "pre-tool-use-network" 1 0 1 R {00000000-0000-0000-0000-000000000010}
+  MARKER 11 20.0 pre-tool-use-network 1 0 1 R {00000000-0000-0000-0000-000000000010}
   MARKER 11 21.5 "" 1
-  MARKER 12 22.0 "pre-tool-use-observe" 1 0 1 R {00000000-0000-0000-0000-000000000011}
+  MARKER 12 22.0 pre-tool-use-observe 1 0 1 R {00000000-0000-0000-0000-000000000011}
   MARKER 12 23.5 "" 1
-  MARKER 13 24.0 "pre-tool-use-dispatch" 1 0 1 R {00000000-0000-0000-0000-000000000012}
+  MARKER 13 24.0 pre-tool-use-dispatch 1 0 1 R {00000000-0000-0000-0000-000000000012}
   MARKER 13 25.5 "" 1
-  MARKER 14 26.0 "pre-tool-use-interact" 1 0 1 R {00000000-0000-0000-0000-000000000013}
+  MARKER 14 26.0 pre-tool-use-interact 1 0 1 R {00000000-0000-0000-0000-000000000013}
   MARKER 14 27.5 "" 1
-  MARKER 15 28.0 "post-tool-use-execute" 1 0 1 R {00000000-0000-0000-0000-000000000014}
+  MARKER 15 28.0 post-tool-use-execute 1 0 1 R {00000000-0000-0000-0000-000000000014}
   MARKER 15 29.5 "" 1
-  MARKER 16 30.0 "post-tool-use-modify" 1 0 1 R {00000000-0000-0000-0000-000000000015}
+  MARKER 16 30.0 post-tool-use-modify 1 0 1 R {00000000-0000-0000-0000-000000000015}
   MARKER 16 31.5 "" 1
-  MARKER 17 32.0 "post-tool-use-network" 1 0 1 R {00000000-0000-0000-0000-000000000016}
+  MARKER 17 32.0 post-tool-use-network 1 0 1 R {00000000-0000-0000-0000-000000000016}
   MARKER 17 33.5 "" 1
-  MARKER 18 34.0 "post-tool-use-observe" 1 0 1 R {00000000-0000-0000-0000-000000000017}
+  MARKER 18 34.0 post-tool-use-observe 1 0 1 R {00000000-0000-0000-0000-000000000017}
   MARKER 18 35.5 "" 1
-  MARKER 19 36.0 "post-tool-use-dispatch" 1 0 1 R {00000000-0000-0000-0000-000000000018}
+  MARKER 19 36.0 post-tool-use-dispatch 1 0 1 R {00000000-0000-0000-0000-000000000018}
   MARKER 19 37.5 "" 1
-  MARKER 20 38.0 "post-tool-use-interact" 1 0 1 R {00000000-0000-0000-0000-000000000019}
+  MARKER 20 38.0 post-tool-use-interact 1 0 1 R {00000000-0000-0000-0000-000000000019}
   MARKER 20 39.5 "" 1
-  MARKER 21 40.0 "notification-auth" 1 0 1 R {00000000-0000-0000-0000-000000000020}
+  MARKER 21 40.0 notification-auth 1 0 1 R {00000000-0000-0000-0000-000000000020}
   MARKER 21 41.5 "" 1
-  MARKER 22 42.0 "notification-elicitation" 1 0 1 R {00000000-0000-0000-0000-000000000021}
+  MARKER 22 42.0 notification-elicitation 1 0 1 R {00000000-0000-0000-0000-000000000021}
   MARKER 22 43.5 "" 1
-  MARKER 23 44.0 "notification-idle" 1 0 1 R {00000000-0000-0000-0000-000000000022}
+  MARKER 23 44.0 notification-idle 1 0 1 R {00000000-0000-0000-0000-000000000022}
   MARKER 23 45.5 "" 1
-  MARKER 24 46.0 "notification-permission" 1 0 1 R {00000000-0000-0000-0000-000000000023}
+  MARKER 24 46.0 notification-permission 1 0 1 R {00000000-0000-0000-0000-000000000023}
   MARKER 24 47.5 "" 1
-  MARKER 25 48.0 "session-start-clear" 1 0 1 R {00000000-0000-0000-0000-000000000024}
+  MARKER 25 48.0 session-start-clear 1 0 1 R {00000000-0000-0000-0000-000000000024}
   MARKER 25 49.5 "" 1
-  MARKER 26 50.0 "session-start-compact" 1 0 1 R {00000000-0000-0000-0000-000000000025}
+  MARKER 26 50.0 session-start-compact 1 0 1 R {00000000-0000-0000-0000-000000000025}
   MARKER 26 51.5 "" 1
-  MARKER 27 52.0 "session-start-resume" 1 0 1 R {00000000-0000-0000-0000-000000000026}
+  MARKER 27 52.0 session-start-resume 1 0 1 R {00000000-0000-0000-0000-000000000026}
   MARKER 27 53.5 "" 1
   <TRACK
-    NAME "stop"
+    NAME stop
     <ITEM
       POSITION 0.0
       LENGTH 2.5
-      NAME "stop"
+      NAME stop
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 48 60
@@ -77,11 +77,11 @@
     >
   >
   <TRACK
-    NAME "notification"
+    NAME notification
     <ITEM
       POSITION 2.0
       LENGTH 1.5
-      NAME "notification"
+      NAME notification
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 3c 60
@@ -95,11 +95,11 @@
     >
   >
   <TRACK
-    NAME "session-start"
+    NAME session-start
     <ITEM
       POSITION 4.0
       LENGTH 2.5
-      NAME "session-start"
+      NAME session-start
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 30 60
@@ -117,11 +117,11 @@
     >
   >
   <TRACK
-    NAME "subagent-stop"
+    NAME subagent-stop
     <ITEM
       POSITION 6.0
       LENGTH 1.5
-      NAME "subagent-stop"
+      NAME subagent-stop
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 40 60
@@ -133,11 +133,11 @@
     >
   >
   <TRACK
-    NAME "pre-compact"
+    NAME pre-compact
     <ITEM
       POSITION 8.0
       LENGTH 1.5
-      NAME "pre-compact"
+      NAME pre-compact
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 2b 60
@@ -149,11 +149,11 @@
     >
   >
   <TRACK
-    NAME "user-prompt-submit"
+    NAME user-prompt-submit
     <ITEM
       POSITION 10.0
       LENGTH 1.5
-      NAME "user-prompt-submit"
+      NAME user-prompt-submit
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 43 60
@@ -163,11 +163,11 @@
     >
   >
   <TRACK
-    NAME "pre-tool-use"
+    NAME pre-tool-use
     <ITEM
       POSITION 12.0
       LENGTH 1.5
-      NAME "pre-tool-use"
+      NAME pre-tool-use
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 46 60
@@ -177,11 +177,11 @@
     >
   >
   <TRACK
-    NAME "post-tool-use"
+    NAME post-tool-use
     <ITEM
       POSITION 14.0
       LENGTH 1.5
-      NAME "post-tool-use"
+      NAME post-tool-use
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 48 60
@@ -191,11 +191,11 @@
     >
   >
   <TRACK
-    NAME "pre-tool-use-execute"
+    NAME pre-tool-use-execute
     <ITEM
       POSITION 16.0
       LENGTH 1.5
-      NAME "pre-tool-use-execute"
+      NAME pre-tool-use-execute
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 46 60
@@ -205,11 +205,11 @@
     >
   >
   <TRACK
-    NAME "pre-tool-use-modify"
+    NAME pre-tool-use-modify
     <ITEM
       POSITION 18.0
       LENGTH 1.5
-      NAME "pre-tool-use-modify"
+      NAME pre-tool-use-modify
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 46 60
@@ -219,11 +219,11 @@
     >
   >
   <TRACK
-    NAME "pre-tool-use-network"
+    NAME pre-tool-use-network
     <ITEM
       POSITION 20.0
       LENGTH 1.5
-      NAME "pre-tool-use-network"
+      NAME pre-tool-use-network
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 46 60
@@ -233,11 +233,11 @@
     >
   >
   <TRACK
-    NAME "pre-tool-use-observe"
+    NAME pre-tool-use-observe
     <ITEM
       POSITION 22.0
       LENGTH 1.5
-      NAME "pre-tool-use-observe"
+      NAME pre-tool-use-observe
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 46 60
@@ -247,11 +247,11 @@
     >
   >
   <TRACK
-    NAME "pre-tool-use-dispatch"
+    NAME pre-tool-use-dispatch
     <ITEM
       POSITION 24.0
       LENGTH 1.5
-      NAME "pre-tool-use-dispatch"
+      NAME pre-tool-use-dispatch
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 46 60
@@ -261,11 +261,11 @@
     >
   >
   <TRACK
-    NAME "pre-tool-use-interact"
+    NAME pre-tool-use-interact
     <ITEM
       POSITION 26.0
       LENGTH 1.5
-      NAME "pre-tool-use-interact"
+      NAME pre-tool-use-interact
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 46 60
@@ -275,11 +275,11 @@
     >
   >
   <TRACK
-    NAME "post-tool-use-execute"
+    NAME post-tool-use-execute
     <ITEM
       POSITION 28.0
       LENGTH 1.5
-      NAME "post-tool-use-execute"
+      NAME post-tool-use-execute
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 48 60
@@ -289,11 +289,11 @@
     >
   >
   <TRACK
-    NAME "post-tool-use-modify"
+    NAME post-tool-use-modify
     <ITEM
       POSITION 30.0
       LENGTH 1.5
-      NAME "post-tool-use-modify"
+      NAME post-tool-use-modify
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 48 60
@@ -303,11 +303,11 @@
     >
   >
   <TRACK
-    NAME "post-tool-use-network"
+    NAME post-tool-use-network
     <ITEM
       POSITION 32.0
       LENGTH 1.5
-      NAME "post-tool-use-network"
+      NAME post-tool-use-network
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 48 60
@@ -317,11 +317,11 @@
     >
   >
   <TRACK
-    NAME "post-tool-use-observe"
+    NAME post-tool-use-observe
     <ITEM
       POSITION 34.0
       LENGTH 1.5
-      NAME "post-tool-use-observe"
+      NAME post-tool-use-observe
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 48 60
@@ -331,11 +331,11 @@
     >
   >
   <TRACK
-    NAME "post-tool-use-dispatch"
+    NAME post-tool-use-dispatch
     <ITEM
       POSITION 36.0
       LENGTH 1.5
-      NAME "post-tool-use-dispatch"
+      NAME post-tool-use-dispatch
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 48 60
@@ -345,11 +345,11 @@
     >
   >
   <TRACK
-    NAME "post-tool-use-interact"
+    NAME post-tool-use-interact
     <ITEM
       POSITION 38.0
       LENGTH 1.5
-      NAME "post-tool-use-interact"
+      NAME post-tool-use-interact
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 48 60
@@ -359,11 +359,11 @@
     >
   >
   <TRACK
-    NAME "notification-auth"
+    NAME notification-auth
     <ITEM
       POSITION 40.0
       LENGTH 1.5
-      NAME "notification-auth"
+      NAME notification-auth
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 3c 60
@@ -377,11 +377,11 @@
     >
   >
   <TRACK
-    NAME "notification-elicitation"
+    NAME notification-elicitation
     <ITEM
       POSITION 42.0
       LENGTH 1.5
-      NAME "notification-elicitation"
+      NAME notification-elicitation
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 3c 60
@@ -395,11 +395,11 @@
     >
   >
   <TRACK
-    NAME "notification-idle"
+    NAME notification-idle
     <ITEM
       POSITION 44.0
       LENGTH 1.5
-      NAME "notification-idle"
+      NAME notification-idle
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 3c 60
@@ -413,11 +413,11 @@
     >
   >
   <TRACK
-    NAME "notification-permission"
+    NAME notification-permission
     <ITEM
       POSITION 46.0
       LENGTH 1.5
-      NAME "notification-permission"
+      NAME notification-permission
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 3c 60
@@ -431,11 +431,11 @@
     >
   >
   <TRACK
-    NAME "session-start-clear"
+    NAME session-start-clear
     <ITEM
       POSITION 48.0
       LENGTH 2.5
-      NAME "session-start-clear"
+      NAME session-start-clear
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 30 60
@@ -453,11 +453,11 @@
     >
   >
   <TRACK
-    NAME "session-start-compact"
+    NAME session-start-compact
     <ITEM
       POSITION 50.0
       LENGTH 2.5
-      NAME "session-start-compact"
+      NAME session-start-compact
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 30 60
@@ -475,11 +475,11 @@
     >
   >
   <TRACK
-    NAME "session-start-resume"
+    NAME session-start-resume
     <ITEM
       POSITION 52.0
       LENGTH 2.5
-      NAME "session-start-resume"
+      NAME session-start-resume
       <SOURCE MIDI
         HASDATA 1 960 QN
         E 0 90 30 60
