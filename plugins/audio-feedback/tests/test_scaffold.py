@@ -58,6 +58,18 @@ def test_note_map_covers_all_base_events():
         assert len(entry["notes"]) >= 1
 
 
+def test_note_map_events_fit_within_one_bar():
+    """Every base event's total duration must fit within one 4/4 bar (3840
+    ticks) -- seq durations sum, chord notes share a single duration."""
+    for name, entry in s.NOTE_MAP.items():
+        mode, notes = entry["mode"], entry["notes"]
+        if mode == "chord":
+            total_ticks = notes[0][1]
+        else:
+            total_ticks = sum(ticks for _midi, ticks in notes)
+        assert total_ticks <= s.BAR, f"{name} exceeds one bar: {total_ticks} > {s.BAR}"
+
+
 def test_base_event_maps_variants():
     assert s.base_event("pre-tool-use-execute") == "pre-tool-use"
     assert s.base_event("post-tool-use-network") == "post-tool-use"
@@ -74,8 +86,16 @@ def test_build_rpp_stop_track_has_midi_item_with_five_notes():
     track_txt = txt[start:]
     assert "<SOURCE MIDI" in track_txt
     note_ons = [l for l in track_txt.splitlines() if l.strip().startswith("E ") and " 90 " in l]
+    note_offs = [l.strip() for l in track_txt.splitlines() if l.strip().startswith("E ") and " 80 " in l]
     assert len(note_ons) == 5
     assert note_ons[0].strip() == "E 0 90 48 60"
+    # stop is quaver, quaver, quaver, quaver, minim -- note-offs use each
+    # note's own duration (480 ticks for the first four, 1920 for the last).
+    assert note_offs[0] == "E 480 80 48 00"
+    assert note_offs[1] == "E 480 80 47 00"
+    assert note_offs[2] == "E 480 80 43 00"
+    assert note_offs[3] == "E 480 80 40 00"
+    assert note_offs[4] == "E 1920 80 3c 00"
     assert track_txt.strip().splitlines()[-1].strip() == ">" or "E 0 b0 7b 00" in track_txt
 
 
@@ -91,6 +111,9 @@ def test_build_rpp_pre_compact_chord_notes_on_before_off():
     first_off_index = event_lines.index(off_lines[0])
     assert event_lines.index(on_lines[0]) < first_off_index
     assert event_lines.index(on_lines[1]) < first_off_index
+    # pre-compact notes are minims (1920 ticks); first off carries the delta.
+    assert off_lines[0] == "E 1920 80 2b 00"
+    assert off_lines[1] == "E 0 80 2e 00"
 
 
 def test_build_rpp_variant_inherits_base_event_notes():

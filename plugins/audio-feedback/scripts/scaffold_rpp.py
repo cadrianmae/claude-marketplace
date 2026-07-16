@@ -16,17 +16,26 @@ GROUPS = ["execute", "modify", "network", "observe", "dispatch", "interact"]
 NOTIF = ["auth", "elicitation", "idle", "permission"]
 SESSION = ["clear", "compact", "resume"]
 
-# Locked note-map: MIDI note numbers per base event. "seq" = notes played
-# sequentially (arpeggio); "chord" = all notes struck together.
+# Note-value constants (PPQN 960). One 4/4 bar = 3840 ticks.
+SEMIQUAVER = 240
+QUAVER = 480
+CROTCHET = 960
+MINIM = 1920
+BAR = 3840  # one 4/4 bar
+
+# Locked note-map: MIDI note numbers + durations (ticks) per base event.
+# "seq" = notes played sequentially (arpeggio), each with its own duration;
+# "chord" = all notes struck together, sharing one duration. Every event's
+# total duration fits within one 4/4 bar (BAR ticks).
 NOTE_MAP = {
-    "session-start":      {"mode": "seq",   "notes": [48, 52, 55, 58, 60]},  # C3 E3 G3 Bb3 C4 (rise)
-    "user-prompt-submit": {"mode": "seq",   "notes": [67]},                   # G4
-    "pre-tool-use":       {"mode": "seq",   "notes": [70]},                   # Bb4 (open)
-    "notification":       {"mode": "seq",   "notes": [60, 67, 70]},           # C4 G4 Bb4 (rise, open)
-    "pre-compact":        {"mode": "chord", "notes": [43, 46]},               # G2 Bb2 (low warn dyad)
-    "post-tool-use":      {"mode": "seq",   "notes": [72]},                   # C5 (tonic, resolved)
-    "subagent-stop":      {"mode": "seq",   "notes": [64, 60]},               # E4 C4 (fall)
-    "stop":               {"mode": "seq",   "notes": [72, 71, 67, 64, 60]},   # C5 B4 G4 E4 C4 (fall, settle)
+    "session-start":      {"mode": "seq",   "notes": [[48, QUAVER], [52, QUAVER], [55, QUAVER], [58, QUAVER], [60, MINIM]]},  # C3 E3 G3 Bb3 C4 (rise) -- 3840 = 1 bar
+    "user-prompt-submit": {"mode": "seq",   "notes": [[67, QUAVER]]},                                                          # G4
+    "pre-tool-use":       {"mode": "seq",   "notes": [[70, QUAVER]]},                                                          # Bb4 (open)
+    "notification":       {"mode": "seq",   "notes": [[60, QUAVER], [67, QUAVER], [70, CROTCHET]]},                           # C4 G4 Bb4 (rise, open) -- 1920
+    "pre-compact":        {"mode": "chord", "notes": [[43, MINIM], [46, MINIM]]},                                             # G2 Bb2 (low warn dyad) -- 1920
+    "post-tool-use":      {"mode": "seq",   "notes": [[72, QUAVER]]},                                                          # C5 (tonic, resolved)
+    "subagent-stop":      {"mode": "seq",   "notes": [[64, QUAVER], [60, CROTCHET]]},                                         # E4 C4 (fall) -- 1440
+    "stop":               {"mode": "seq",   "notes": [[72, QUAVER], [71, QUAVER], [67, QUAVER], [64, QUAVER], [60, MINIM]]},  # C5 B4 G4 E4 C4 (fall, settle) -- 3840 = 1 bar
 }
 
 PPQN = 960
@@ -55,18 +64,22 @@ def _midi_events(mode, notes):
     """Build the sequence of E (event) directives for a MIDI item body.
 
     Each directive is a plain list: ["E", delta, status, note_hex, velocity].
+    `notes` is a list of [midi, ticks] pairs -- each note carries its own
+    duration so rhythms can vary (quavers, crotchets, minims) instead of
+    every note being a fixed-length crotchet.
     """
     events = []
     if mode == "chord":
-        for note in notes:
+        for note, _ticks in notes:
             events.append(["E", "0", "90", _note_hex(note), f"{VELOCITY:02x}"])
-        for i, note in enumerate(notes):
-            delta = PPQN if i == 0 else 0
+        duration = notes[0][1]
+        for i, (note, _ticks) in enumerate(notes):
+            delta = duration if i == 0 else 0
             events.append(["E", str(delta), "80", _note_hex(note), "00"])
     else:
-        for note in notes:
+        for note, ticks in notes:
             events.append(["E", "0", "90", _note_hex(note), f"{VELOCITY:02x}"])
-            events.append(["E", str(PPQN), "80", _note_hex(note), "00"])
+            events.append(["E", str(ticks), "80", _note_hex(note), "00"])
     events.append(["E", "0", "b0", "7b", "00"])
     return events
 
@@ -102,7 +115,10 @@ def _track(name, idx):
     entry = NOTE_MAP[event]
     mode, notes = entry["mode"], entry["notes"]
     position = idx * 2.0
-    length = 1.5 if mode == "chord" else max(1.5, len(notes) * 0.5)
+    # total_ticks: chord notes share one duration; seq notes sum their own.
+    total_ticks = notes[0][1] if mode == "chord" else sum(ticks for _midi, ticks in notes)
+    # REAPER default 120 BPM => 1920 ticks/sec.
+    length = total_ticks / 1920.0
     return Element(
         tag="TRACK",
         attrib=[],
