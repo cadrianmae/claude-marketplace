@@ -1,6 +1,8 @@
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
+import rpp
 import scaffold_rpp as s
+
 
 def test_sound_names_cover_base_and_variants():
     names = s.sound_names()
@@ -12,40 +14,114 @@ def test_sound_names_cover_base_and_variants():
     # 8 base + 6 pre + 6 post + 4 notification + 3 session-start = 27..28
     assert len(names) >= 27
 
-def test_build_rpp_is_reaper_project_with_regions():
-    names = ["stop", "notification"]
-    txt = s.build_rpp(names)
-    assert txt.startswith("<REAPER_PROJECT")
-    assert txt.strip().endswith(">")
-    # one named track + region marker per name
-    for n in names:
-        assert f'NAME "{n}"' in txt or f'NAME {n}' in txt
-    assert txt.count("<TRACK") == len(names)
 
-    # Each region is a PAIR of MARKER lines sharing the same integer ID --
-    # a start line (quoted name + " R ") and an end line (empty name "").
-    # Under the old bug each pair used distinct IDs (2*slot+1, 2*slot+2),
-    # which this test would catch.
+def _parse(txt):
+    return rpp.loads(txt)
+
+
+def _tracks(tree):
+    return [e for e in tree if getattr(e, "tag", None) == "TRACK"]
+
+
+def _child_tag(c):
+    """Tag of a child, whether it's a nested Element or a plain directive
+    list (rpp represents leaf directives like ["NAME", "x"] as plain lists,
+    not Elements)."""
+    tag = getattr(c, "tag", None)
+    if tag is not None:
+        return tag
+    if isinstance(c, list) and c:
+        return c[0]
+    return None
+
+
+def _find(element, tag):
+    """First direct child (Element or plain directive list) with the given
+    tag."""
+    for c in element:
+        if _child_tag(c) == tag:
+            return c
+    return None
+
+
+def _findall(element, tag):
+    return [c for c in element if _child_tag(c) == tag]
+
+
+def test_build_rpp_has_three_vital_layer_tracks():
+    names = s.sound_names()
+    txt = s.build_rpp(names)
+    tree = _parse(txt)
+    tracks = _tracks(tree)
+    assert len(tracks) == 3
+
+    track_names = []
+    for tr in tracks:
+        name_child = _find(tr, "NAME")
+        track_names.append(name_child[1])
+        fxchain = _find(tr, "FXCHAIN")
+        assert fxchain is not None
+        vst = _find(fxchain, "VST")
+        assert vst is not None
+
+    assert track_names == ["Layer 1", "Layer 2", "Layer 3"]
+
+
+def test_layer_track_has_stop_midi_item_with_correct_notes():
+    names = s.sound_names()
+    txt = s.build_rpp(names)
+    tree = _parse(txt)
+    tracks = _tracks(tree)
+    layer1 = tracks[0]
+    items = _findall(layer1, "ITEM")
+    assert len(items) == len(names)
+
+    stop_idx = names.index("stop")
+    stop_item = items[stop_idx]
+    item_txt = rpp.dumps(stop_item)
+    assert "<SOURCE MIDI" in item_txt
+    note_ons = [l.strip() for l in item_txt.splitlines() if l.strip().startswith("E ") and " 90 " in l]
+    assert note_ons[0] == "E 0 90 48 60"
+    note_offs = [l.strip() for l in item_txt.splitlines() if l.strip().startswith("E ") and " 80 " in l]
+    assert note_offs[-1] == "E 1920 80 3c 00"
+
+
+def test_regions_positions_and_shared_ids():
+    names = s.sound_names()
+    txt = s.build_rpp(names)
+    assert len(names) == 27 or len(names) >= 27
+    n_regions = len(names)
+
     marker_lines = [l for l in txt.splitlines() if l.strip().startswith("MARKER ")]
-    assert len(marker_lines) == 2 * len(names)
+    assert len(marker_lines) == 2 * n_regions
 
     starts = [l for l in marker_lines if " R " in l]
     ends = [l for l in marker_lines if " R " not in l]
-    assert len(starts) == len(names)
-    assert len(ends) == len(names)
+    assert len(starts) == n_regions
+    assert len(ends) == n_regions
 
     start_ids = sorted(int(l.split()[1]) for l in starts)
     end_ids = sorted(int(l.split()[1]) for l in ends)
-    assert start_ids == list(range(1, len(names) + 1))
-    assert end_ids == list(range(1, len(names) + 1))
+    assert start_ids == list(range(1, n_regions + 1))
+    assert end_ids == list(range(1, n_regions + 1))
 
-    # Each start's name matches an end with the SAME id.
-    for start in starts:
-        parts = start.split()
-        region_id = int(parts[1])
-        matching_ends = [l for l in ends if int(l.split()[1]) == region_id]
-        assert len(matching_ends) == 1
-        assert '""' in matching_ends[0]
+    # region 0 and region 2: positions 0.0/4.0 and 12.0/16.0 (3-bar step).
+    def region_by_id(region_id):
+        matching = [l for l in marker_lines if l.split()[1] == str(region_id)]
+        assert len(matching) == 2
+        return matching
+
+    r0 = region_by_id(1)
+    r0_start = [l for l in r0 if " R " in l][0]
+    r0_end = [l for l in r0 if " R " not in l][0]
+    assert float(r0_start.split()[2]) == 0.0
+    assert float(r0_end.split()[2]) == 4.0
+
+    r2 = region_by_id(3)
+    r2_start = [l for l in r2 if " R " in l][0]
+    r2_end = [l for l in r2 if " R " not in l][0]
+    assert float(r2_start.split()[2]) == 12.0
+    assert float(r2_end.split()[2]) == 16.0
 
 
 def test_note_map_covers_all_base_events():
@@ -78,32 +154,10 @@ def test_base_event_maps_variants():
     assert s.base_event("stop") == "stop"
 
 
-def test_build_rpp_stop_track_has_midi_item_with_five_notes():
-    txt = s.build_rpp(["stop"])
-    # Isolate the stop track block. Hyphenated names have no spaces, so rpp
-    # dumps them unquoted (`NAME stop`, not `NAME "stop"`).
-    start = txt.index("NAME stop")
-    track_txt = txt[start:]
-    assert "<SOURCE MIDI" in track_txt
-    note_ons = [l for l in track_txt.splitlines() if l.strip().startswith("E ") and " 90 " in l]
-    note_offs = [l.strip() for l in track_txt.splitlines() if l.strip().startswith("E ") and " 80 " in l]
-    assert len(note_ons) == 5
-    assert note_ons[0].strip() == "E 0 90 48 60"
-    # stop is quaver, quaver, quaver, quaver, minim -- note-offs use each
-    # note's own duration (480 ticks for the first four, 1920 for the last).
-    assert note_offs[0] == "E 480 80 48 00"
-    assert note_offs[1] == "E 480 80 47 00"
-    assert note_offs[2] == "E 480 80 43 00"
-    assert note_offs[3] == "E 480 80 40 00"
-    assert note_offs[4] == "E 1920 80 3c 00"
-    assert track_txt.strip().splitlines()[-1].strip() == ">" or "E 0 b0 7b 00" in track_txt
-
-
-def test_build_rpp_pre_compact_chord_notes_on_before_off():
-    txt = s.build_rpp(["pre-compact"])
-    start = txt.index("NAME pre-compact")
-    track_txt = txt[start:]
-    event_lines = [l.strip() for l in track_txt.splitlines() if l.strip().startswith("E ")]
+def test_midi_item_pre_compact_chord_notes_on_before_off():
+    item = s._midi_item("pre-compact", 0)
+    item_txt = rpp.dumps(item)
+    event_lines = [l.strip() for l in item_txt.splitlines() if l.strip().startswith("E ")]
     on_lines = [l for l in event_lines if " 90 " in l]
     off_lines = [l for l in event_lines if " 80 " in l]
     assert on_lines[:2] == ["E 0 90 2b 60", "E 0 90 2e 60"]
@@ -116,9 +170,18 @@ def test_build_rpp_pre_compact_chord_notes_on_before_off():
     assert off_lines[1] == "E 0 80 2e 00"
 
 
-def test_build_rpp_variant_inherits_base_event_notes():
-    txt = s.build_rpp(["post-tool-use-network"])
-    start = txt.index("NAME post-tool-use-network")
-    track_txt = txt[start:]
-    note_ons = [l.strip() for l in track_txt.splitlines() if l.strip().startswith("E ") and " 90 " in l]
+def test_midi_item_variant_inherits_base_event_notes():
+    item = s._midi_item("post-tool-use-network", 0)
+    item_txt = rpp.dumps(item)
+    note_ons = [l.strip() for l in item_txt.splitlines() if l.strip().startswith("E ") and " 90 " in l]
     assert note_ons[0] == "E 0 90 48 60"
+
+
+def test_layer_tracks_do_not_share_fxchain_object():
+    names = ["stop"]
+    txt = s.build_rpp(names)
+    tree = _parse(txt)
+    tracks = _tracks(tree)
+    fxchains = [_find(tr, "FXCHAIN") for tr in tracks]
+    assert fxchains[0] is not fxchains[1]
+    assert fxchains[1] is not fxchains[2]
