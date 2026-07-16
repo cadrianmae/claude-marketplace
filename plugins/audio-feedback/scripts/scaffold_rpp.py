@@ -52,8 +52,8 @@ VELOCITY = 0x60
 # Zone geometry. Tempo is 120 BPM 4/4, so 1 bar = 2.0s. Each sound gets a
 # 2-bar region with a 1-bar gap before the next sound's region starts.
 BAR_SEC = 2.0
-ZONE_LEN_SEC = 4.0   # 2-bar region
-ZONE_STEP_SEC = 6.0  # 3 bars = 2-bar zone + 1-bar gap
+ZONE_LEN_SEC = BAR_SEC * 2   # 2-bar region
+ZONE_STEP_SEC = BAR_SEC * 3  # 3 bars = 2-bar zone + 1-bar gap
 
 LAYER_COUNT = 3
 

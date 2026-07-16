@@ -58,6 +58,7 @@ def test_build_rpp_has_three_vital_layer_tracks():
     track_names = []
     for tr in tracks:
         name_child = _find(tr, "NAME")
+        assert name_child is not None
         track_names.append(name_child[1])
         fxchain = _find(tr, "FXCHAIN")
         assert fxchain is not None
