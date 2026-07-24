@@ -40,14 +40,17 @@ or the slash-command arguments users type.
   (+ `[WARN]` to stderr) if the target cannot be created/written.
 - **Config file: `~/.claude/.context-config`** (plugin convention, cf.
   `~/.claude/.audio-feedback-config`). KV format. Keys: `dir` (override handover
-  dir), `ttl_days` (override retention; default **90**).
+  dir), `ttl_days` (override retention; default **90**), `max_bytes` (inline-cat
+  size cap for `receive`; default **28000**).
 - **TTL: on, 90-day default.** `/context:send` auto-prunes on each invocation.
 - **Legacy `/tmp/claude-ctx` files**: left untouched (unreferenced). No migration.
 - **Structure: `scripts/lib.sh` + `bin/context-manage`** (matches audio-feedback /
   tts). Shared resolution + all handover logic in `lib.sh`; `bin/context-manage`
   is a thin CLI wrapper resolving the plugin root via `readlink -f "$0"`.
-- **`send` writes the file from stdin** (body piped in); **`receive` prints the
-  path** of the matching handover for Claude to read.
+- **`send` writes the file from stdin** (body piped in); **`receive` outputs the
+  matching handover's content** to stdout (cats it), so it lands directly in the
+  command output — no separate read step. The source filename is printed to stderr
+  as an `[INFO]` line for provenance (keeps stdout pure content).
 - **Subject is required on `send`** (the slash command has Claude infer one when
   the user omits it); **optional on `receive`** (newest matching handover for that
   direction if omitted).
@@ -83,8 +86,12 @@ No side effects at source time. Functions:
 - `ctx_send <target> <subject>` -> ensure dir, prune, compute path, write stdin to
   it, print the path.
 - `ctx_receive <source> <subject>` -> resolve dir, find the matching file (exact
-  subject; if omitted, newest match for that direction), print its path; error to
-  stderr + exit 1 if none.
+  subject; if omitted, newest match for that direction), print an `[INFO]` line
+  naming the file to stderr, then cat its content to stdout; error to stderr +
+  exit 1 if none. **Size guard:** if the file exceeds a threshold (default
+  ~28000 bytes, configurable `max_bytes` in config), skip cat-ing and instead
+  print the path with a `[WARN]` that it is too large to inline (avoids Bash
+  tool-output truncation, which is ~30000 chars) — Claude reads it directly then.
 - `ctx_list` -> for each `ctx-*.md`: age (days from mtime), direction, subject.
 - `ctx_prune` -> delete `ctx-*.md` older than `ttl_days`; report removed. Never
   touches non-`ctx-*.md` files.
@@ -96,7 +103,7 @@ blanks/`#`, whitelist known keys.
 ### `plugins/context/bin/context-manage` (CLI wrapper)
 ```
 context-manage send <target> <subject>     # stdin -> handover file; prints path
-context-manage receive <source> [subject]  # prints path of matching handover
+context-manage receive <source> [subject]  # outputs matching handover content
 context-manage list                        # age + direction + subject
 context-manage prune                       # remove handovers older than ttl_days
 context-manage clean                       # remove all handovers
@@ -113,15 +120,16 @@ Resolves the plugin root from its own location (`readlink -f "$0"`), sources
 - **send**: Claude assembles the handover body (including the auto-captured project
   state), then pipes it to `context-manage send <target> <subject>`, which prunes,
   names, writes, and returns the path.
-- **receive**: call `context-manage receive <source> [subject]` to get the path,
-  then read it. `context-manage list` can show available handoffs.
+- **receive**: call `context-manage receive <source> [subject]`; the handover
+  content is emitted to the command output for Claude to consume directly (or the
+  path, for oversized files). `context-manage list` can show available handoffs.
 
 ## Data flow
 
 - **send**: `body | context-manage send <target> <subject>` -> ctx_dir (ensure) ->
   ctx_prune -> write file -> print path.
 - **receive**: `context-manage receive <source> [subject]` -> ctx_dir -> filter ->
-  print path -> Claude reads it.
+  cat content to stdout (or path if oversized) -> Claude consumes it.
 - **manage**: `context-manage list|prune|clean|path`.
 
 ## Error handling
@@ -145,8 +153,10 @@ Bash tests (`tests/test_context_manage.sh`) with an isolated environment (temp
 - Direction mapping: `send child X` -> `ctx-parent-to-child-X.md`; `send parent X`
   -> `ctx-child-to-parent-X.md`; sibling -> `ctx-sibling-to-sibling-X.md`.
 - `send` writes stdin to the correct file and prints its path; content matches.
-- `receive parent X` returns the path `send child X` wrote; `receive` with no
-  subject returns the newest matching handover; no match -> exit 1.
+- `receive parent X` outputs to stdout the content `send child X` wrote (matches);
+  `receive` with no subject outputs the newest matching handover; no match -> exit 1.
+- Size guard: a handover larger than `max_bytes` is not cat-ed; `receive` prints
+  its path with a `[WARN]` instead (exit 0).
 - `prune`: a `ctx-*.md` with an old mtime (`touch -d`) is removed; a fresh one is
   kept; a non-`ctx-*.md` (README) is never removed.
 - `clean`: removes all `ctx-*.md`, keeps README.
@@ -169,6 +179,6 @@ Bash tests (`tests/test_context_manage.sh`) with an isolated environment (temp
 - `bash tests/test_context_manage.sh` passes.
 - `context-manage path` prints a writable persistent dir under `$HOME`.
 - Round trip: `echo body | context-manage send child demo` writes the file;
-  `context-manage receive parent demo` returns that path; content matches.
+  `context-manage receive parent demo` outputs that body to stdout; content matches.
 - `send` auto-prunes: a >90-day handover is gone after a send; a recent one remains.
 - No markdown file still references `/tmp/claude-ctx`.
