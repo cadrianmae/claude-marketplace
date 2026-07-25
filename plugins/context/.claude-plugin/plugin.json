@@ -1,6 +1,6 @@
 {
   "name": "context",
-  "version": "1.3.3",
+  "version": "2.0.0",
   "description": "Hierarchical parent-child session context handoff system. Pass context between sessions using /context:send and /context:receive.",
   "author": {
     "name": "Mae Capacite",

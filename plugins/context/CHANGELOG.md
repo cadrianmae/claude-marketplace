@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `context-manage` script (`bin/context-manage` + `bin/context-manage`) owning
+  handover naming, direction mapping, listing, pruning, and send/receive.
+- Persistent handover location under `$XDG_STATE_HOME/claude-context` (survives
+  reboot; was `/tmp/claude-ctx`), configurable via `~/.claude/.context-config`.
+- TTL auto-prune on send (default 90 days), `list` with LIVE/SUPERSEDED + stale
+  markers, service-captured front-matter (git/cwd/time), and a size guard so
+  oversized handovers are referenced by path rather than truncated.
+
+### Changed
+- `/context:send` and `/context:receive` now route through `context-manage`;
+  the hardcoded `/tmp/claude-ctx` path and the `path` argument are removed.
+
 ## [1.3.2] - 2026-01-27
 ### Added
 - CHANGELOG.md following Keep a Changelog format
