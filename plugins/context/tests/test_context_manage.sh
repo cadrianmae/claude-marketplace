@@ -59,4 +59,17 @@ assert_contains "$meta" "git_commit:" "meta git_commit present"
 meta_norepo="$(cd "$TMP" && ctx_capture_meta parent child x none)"
 assert_contains "$meta_norepo" "git_dirty: unknown" "meta git_dirty unknown outside repo"
 
+# --- send ---
+fresh_env
+p="$(printf 'hello body\n' | ctx_send child demo)"
+assert_eq "$p" "$XDG_STATE_HOME/claude-context/ctx-parent-to-child-demo.md" "send returns path"
+assert_contains "$(cat "$p")" "hello body" "send wrote body"
+assert_contains "$(cat "$p")" "from: parent" "send wrote front-matter"
+assert_contains "$(cat "$p")" "supersedes: none" "first send supersedes none"
+ctx_send child 2>/dev/null; [ "$?" -eq 2 ] && pass "send missing subject -> exit 2" || fail "send missing subject -> exit 2"
+# supersession: a second, different-subject handover on the same direction
+sleep 1
+p2="$(printf 'body2\n' | ctx_send child 'second topic')"
+assert_contains "$(cat "$p2")" "supersedes: ctx-parent-to-child-demo.md" "second send records supersedes"
+
 echo "---"; [ "$FAILED" -eq 0 ] && echo "ALL PASS" || { echo "FAILURES"; exit 1; }

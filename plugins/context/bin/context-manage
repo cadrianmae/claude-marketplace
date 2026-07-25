@@ -89,3 +89,23 @@ ctx_capture_meta() {
     printf 'supersedes: %s\n' "$sup"
     printf -- '---\n\n'
 }
+
+# Temporary stub; real implementation lands in Task 5.
+if ! declare -f ctx_prune >/dev/null; then ctx_prune() { return 0; }; fi
+
+# ctx_send TARGET SUBJECT  (body on stdin)
+ctx_send() {
+    local target="$1" subj="${2:-}" dir opp fn path prior sup
+    if [ -z "$target" ] || [ -z "$subj" ]; then
+        echo "[WARN] usage: send <parent|child|sibling> <subject>" >&2; return 2
+    fi
+    opp="$(ctx_opposite "$target")" || { echo "[WARN] bad direction: $target" >&2; return 2; }
+    dir="$(ctx_dir)"
+    ctx_prune >/dev/null 2>&1 || true
+    fn="$(ctx_filename send "$target" "$subj")" || { echo "[WARN] bad direction: $target" >&2; return 2; }
+    path="$dir/$fn"
+    prior="$(ls -t "$dir"/ctx-"${opp}"-to-"${target}"-*.md 2>/dev/null | grep -vxF "$path" | head -1)"
+    sup="none"; [ -n "$prior" ] && sup="$(basename "$prior")"
+    { ctx_capture_meta "$opp" "$target" "$subj" "$sup"; cat; } > "$path"
+    printf '%s\n' "$path"
+}
