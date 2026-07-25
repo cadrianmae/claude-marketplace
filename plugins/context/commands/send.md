@@ -1,7 +1,7 @@
 ---
 description: Send context to parent, child, or sibling session before switching
-argument-hint: <direction> [subject] [path]
-allowed-tools: Bash, Write
+argument-hint: <direction> [subject]
+allowed-tools: Bash
 ---
 
 ## Current Project State (Auto-Captured)
@@ -12,28 +12,17 @@ allowed-tools: Bash, Write
 **Git Status**: !`git status --short 2>/dev/null | head -10 || echo "No changes"`
 **Last Commit**: !`git log -1 --oneline 2>/dev/null || echo "No commits"`
 
-**Context Directory**: !`[ -d /tmp/claude-ctx ] && echo "Exists" || echo "Does not exist - will create"`
-
----
-
-**Note**: If `/tmp/claude-ctx/` does not exist, create it with:
-```bash
-mkdir -p /tmp/claude-ctx
-cat > /tmp/claude-ctx/README.md << 'EOF'
-# Claude Context Handoff Directory
-
-This is an **ephemeral directory** for Claude Code session context handoff. Created by claude slash commands. '/context:send' and '/context:receive'.
-EOF
-```
+**Handover Dir**: !`context-manage path`
 
 ---
 
 ## Quick Example
 
 ```bash
-/context:send child feature-work
-# ✓ Context prepared for child session
-#   File: /tmp/claude-ctx/ctx-parent-to-child-feature-work.md
+context-manage send child "feature-work" <<'EOF'
+[handover body]
+EOF
+/home/user/.local/state/claude-context/ctx-parent-to-child-feature-work.md
 ```
 
 ---
@@ -45,57 +34,45 @@ Create a context handoff file for transitioning between sessions.
 ## Usage
 
 ```
-/context:send child [subject] [path]
-/context:send parent [subject] [path]
-/context:send sibling [subject] [path]
+/context:send child [subject]
+/context:send parent [subject]
+/context:send sibling [subject]
 ```
 
 **IMPORTANT: Direction is REQUIRED.** Must be one of: `parent`, `child`, or `sibling`.
 
-**Direction is REQUIRED** - must be first argument: `parent`, `child`, or `sibling`
-
-Subject and path are optional:
-- **subject**: Claude will infer from current conversation context if not provided
-- **path**: Defaults to `/tmp/claude-ctx/` if not provided
+Subject is optional - Claude will infer it from the current conversation context if not provided. The handover location is managed by `context-manage` (see `context-manage path`).
 
 ## What it does
 
 1. **Validates direction** - Errors if direction is not parent|child|sibling
-2. Check "Context Directory" status above (from dynamic injection)
-3. Create directory only if status shows "Does not exist - will create"
-4. If creating directory, generates minimal README.md:
-   ```markdown
-   # Claude Context Handoff Directory
+2. Determines direction flow based on argument
+3. **Auto-captures project state** (timestamp, git branch, working dir, git status)
+4. If no subject provided, infers one from current conversation context
+5. Assembles the handover body, then pipes it to the script (it names the
+   file, captures git/cwd/time, prunes stale handovers, and prints the path):
 
-   This is an **ephemeral directory** for Claude Code session context handoff. Created by claude slash commands. '/context:send' and '/context:receive'.
+   ```bash
+   context-manage send <direction> "<subject>" <<'EOF'
+   <handover body>
+   EOF
    ```
-5. Determines direction flow based on argument
-6. **Auto-captures project state** (timestamp, git branch, working dir, git status)
-7. If subject provided, creates `{path}/ctx-{direction}-{subject}.md`
-8. If no subject, infers from current conversation context and creates file with inferred name
-9. Path defaults to `/tmp/claude-ctx/` but can be customized
-10. Uses `cat > filename.md << 'EOF'` to clear file and write context
-11. Includes:
-    - Direction and timestamp (auto-captured)
-    - Current situation and context
-    - Decisions made and work completed
-    - Blockers and next actions
-    - Files modified
-    - Git state (auto-captured)
-12. Shows clear "next steps" for user
+6. Shows clear "next steps" for user
 
-**File naming pattern:**
-- `/context:send child` → `/tmp/claude-ctx/ctx-parent-to-child-{inferred-subject}.md`
-- `/context:send parent` → `/tmp/claude-ctx/ctx-child-to-parent-{inferred-subject}.md`
-- `/context:send sibling` → `/tmp/claude-ctx/ctx-sibling-to-sibling-{inferred-subject}.md`
+**File naming pattern (handled by the script):**
+- `context-manage send child <subject>` -> `ctx-parent-to-child-<subject>.md`
+- `context-manage send parent <subject>` -> `ctx-child-to-parent-<subject>.md`
+- `context-manage send sibling <subject>` -> `ctx-sibling-to-sibling-<subject>.md`
 
 ## Example: Sending to Child with Subject
 
 ```
 /context:send child database-migration
 
-✓ Context prepared for child session
-  File: /tmp/claude-ctx/ctx-parent-to-child-database-migration.md
+$ context-manage send child "database-migration" <<'EOF'
+[handover body]
+EOF
+/home/user/.local/state/claude-context/ctx-parent-to-child-database-migration.md
 
 Next steps:
 1. Start child session for focused work
@@ -107,8 +84,10 @@ Next steps:
 ```
 /context:send parent
 
-✓ Context prepared for parent session
-  File: /tmp/claude-ctx/ctx-child-to-parent-api-implementation.md
+$ context-manage send parent "api-implementation" <<'EOF'
+[handover body]
+EOF
+/home/user/.local/state/claude-context/ctx-child-to-parent-api-implementation.md
 
 Next steps:
 1. Exit this session
@@ -121,25 +100,14 @@ Next steps:
 ```
 /context:send sibling parallel-task
 
-✓ Context prepared for sibling session
-  File: /tmp/claude-ctx/ctx-sibling-to-sibling-parallel-task.md
+$ context-manage send sibling "parallel-task" <<'EOF'
+[handover body]
+EOF
+/home/user/.local/state/claude-context/ctx-sibling-to-sibling-parallel-task.md
 
 Next steps:
 1. Start sibling session for parallel work
 2. In new session, run: /context:receive sibling parallel-task
-```
-
-## Example: Custom Path
-
-```
-/context:send child feature-work ~/Documents/context/
-
-✓ Context prepared for child session
-  File: ~/Documents/context/ctx-parent-to-child-feature-work.md
-
-Next steps:
-1. Start child session
-2. In new session, run: /context:receive parent feature-work ~/Documents/context/
 ```
 
 ## Example: Missing Direction (Error)
@@ -148,7 +116,7 @@ Next steps:
 /context:send database-work
 
 ✗ Error: Must specify direction: parent, child, or sibling
-  Usage: /context:send <parent|child|sibling> [subject] [path]
+  Usage: /context:send <parent|child|sibling> [subject]
 ```
 
 ## Context File Contents
@@ -183,33 +151,19 @@ The context file should include:
 
 ## Implementation Pattern
 
-**Create directory if needed:**
+Assemble the handover body, then pipe it to `context-manage send` (it names the
+file, captures git/cwd/time, prunes stale handovers, and prints the path):
 
 ```bash
-# Check if directory exists, create only if needed
-[ -d /tmp/claude-ctx ] || {
-    mkdir -p /tmp/claude-ctx
-    cat > /tmp/claude-ctx/README.md << 'EOF'
-# Claude Context Handoff Directory
-
-This is an **ephemeral directory** for Claude Code session context handoff. Created by claude slash commands. '/context:send' and '/context:receive'.
-EOF
-}
-```
-
-**Write context file:**
-
-Use heredoc to write context file:
-
-```bash
-cat > /tmp/claude-ctx/ctx-parent-to-child-{subject}.md << 'EOF'
-# Context: Parent → Child
+context-manage send <direction> "<subject>" <<'EOF'
+# Context: Parent -> Child
 
 [Context content here]
 EOF
 ```
 
-This pattern clears the file first, preventing accumulation of old context.
+This clears any existing file for the same direction+subject, preventing
+accumulation of old context.
 
 ## When to use
 

@@ -1,34 +1,21 @@
 ---
 description: Receive context from parent, child, or sibling session
-argument-hint: <direction> [subject] [path]
-allowed-tools: Bash, Read
+argument-hint: <direction> [subject]
+allowed-tools: Bash
 ---
 
 ## Receiving Context
 
 **Received At**: !`date '+%Y-%m-%d %H:%M:%S'`
-**Context Directory**: !`[ -d /tmp/claude-ctx ] && echo "Exists" || echo "Does not exist - will create"`
-
----
-
-**Note**: If `/tmp/claude-ctx/` does not exist, create it with:
-```bash
-mkdir -p /tmp/claude-ctx
-cat > /tmp/claude-ctx/README.md << 'EOF'
-# Claude Context Handoff Directory
-
-This is an **ephemeral directory** for Claude Code session context handoff. Created by claude slash commands. '/context:send' and '/context:receive'.
-EOF
-```
+**Handover Dir**: !`context-manage path`
 
 ---
 
 ## Quick Example
 
 ```bash
-/context:receive parent
-# ✓ Context received from parent session
-#   File: /tmp/claude-ctx/ctx-parent-to-child-feature-work.md
+context-manage receive parent
+# prints the handover content directly (or a path + [WARN] if oversized)
 ```
 
 ---
@@ -40,51 +27,40 @@ Read and integrate context from session handoff file.
 ## Usage
 
 ```
-/context:receive parent [subject] [path]
-/context:receive child [subject] [path]
-/context:receive sibling [subject] [path]
+/context:receive parent [subject]
+/context:receive child [subject]
+/context:receive sibling [subject]
 ```
 
 **IMPORTANT: Direction is REQUIRED.** Must be one of: `parent`, `child`, or `sibling`.
 
-Subject and path are optional:
-- **subject**: Claude will infer from context if not provided
-- **path**: Defaults to `/tmp/claude-ctx/` if not provided
+Subject is optional - Claude will infer from context if not provided; without a subject the script falls back to the newest handover for that direction. The handover location is managed by `context-manage` (see `context-manage path`).
 
 ## What it does
 
 1. **Validates direction** - Errors if direction is not parent|child|sibling
-2. Check "Context Directory" status above (from dynamic injection)
-3. Create directory only if status shows "Does not exist - will create"
-4. If creating directory, generates minimal README.md:
-   ```markdown
-   # Claude Context Handoff Directory
+2. Determines direction flow based on argument
+3. **Records received timestamp** (auto-captured)
+4. Calls the script, whose output is the handover content itself:
 
-   This is an **ephemeral directory** for Claude Code session context handoff. Created by claude slash commands. '/context:send' and '/context:receive'.
+   ```bash
+   context-manage receive <direction> [subject]
    ```
-5. Determines direction flow based on argument
-6. **Records received timestamp** (auto-captured)
-7. If subject provided, looks for `{path}/ctx-{direction}-{subject}.md`
-8. If no subject, uses wildcard: `{path}/ctx-{direction}-*.md` **sorted by newest first**
-9. Path defaults to `/tmp/claude-ctx/` but can be customized
-10. Reads and displays context file with **original timestamp** from sender
-11. Integrates context into current session understanding
+5. Prints the content directly, or - for an oversized handover - a path with a
+   `[WARN]`, in which case read that path
+6. If subject provided, the script looks up that exact handover; if omitted, it
+   uses the newest handover for that direction
+7. Integrates context into current session understanding
 
-**Important:** When using wildcard (no subject), files are sorted by modification time with **newest first**, ensuring you get the most recent context.
+**Important:** Without a subject, the script picks the newest handover for that direction, ensuring you get the most recent context.
 
-**File patterns:**
-- `/context:receive parent` → looks for `/tmp/claude-ctx/ctx-parent-to-child-*.md`
-- `/context:receive child` → looks for `/tmp/claude-ctx/ctx-child-to-parent-*.md`
-- `/context:receive sibling` → looks for `/tmp/claude-ctx/ctx-sibling-to-sibling-*.md`
-
-## Example: Receiving from Parent (Wildcard)
+## Example: Receiving from Parent (No Subject)
 
 ```
 /context:receive parent
 
-✓ Searching for context files: /tmp/claude-ctx/ctx-parent-to-child-*.md (newest first)
-✓ Found: /tmp/claude-ctx/ctx-parent-to-child-database-migration.md (modified 2 minutes ago)
-
+$ context-manage receive parent
+[INFO] ctx-parent-to-child-database-migration.md
 [Context displayed with parent session details]
 
 Ready to begin focused work based on parent's context!
@@ -95,9 +71,8 @@ Ready to begin focused work based on parent's context!
 ```
 /context:receive child api-implementation
 
-✓ Context received from child session
-  File: /tmp/claude-ctx/ctx-child-to-parent-api-implementation.md
-
+$ context-manage receive child api-implementation
+[INFO] ctx-child-to-parent-api-implementation.md
 [Context displayed with completed work summary]
 
 Child session completed. Integrating results back.
@@ -108,23 +83,24 @@ Child session completed. Integrating results back.
 ```
 /context:receive sibling parallel-task
 
-✓ Context received from sibling session
-  File: /tmp/claude-ctx/ctx-sibling-to-sibling-parallel-task.md
-
+$ context-manage receive sibling parallel-task
+[INFO] ctx-sibling-to-sibling-parallel-task.md
 [Context displayed with parallel work details]
 
 Sibling session completed. Integrating parallel work.
 ```
 
-## Example: Custom Path
+## Example: Oversized Handover
 
 ```
-/context:receive parent database-work ~/Documents/context/
+/context:receive parent
 
-✓ Context received from parent session
-  File: ~/Documents/context/ctx-parent-to-child-database-work.md
+$ context-manage receive parent
+[INFO] ctx-parent-to-child-large-refactor.md
+[WARN] handover too large to inline (41230 bytes); read it directly:
+/home/user/.local/state/claude-context/ctx-parent-to-child-large-refactor.md
 
-[Context displayed]
+[Read the file at the printed path instead of relying on stdout]
 ```
 
 ## Example: Missing Direction (Error)
@@ -133,7 +109,7 @@ Sibling session completed. Integrating parallel work.
 /context:receive database-work
 
 ✗ Error: Must specify direction: parent, child, or sibling
-  Usage: /context:receive <parent|child|sibling> [subject] [path]
+  Usage: /context:receive <parent|child|sibling> [subject]
 ```
 
 ## What gets loaded
