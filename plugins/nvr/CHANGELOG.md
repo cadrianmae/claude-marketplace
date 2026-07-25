@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `nvr-status` / `nvr-workspace`: wrapped `nvr --remote-expr` calls in `timeout 3` so an unresponsive neovim can no longer hang the command. (#18)
+
+
 ### Changed
 - Refactored `bin/` to hold the command logic directly instead of thin
   wrappers that `exec`'d `scripts/*.sh`. The `scripts/` directory is removed;
