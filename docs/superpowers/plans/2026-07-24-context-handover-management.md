@@ -22,7 +22,7 @@
 - Legacy `/tmp/claude-ctx` files: left untouched.
 - Structure follows `plugins/CONVENTIONS.md`: one self-contained `bin/context-manage` (functions + guarded dispatch), no `scripts/` dir, no readlink; **never** use `${CLAUDE_PLUGIN_ROOT}` in the skills/commands (call `context-manage` by bare name).
 - No emoji / non-ASCII in code; ASCII tags `[OK]`/`[WARN]`/`[INFO]`. en-GB.
-- Version bump `plugins/context/.claude-plugin/plugin.json` 1.3.3 -> **1.4.0** (new feature, backward-compatible).
+- Version bump `plugins/context/.claude-plugin/plugin.json` 1.3.3 -> **2.0.0** (MAJOR: removes the `path` argument and relocates handovers off `/tmp` -- breaking).
 
 All paths below are relative to repo root. Run tests from `plugins/context/`.
 
@@ -726,14 +726,14 @@ reboot (were `/tmp`), and that legacy `/tmp/claude-ctx` files are left in place.
 
 - [ ] **Step 3: Bump the version**
 
-In `plugins/context/.claude-plugin/plugin.json`, change `"version": "1.3.3"` to `"version": "1.4.0"`.
+In `plugins/context/.claude-plugin/plugin.json`, change `"version": "1.3.3"` to `"version": "2.0.0"`.
 
 - [ ] **Step 4: Full verification**
 
 Run:
 ```bash
 cd plugins/context && bash tests/test_context_manage.sh
-grep -q '1.4.0' .claude-plugin/plugin.json && echo "[OK] version bumped"
+grep -q '2.0.0' .claude-plugin/plugin.json && echo "[OK] version bumped"
 for f in bin/context-manage tests/test_context_manage.sh; do test -f "$f" && echo "[OK] $f"; done
 test -x bin/context-manage && echo "[OK] context-manage executable"
 ```
