@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Give the `context` plugin a `context-manage` script (lib.sh + bin) that owns handover naming, direction mapping, a persistent XDG-state location, TTL pruning, staleness/supersession, and send/receive — so the slash commands and skills are thin and handovers survive reboot.
+**Goal:** Give the `context` plugin a single self-contained `bin/context-manage` executable that owns handover naming, direction mapping, a persistent XDG-state location, TTL pruning, staleness/supersession, and send/receive — so the slash commands and skills are thin and handovers survive reboot.
 
-**Architecture:** All handover logic lives in `plugins/context/scripts/lib.sh` (sourced shell functions). `plugins/context/bin/context-manage` is a thin dispatcher that self-locates, sources the lib, and routes subcommands. Skills/commands call `context-manage` by bare name (bin/ is auto-added to PATH). Storage is flat `ctx-<direction>-<subject>.md` files with a service-captured front-matter block.
+**Architecture:** All handover logic lives in a single self-contained executable, `plugins/context/bin/context-manage`: `ctx_*` shell functions followed by a guarded `case` dispatch (`if [ "${BASH_SOURCE[0]}" = "$0" ]` — runs only when executed, dormant when sourced, so tests can source the file to unit-test the functions). Skills/commands call `context-manage` by bare name (bin/ is auto-added to PATH). There is no `scripts/` dir and no `lib.sh` — the plugin has one executable and no hooks, so nothing needs a shared sourced library (see `plugins/CONVENTIONS.md`). Storage is flat `ctx-<direction>-<subject>.md` files with a service-captured front-matter block.
 
 **Tech Stack:** Bash, `git`/`date`/`stat` (service-side capture), a bash test harness. No external deps. Runtime-only shell (no Python).
 
@@ -20,7 +20,7 @@
 - Supersession: within a direction the newest is LIVE, older are SUPERSEDED (shown by `list`, never auto-deleted). `send` records `supersedes:` in front-matter.
 - Staleness: front-matter records the git commit; `receive`/`list` flag when the repo's `HEAD` differs.
 - Legacy `/tmp/claude-ctx` files: left untouched.
-- Structure follows `plugins/CONVENTIONS.md`: logic in `bin/`-callable form via lib.sh + a `bin/` dispatcher; **never** use `${CLAUDE_PLUGIN_ROOT}` in the skills/commands (call `context-manage` by bare name).
+- Structure follows `plugins/CONVENTIONS.md`: one self-contained `bin/context-manage` (functions + guarded dispatch), no `scripts/` dir, no readlink; **never** use `${CLAUDE_PLUGIN_ROOT}` in the skills/commands (call `context-manage` by bare name).
 - No emoji / non-ASCII in code; ASCII tags `[OK]`/`[WARN]`/`[INFO]`. en-GB.
 - Version bump `plugins/context/.claude-plugin/plugin.json` 1.3.3 -> **1.4.0** (new feature, backward-compatible).
 
@@ -31,7 +31,7 @@ All paths below are relative to repo root. Run tests from `plugins/context/`.
 ### Task 1: Test harness + config/dir resolution
 
 **Files:**
-- Create: `plugins/context/scripts/lib.sh`
+- Create: `plugins/context/bin/context-manage`
 - Create: `plugins/context/tests/test_context_manage.sh`
 
 **Interfaces:**
@@ -43,10 +43,10 @@ Create `plugins/context/tests/test_context_manage.sh`:
 
 ```bash
 #!/usr/bin/env bash
-# Tests for the context plugin's lib.sh. Isolated env (temp HOME + XDG state).
+# Tests for the context plugin's bin/context-manage. Isolated env (temp HOME + XDG state).
 set -u
 DIR="$(cd "$(dirname "$0")/.." && pwd)"
-. "$DIR/scripts/lib.sh"
+. "$DIR/bin/context-manage"
 
 FAILED=0
 pass() { echo "[OK] $1"; }
@@ -89,16 +89,19 @@ echo "---"; [ "$FAILED" -eq 0 ] && echo "ALL PASS" || { echo "FAILURES"; exit 1;
 - [ ] **Step 2: Run it to verify it fails**
 
 Run: `cd plugins/context && bash tests/test_context_manage.sh`
-Expected: FAIL — `lib.sh: No such file or directory` (or function-not-found once the file exists but is empty).
+Expected: FAIL — `context-manage: No such file or directory` (or function-not-found once the file exists but is empty).
 
-- [ ] **Step 3: Implement lib.sh (config + dir)**
+- [ ] **Step 3: Create bin/context-manage with the config + dir functions**
 
-Create `plugins/context/scripts/lib.sh`:
+Create `plugins/context/bin/context-manage`:
 
 ```bash
 #!/bin/bash
-# Shared library for the context plugin's handover management.
-# Sourced by bin/context-manage and the test harness. No side effects at source.
+# context-manage -- handover management for the context plugin.
+# Self-contained: ctx_* functions below, a guarded dispatch appended in Task 6.
+# Called by bare name from the skills/commands (bin/ is auto-added to PATH); see
+# plugins/CONVENTIONS.md. Sourcing this file (the tests do) defines the functions
+# without running the dispatch. No side effects at source time.
 
 ctx_config_file() { printf '%s' "$HOME/.claude/.context-config"; }
 
@@ -160,8 +163,8 @@ Expected: `ALL PASS`.
 
 ```bash
 chmod +x plugins/context/tests/test_context_manage.sh
-git add plugins/context/scripts/lib.sh plugins/context/tests/test_context_manage.sh
-git commit -m "feat(context): lib.sh config + handover dir resolution"
+git add plugins/context/bin/context-manage plugins/context/tests/test_context_manage.sh
+git commit -m "feat(context): context-manage config + handover dir resolution"
 ```
 
 ---
@@ -169,7 +172,7 @@ git commit -m "feat(context): lib.sh config + handover dir resolution"
 ### Task 2: Filename/direction mapping + front-matter capture
 
 **Files:**
-- Modify: `plugins/context/scripts/lib.sh` (add `ctx_filename`, `ctx_capture_meta`)
+- Modify: `plugins/context/bin/context-manage` (add `ctx_filename`, `ctx_capture_meta`)
 - Modify: `plugins/context/tests/test_context_manage.sh`
 
 **Interfaces:**
@@ -205,7 +208,7 @@ Expected: FAIL — `ctx_filename: command not found` (or the new asserts fail).
 
 - [ ] **Step 3: Implement**
 
-Append to `scripts/lib.sh`:
+Append to `bin/context-manage`:
 
 ```bash
 # ctx_filename MODE ROLE SUBJECT  (MODE = send|receive)
@@ -248,7 +251,7 @@ Expected: `ALL PASS`.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add plugins/context/scripts/lib.sh plugins/context/tests/test_context_manage.sh
+git add plugins/context/bin/context-manage plugins/context/tests/test_context_manage.sh
 git commit -m "feat(context): filename/direction mapping + front-matter capture"
 ```
 
@@ -257,7 +260,7 @@ git commit -m "feat(context): filename/direction mapping + front-matter capture"
 ### Task 3: send (write front-matter + body, supersession)
 
 **Files:**
-- Modify: `plugins/context/scripts/lib.sh` (add `ctx_send`; `ctx_prune` referenced — provide a temporary no-op if not yet present, replaced in Task 5)
+- Modify: `plugins/context/bin/context-manage` (add `ctx_send`; `ctx_prune` referenced — provide a temporary no-op if not yet present, replaced in Task 5)
 - Modify: `plugins/context/tests/test_context_manage.sh`
 
 **Interfaces:**
@@ -290,7 +293,7 @@ Expected: FAIL — `ctx_send: command not found`.
 
 - [ ] **Step 3: Implement**
 
-Append to `scripts/lib.sh` (the temporary `ctx_prune` stub is replaced by the real one in Task 5 — if Task 5 is done first, skip the stub):
+Append to `bin/context-manage` (the temporary `ctx_prune` stub is replaced by the real one in Task 5 — if Task 5 is done first, skip the stub):
 
 ```bash
 # Temporary stub; real implementation lands in Task 5.
@@ -322,7 +325,7 @@ Expected: `ALL PASS`.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add plugins/context/scripts/lib.sh plugins/context/tests/test_context_manage.sh
+git add plugins/context/bin/context-manage plugins/context/tests/test_context_manage.sh
 git commit -m "feat(context): ctx_send writes front-matter + body with supersession"
 ```
 
@@ -331,7 +334,7 @@ git commit -m "feat(context): ctx_send writes front-matter + body with supersess
 ### Task 4: staleness + receive (cat content, newest, size guard)
 
 **Files:**
-- Modify: `plugins/context/scripts/lib.sh` (add `ctx_is_stale`, `ctx_stale_note`, `ctx_receive`)
+- Modify: `plugins/context/bin/context-manage` (add `ctx_is_stale`, `ctx_stale_note`, `ctx_receive`)
 - Modify: `plugins/context/tests/test_context_manage.sh`
 
 **Interfaces:**
@@ -370,7 +373,7 @@ Expected: FAIL — `ctx_receive: command not found`.
 
 - [ ] **Step 3: Implement**
 
-Append to `scripts/lib.sh`:
+Append to `bin/context-manage`:
 
 ```bash
 # ctx_is_stale FILE -> exit 0 if handover's commit != current HEAD
@@ -418,7 +421,7 @@ Expected: `ALL PASS`.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add plugins/context/scripts/lib.sh plugins/context/tests/test_context_manage.sh
+git add plugins/context/bin/context-manage plugins/context/tests/test_context_manage.sh
 git commit -m "feat(context): ctx_receive with staleness + size guard"
 ```
 
@@ -427,7 +430,7 @@ git commit -m "feat(context): ctx_receive with staleness + size guard"
 ### Task 5: list / prune / clean
 
 **Files:**
-- Modify: `plugins/context/scripts/lib.sh` (add `ctx_list`, replace the `ctx_prune` stub with the real one, add `ctx_clean`)
+- Modify: `plugins/context/bin/context-manage` (add `ctx_list`, replace the `ctx_prune` stub with the real one, add `ctx_clean`)
 - Modify: `plugins/context/tests/test_context_manage.sh`
 
 **Interfaces:**
@@ -472,7 +475,7 @@ Expected: FAIL — `ctx_list: command not found` (and prune stub does nothing).
 
 - [ ] **Step 3: Implement**
 
-In `scripts/lib.sh`, **remove the Task 3 `ctx_prune` stub block** (the `if ! declare -f ctx_prune ...` line) and append:
+In `bin/context-manage`, **remove the Task 3 `ctx_prune` stub block** (the `if ! declare -f ctx_prune ...` line) and append:
 
 ```bash
 # newest ctx-<direction>-*.md by mtime, or empty
@@ -533,7 +536,7 @@ Expected: `ALL PASS`.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add plugins/context/scripts/lib.sh plugins/context/tests/test_context_manage.sh
+git add plugins/context/bin/context-manage plugins/context/tests/test_context_manage.sh
 git commit -m "feat(context): list (live/superseded/stale) + prune + clean"
 ```
 
@@ -542,12 +545,12 @@ git commit -m "feat(context): list (live/superseded/stale) + prune + clean"
 ### Task 6: bin/context-manage CLI dispatcher
 
 **Files:**
-- Create: `plugins/context/bin/context-manage`
+- Modify: `plugins/context/bin/context-manage` (append the guarded dispatch below the functions)
 - Modify: `plugins/context/tests/test_context_manage.sh` (CLI-level cases)
 
 **Interfaces:**
-- Consumes: all `ctx_*` functions from `lib.sh`.
-- Produces: an executable that self-locates, sources `../scripts/lib.sh`, and dispatches `send|receive|list|prune|clean|path|help`. Unknown subcommand -> `[WARN]` + exit 2.
+- Consumes: all `ctx_*` functions defined earlier in `bin/context-manage`.
+- Produces: a guarded `case` dispatch at the bottom of the same file that routes `send|receive|list|prune|clean|path|help`, running only when the file is executed (not sourced). Unknown subcommand -> `[WARN]` + exit 2.
 
 - [ ] **Step 1: Write the failing CLI tests**
 
@@ -568,32 +571,26 @@ assert_contains "$("$CM" list)" "parent-to-child" "CLI list"
 - [ ] **Step 2: Run to verify fail**
 
 Run: `cd plugins/context && bash tests/test_context_manage.sh`
-Expected: FAIL — `context-manage: No such file or directory`.
+Expected: FAIL — executing `context-manage` produces no output yet (no dispatch), so the CLI round-trip / path / list / help asserts fail.
 
-- [ ] **Step 3: Implement**
+- [ ] **Step 3: Append the guarded dispatch**
 
-Create `plugins/context/bin/context-manage`:
+Append to the bottom of `plugins/context/bin/context-manage` (after all the `ctx_*` functions). The guard makes the dispatch run only when the file is executed, so the test can still `source` the file to reach the functions:
 
 ```bash
-#!/bin/bash
-# context-manage -- handover management for the context plugin.
-# Called by bare name from the skills/commands (bin/ is auto-added to PATH).
-# See plugins/CONVENTIONS.md: ${CLAUDE_PLUGIN_ROOT} is not available in skills,
-# so scripts self-locate and are invoked by bare name.
-set -u
-HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
-. "$HERE/../scripts/lib.sh"
-
-cmd="${1:-help}"; [ "$#" -gt 0 ] && shift
-case "$cmd" in
-    send)    ctx_send "${1:-}" "${2:-}" ;;
-    receive) ctx_receive "${1:-}" "${2:-}" ;;
-    list)    ctx_list ;;
-    prune)   ctx_prune ;;
-    clean)   ctx_clean ;;
-    path)    printf '%s\n' "$(ctx_dir)" ;;
-    help|-h|--help)
-        cat <<'USAGE'
+# ---- CLI dispatch: runs only when executed, dormant when sourced ----
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+    set -u
+    cmd="${1:-help}"; [ "$#" -gt 0 ] && shift
+    case "$cmd" in
+        send)    ctx_send "${1:-}" "${2:-}" ;;
+        receive) ctx_receive "${1:-}" "${2:-}" ;;
+        list)    ctx_list ;;
+        prune)   ctx_prune ;;
+        clean)   ctx_clean ;;
+        path)    printf '%s\n' "$(ctx_dir)" ;;
+        help|-h|--help)
+            cat <<'USAGE'
 context-manage send <parent|child|sibling> <subject>    # stdin -> handover; prints path
 context-manage receive <parent|child|sibling> [subject] # outputs handover content
 context-manage list        # handoffs: age, direction, live/superseded, subject
@@ -601,9 +598,10 @@ context-manage prune       # remove handoffs older than ttl_days (default 90)
 context-manage clean       # remove all handoffs
 context-manage path        # print the handover directory
 USAGE
-        ;;
-    *) echo "[WARN] unknown subcommand: $cmd (try: context-manage help)" >&2; exit 2 ;;
-esac
+            ;;
+        *) echo "[WARN] unknown subcommand: $cmd (try: context-manage help)" >&2; exit 2 ;;
+    esac
+fi
 ```
 
 - [ ] **Step 4: Make executable, run to verify pass**
@@ -713,7 +711,7 @@ reboot (were `/tmp`), and that legacy `/tmp/claude-ctx` files are left in place.
 ## [Unreleased]
 
 ### Added
-- `context-manage` script (`bin/context-manage` + `scripts/lib.sh`) owning
+- `context-manage` script (`bin/context-manage` + `bin/context-manage`) owning
   handover naming, direction mapping, listing, pruning, and send/receive.
 - Persistent handover location under `$XDG_STATE_HOME/claude-context` (survives
   reboot; was `/tmp/claude-ctx`), configurable via `~/.claude/.context-config`.
@@ -736,7 +734,8 @@ Run:
 ```bash
 cd plugins/context && bash tests/test_context_manage.sh
 grep -q '1.4.0' .claude-plugin/plugin.json && echo "[OK] version bumped"
-for f in bin/context-manage scripts/lib.sh tests/test_context_manage.sh; do test -x "$f" -o -f "$f" && echo "[OK] $f"; done
+for f in bin/context-manage tests/test_context_manage.sh; do test -f "$f" && echo "[OK] $f"; done
+test -x bin/context-manage && echo "[OK] context-manage executable"
 ```
 Expected: `ALL PASS`, `[OK] version bumped`, all files present.
 
@@ -751,7 +750,7 @@ git commit -m "docs(context): document context-manage + persistent handovers; bu
 
 ## Notes on ordering
 
-Tasks 1-6 build `lib.sh` + the CLI bottom-up, each with passing bash tests; Task 3
+Tasks 1-6 build `bin/context-manage` (functions then guarded dispatch) bottom-up, each with passing bash tests; Task 3
 uses a `ctx_prune` stub that Task 5 replaces (remove the stub block in Task 5).
 Task 7 (markdown wiring) depends on the CLI existing (Task 6). Task 8 is docs +
 version. Recommended order is 1 -> 8 in sequence.
