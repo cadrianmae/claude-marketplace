@@ -1,7 +1,7 @@
 ---
 name: nvr
 description: This skill should be used when the user asks to "open a file in neovim", "open in editor", "show in nvim", "open at line", "jump to line", "edit file", "list neovim instances", "check neovim status", "show workspace info", or mentions nvr, neovim remote, or opening files in their editor. Single unified entry point for neovim remote integration.
-version: 2.0.0
+version: 2.0.2
 user-invocable: true
 allowed-tools: Bash, AskUserQuestion
 argument-hint: <open|list|status|workspace|help> [args...]
@@ -36,7 +36,7 @@ If the user's message already includes a subcommand (e.g. `/nvr open README.md 4
 
 ## Helper Commands
 
-All real work is done by thin wrappers in the plugin's `bin/` directory. Claude Code puts that directory on `PATH` automatically, so invoke them as bare commands -- **no path construction, no `$CLAUDE_PLUGIN_ROOT`**. (`$CLAUDE_PLUGIN_ROOT` is not substituted inside SKILL.md files; see [anthropics/claude-code#9354](https://github.com/anthropics/claude-code/issues/9354).)
+All real work is done by the executables in the plugin's `bin/` directory. Claude Code puts that directory on `PATH` automatically, so invoke them as bare commands -- **no path construction, no `$CLAUDE_PLUGIN_ROOT`**. (`$CLAUDE_PLUGIN_ROOT` is not available inside skills -- neither substituted nor set as an env var; see [anthropics/claude-code#9354](https://github.com/anthropics/claude-code/issues/9354), [#44057](https://github.com/anthropics/claude-code/issues/44057).)
 
 - `nvr-open <file> [line]` -- open file at optional line in discovered instance
 - `nvr-list` -- list all active neovim instances with directories
@@ -69,25 +69,25 @@ This skill should be automatically invoked whenever opening files in the user's 
    - "database.py at line 45" -> `nvr-open database.py 45`
    - "src/utils/helper.py" -> `nvr-open src/utils/helper.py`
    - "the error on line 23 of server.js" -> `nvr-open server.js 23`
-4. Show the wrapper's output (success: socket path and file opened; failure: diagnostic info).
+4. Show the command's output (success: socket path and file opened; failure: diagnostic info).
 
 If the socket discovery fails, show the error and suggest running `/nvr list` to see available instances or setting `$NVIM_SOCKET` manually.
 
 ## Workflow: LIST
 
-Run `nvr-list` and show its output. Takes no arguments. The wrapper queries all active sockets and displays each with its PID, working directory, and socket path.
+Run `nvr-list` and show its output. Takes no arguments. The command queries all active sockets and displays each with its PID, working directory, and socket path.
 
 If no instances are found, suggest starting neovim with `nvim`.
 
 ## Workflow: STATUS
 
-Run `nvr-status` and show its output. Takes no arguments. The wrapper discovers the socket for the current directory, then queries neovim for PID, working directory, and buffer count.
+Run `nvr-status` and show its output. Takes no arguments. The command discovers the socket for the current directory, then queries neovim for PID, working directory, and buffer count.
 
 If no matching instance is found, suggest running `/nvr list` to see what's available.
 
 ## Workflow: WORKSPACE
 
-Run `nvr-workspace` and show its output. Takes no arguments. The wrapper gathers:
+Run `nvr-workspace` and show its output. Takes no arguments. The command gathers:
 - Current working directory
 - Git root and current branch (if in a git repo)
 - Discovered neovim instance (if any)
