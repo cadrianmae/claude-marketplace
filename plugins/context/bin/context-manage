@@ -72,7 +72,11 @@ ctx_capture_meta() {
     local from="$1" to="$2" subj="$3" sup="$4" branch commit dirty
     branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
     commit="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
-    if [ -n "$(git status --porcelain 2>/dev/null)" ]; then dirty=true; else dirty=false; fi
+    if git rev-parse HEAD >/dev/null 2>&1; then
+        if [ -n "$(git status --porcelain 2>/dev/null)" ]; then dirty=true; else dirty=false; fi
+    else
+        dirty=unknown
+    fi
     printf -- '---\n'
     printf 'from: %s\n' "$from"
     printf 'to: %s\n' "$to"

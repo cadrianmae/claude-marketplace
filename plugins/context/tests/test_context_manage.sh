@@ -55,4 +55,8 @@ assert_contains "$meta" "subject: migration" "meta subject"
 assert_contains "$meta" "supersedes: none" "meta supersedes"
 assert_contains "$meta" "git_commit:" "meta git_commit present"
 
+# --- capture meta outside a git repo ---
+meta_norepo="$(cd "$TMP" && ctx_capture_meta parent child x none)"
+assert_contains "$meta_norepo" "git_dirty: unknown" "meta git_dirty unknown outside repo"
+
 echo "---"; [ "$FAILED" -eq 0 ] && echo "ALL PASS" || { echo "FAILURES"; exit 1; }
