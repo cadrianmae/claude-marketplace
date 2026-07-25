@@ -54,3 +54,34 @@ ctx_opposite() {
 ctx_slug() {
     printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//'
 }
+
+# ctx_filename MODE ROLE SUBJECT  (MODE = send|receive)
+ctx_filename() {
+    local mode="$1" role="$2" subj="$3" opp direction
+    opp="$(ctx_opposite "$role")" || return 1
+    case "$mode" in
+        send)    direction="${opp}-to-${role}" ;;
+        receive) direction="${role}-to-${opp}" ;;
+        *) return 1 ;;
+    esac
+    printf 'ctx-%s-%s.md' "$direction" "$(ctx_slug "$subj")"
+}
+
+# ctx_capture_meta FROM TO SUBJECT SUPERSEDES  -> front-matter block on stdout
+ctx_capture_meta() {
+    local from="$1" to="$2" subj="$3" sup="$4" branch commit dirty
+    branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
+    commit="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+    if [ -n "$(git status --porcelain 2>/dev/null)" ]; then dirty=true; else dirty=false; fi
+    printf -- '---\n'
+    printf 'from: %s\n' "$from"
+    printf 'to: %s\n' "$to"
+    printf 'subject: %s\n' "$subj"
+    printf 'created: %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+    printf 'git_branch: %s\n' "$branch"
+    printf 'git_commit: %s\n' "$commit"
+    printf 'git_dirty: %s\n' "$dirty"
+    printf 'cwd: %s\n' "$(pwd)"
+    printf 'supersedes: %s\n' "$sup"
+    printf -- '---\n\n'
+}

@@ -39,4 +39,20 @@ assert_eq "$(ctx_opposite child)" "parent" "opposite child"
 assert_eq "$(ctx_opposite sibling)" "sibling" "opposite sibling"
 assert_eq "$(ctx_slug 'Database Migration!')" "database-migration" "slug"
 
+# --- filename mapping ---
+assert_eq "$(ctx_filename send child migration)" "ctx-parent-to-child-migration.md" "send child -> parent-to-child"
+assert_eq "$(ctx_filename send parent migration)" "ctx-child-to-parent-migration.md" "send parent -> child-to-parent"
+assert_eq "$(ctx_filename send sibling foo)" "ctx-sibling-to-sibling-foo.md" "send sibling"
+assert_eq "$(ctx_filename receive parent migration)" "ctx-parent-to-child-migration.md" "receive parent -> parent-to-child"
+assert_eq "$(ctx_filename receive child migration)" "ctx-child-to-parent-migration.md" "receive child -> child-to-parent"
+ctx_filename send bogus x >/dev/null 2>&1 && fail "bad role rejected" || pass "bad role rejected"
+
+# --- capture meta ---
+meta="$(ctx_capture_meta parent child migration none)"
+assert_contains "$meta" "from: parent" "meta from"
+assert_contains "$meta" "to: child" "meta to"
+assert_contains "$meta" "subject: migration" "meta subject"
+assert_contains "$meta" "supersedes: none" "meta supersedes"
+assert_contains "$meta" "git_commit:" "meta git_commit present"
+
 echo "---"; [ "$FAILED" -eq 0 ] && echo "ALL PASS" || { echo "FAILURES"; exit 1; }
