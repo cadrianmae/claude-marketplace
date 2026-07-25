@@ -17,7 +17,7 @@ or a USER-invocable skill (disable-model-invocation: true)?
 │          shared functions -> scripts/lib.sh, sourced via self-locate idiom
 │          (${CLAUDE_PLUGIN_ROOT} is BROKEN on these surfaces — do not use it)
 │
-└── NO — only hooks / MCP / LSP / monitors / agent-invocable skills?
+└── NO — only hooks / MCP / LSP / monitors (JSON config surfaces)?
          -> reference scripts/ via "${CLAUDE_PLUGIN_ROOT}/scripts/x.sh"
             (the documented, substituted form on those surfaces)
 
@@ -28,31 +28,46 @@ skill's announced base directory. bin/ is fine too and is more uniform.
 
 ## The `${CLAUDE_PLUGIN_ROOT}` substitution gap
 
-`${CLAUDE_PLUGIN_ROOT}` is the plugin's root path. It **is** substituted in:
+`${CLAUDE_PLUGIN_ROOT}` is the plugin's root path. It resolves ONLY via harness
+**text-substitution** of the markdown/JSON *before* execution, and only on the
+JSON config surfaces:
 
 - `hooks/hooks.json` command strings
 - `.mcp.json`, `.lsp.json`, `monitors/monitors.json`
-- **agent**-invocable skills (model-invoked)
 
-It is **NOT** substituted in:
+It is **NOT** available in:
 
 - **slash commands** (`commands/*.md`)
-- **user**-invocable skills (`SKILL.md` with `disable-model-invocation: true`)
+- **ALL skills** — user-invocable AND agent-invocable (`SKILL.md`, regardless of
+  `disable-model-invocation`)
 
-This is a known, unfixed bug — Anthropic issues
-[#9354](https://github.com/anthropics/claude-code/issues/9354) and
-[#44057](https://github.com/anthropics/claude-code/issues/44057), both OPEN as of
-July 2026. (The docs claim it works "anywhere in skill content"; in practice it
-only works for agent-invoked skills.) On the broken surfaces the literal string
-`${CLAUDE_PLUGIN_ROOT}` reaches the shell unexpanded, so a path built from it
-fails. **Do not use `${CLAUDE_PLUGIN_ROOT}` in slash commands or user skills.**
+Two independent facts make this certain:
+
+1. **Not substituted in the markdown** on those surfaces — Anthropic issues
+   [#9354](https://github.com/anthropics/claude-code/issues/9354) and
+   [#44057](https://github.com/anthropics/claude-code/issues/44057), both OPEN
+   (July 2026). The literal string `${CLAUDE_PLUGIN_ROOT}` reaches the shell.
+2. **Not an environment variable either** — `echo "${CLAUDE_PLUGIN_ROOT}"` in the
+   Bash tool prints empty (verified). So a skill's bash block referencing it gets
+   nothing, and a path like `"${CLAUDE_PLUGIN_ROOT}/.."` collapses to `/..`.
+
+The docs claim it works "anywhere in skill content"; that is wrong for the Bash
+surface. Anthropic's own **superpowers** skills use relative `scripts/` paths and
+never touch `${CLAUDE_PLUGIN_ROOT}` — treat that as the authoritative signal.
+
+**Rule: never use `${CLAUDE_PLUGIN_ROOT}` in a slash command or any skill.** Only
+use it in `hooks.json` / MCP / LSP / monitor JSON.
+
+> **Known offender:** `plugins/cadrianmae-integration/skills/integration/SKILL.md`
+> builds `MARKETPLACE_DIR="${CLAUDE_PLUGIN_ROOT}/.."`, which resolves to `/..`.
+> That skill needs fixing (self-locate or a `bin/` entry) — file a bug.
 
 ## The three mechanisms
 
 | Mechanism | Path form | Works on | Notes |
 |---|---|---|---|
 | **`bin/` on PATH** | bare name, e.g. `context-manage send ...` | Bash calls, hooks, skills, commands | Official: `bin/` is auto-added to PATH; files are "invokable as bare commands while the plugin is enabled". The one form that works everywhere. |
-| **`${CLAUDE_PLUGIN_ROOT}/scripts/x.sh`** | absolute | hooks, MCP, LSP, monitors, agent skills | The documented form for hook/JSON surfaces. Broken in slash commands + user skills. |
+| **`${CLAUDE_PLUGIN_ROOT}/scripts/x.sh`** | absolute | hooks, MCP, LSP, monitors (JSON only) | Broken in slash commands AND all skills (not substituted; not an env var). |
 | **relative `scripts/x.sh`** | relative to the skill's base dir | skills (Skill tool announces the base dir) | The superpowers pattern. No PATH use, no wrapper. Unproven for slash commands (no announced base dir). |
 
 `bin/` = executables meant to be called by bare name. `scripts/` = helper scripts
