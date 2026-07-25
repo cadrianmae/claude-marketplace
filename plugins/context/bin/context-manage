@@ -109,3 +109,39 @@ ctx_send() {
     { ctx_capture_meta "$opp" "$target" "$subj" "$sup"; cat; } > "$path"
     printf '%s\n' "$path"
 }
+
+# ctx_is_stale FILE -> exit 0 if handover's commit != current HEAD
+ctx_is_stale() {
+    local f="$1" stored head
+    head="$(git rev-parse --short HEAD 2>/dev/null)" || return 1
+    stored="$(grep -E '^git_commit:' "$f" 2>/dev/null | head -1 | awk '{print $2}')"
+    [ -n "$stored" ] && [ "$stored" != unknown ] && [ "$stored" != "$head" ]
+}
+
+ctx_stale_note() {
+    ctx_is_stale "$1" && echo "[WARN] stale: repo moved since handover" >&2
+    return 0
+}
+
+# ctx_receive SOURCE [SUBJECT]
+ctx_receive() {
+    local source="$1" subj="${2:-}" dir opp file maxb sz
+    opp="$(ctx_opposite "$source")" || { echo "[WARN] bad direction: $source" >&2; return 2; }
+    dir="$(ctx_dir)"
+    if [ -n "$subj" ]; then
+        file="$dir/$(ctx_filename receive "$source" "$subj")"
+        [ -f "$file" ] || { echo "[WARN] no handover: $(basename "$file")" >&2; return 1; }
+    else
+        file="$(ls -t "$dir"/ctx-"${source}"-to-"${opp}"-*.md 2>/dev/null | head -1)"
+        [ -n "$file" ] || { echo "[WARN] no handover from $source" >&2; return 1; }
+    fi
+    echo "[INFO] $(basename "$file")" >&2
+    ctx_stale_note "$file"
+    maxb="$(ctx_max_bytes)"; sz="$(wc -c < "$file")"
+    if [ "$sz" -gt "$maxb" ]; then
+        echo "[WARN] handover too large to inline ($sz bytes); read it directly:" >&2
+        printf '%s\n' "$file"
+    else
+        cat "$file"
+    fi
+}

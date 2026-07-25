@@ -72,4 +72,24 @@ sleep 1
 p2="$(printf 'body2\n' | ctx_send child 'second topic')"
 assert_contains "$(cat "$p2")" "supersedes: ctx-parent-to-child-demo.md" "second send records supersedes"
 
+
+# --- receive ---
+fresh_env
+printf 'the body\n' | ctx_send child demo >/dev/null
+out="$(ctx_receive parent demo 2>/dev/null)"
+assert_contains "$out" "the body" "receive cats content"
+assert_contains "$out" "from: parent" "receive includes front-matter"
+# newest when no subject
+sleep 1; printf 'newer\n' | ctx_send child later >/dev/null
+assert_contains "$(ctx_receive parent 2>/dev/null)" "newer" "receive newest when no subject"
+# no match -> exit 1
+ctx_receive parent nope >/dev/null 2>&1; [ "$?" -eq 1 ] && pass "receive no-match exit 1" || fail "receive no-match exit 1"
+# bad direction -> exit 2
+ctx_receive bogus >/dev/null 2>&1; [ "$?" -eq 2 ] && pass "receive bad dir exit 2" || fail "receive bad dir exit 2"
+# size guard: force a tiny max_bytes so the file is 'too large'
+printf 'max_bytes=10\n' > "$HOME/.claude/.context-config"
+big="$(ctx_receive parent demo 2>/dev/null)"
+assert_contains "$big" "ctx-parent-to-child-demo.md" "oversize receive prints path"
+rm -f "$HOME/.claude/.context-config"
+
 echo "---"; [ "$FAILED" -eq 0 ] && echo "ALL PASS" || { echo "FAILURES"; exit 1; }
