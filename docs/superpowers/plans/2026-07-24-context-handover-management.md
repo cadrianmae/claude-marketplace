@@ -743,7 +743,7 @@ Expected: `ALL PASS`, `[OK] version bumped`, all files present.
 
 ```bash
 git add plugins/context/README.md plugins/context/CHANGELOG.md plugins/context/.claude-plugin/plugin.json
-git commit -m "docs(context): document context-manage + persistent handovers; bump to 1.4.0"
+git commit -m "docs(context): document context-manage + persistent handovers; bump to 2.0.0"
 ```
 
 ---
