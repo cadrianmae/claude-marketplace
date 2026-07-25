@@ -80,9 +80,13 @@ No side effects at source time. Functions:
 - `ctx_dir` -> resolve + ensure the handover dir: config `dir` else XDG state
   default; `mkdir -p`; if unwritable use `/tmp/claude-context` (+ `[WARN]`); create
   a `README.md` on first use; print the resolved path.
-- `ctx_filename <role> <subject>` -> maps a send target / receive source to the
-  `ctx-{direction}-{subject}.md` basename (slugifies subject; validates the
-  role is parent|child|sibling).
+- `ctx_filename <mode> <role> <subject>` -> `ctx-{direction}-{subject}.md`
+  basename. `mode` is `send` or `receive`; `role` is parent|child|sibling (validated).
+  Mapping: `send <role>` -> `{opposite(role)}-to-{role}`; `receive <role>` ->
+  `{role}-to-{opposite(role)}`; where opposite is child<->parent and
+  sibling<->sibling. (So `send child` and `receive child` resolve to different
+  files — this is why mode is required.) Slugifies subject; send/receive slugify
+  identically so a subject round-trips.
 - `ctx_send <target> <subject>` -> ensure dir, prune, compute path, write stdin to
   it, print the path.
 - `ctx_receive <source> <subject>` -> resolve dir, find the matching file (exact
