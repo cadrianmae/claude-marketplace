@@ -54,6 +54,18 @@ or the slash-command arguments users type.
 - **Subject is required on `send`** (the slash command has Claude infer one when
   the user omits it); **optional on `receive`** (newest matching handover for that
   direction if omitted).
+- **Light front-matter schema.** `send` prepends a service-captured metadata block
+  to the piped body (see "Handover file format"). The service — not Claude —
+  captures git branch/commit/dirty, cwd, and timestamp, so that context is reliable.
+- **Staleness (drift), separate from TTL (age).** The handover records the git
+  commit at creation; `receive`/`list` compare it to the repo's current `HEAD` and
+  flag `[WARN] stale: repo moved N commits since handover`. Informational, never
+  blocks delivery. TTL prunes by *age*; staleness warns about *drift*.
+- **Supersession.** Within a direction (channel), the newest handover is *live*;
+  older ones on the same direction are *superseded*. `receive` without a subject
+  returns the live one; `list` annotates each as LIVE or SUPERSEDED. Supersession
+  is shown, not auto-deleted (prune stays TTL-based, so a still-wanted older
+  handover is never silently removed).
 
 ## Direction mapping
 
@@ -71,6 +83,34 @@ or the slash-command arguments users type.
 Flow: `parent: send child X` -> `child: receive parent X` -> `child: send parent X`
 -> `parent: receive child X`.
 
+## Handover file format
+
+`send` writes a metadata front-matter block (service-captured) followed by the
+piped body. Example `ctx-parent-to-child-migration.md`:
+
+```
+---
+from: parent
+to: child
+subject: migration
+created: 2026-07-24T14:30:05
+git_branch: feat/db-migration
+git_commit: a1b2c3d
+git_dirty: true
+cwd: /home/cadrianmae/git/.../project
+supersedes: ctx-parent-to-child-schema-review.md
+---
+
+<the handover body piped in by Claude>
+```
+
+- All front-matter values are captured by the service (`git`, `pwd`, `date`),
+  except `from/to/subject` (from the args) — Claude never types these.
+- `supersedes` records the previously-live handover on the same direction (its
+  basename), or `none`. This is the lineage link for supersession.
+- `receive` cats the whole file (front-matter + body) so the receiver sees the
+  provenance; the size guard measures the whole file.
+
 ## Architecture / components
 
 ### `plugins/context/scripts/lib.sh` (shared library, sourced)
@@ -87,16 +127,26 @@ No side effects at source time. Functions:
   sibling<->sibling. (So `send child` and `receive child` resolve to different
   files — this is why mode is required.) Slugifies subject; send/receive slugify
   identically so a subject round-trips.
-- `ctx_send <target> <subject>` -> ensure dir, prune, compute path, write stdin to
-  it, print the path.
-- `ctx_receive <source> <subject>` -> resolve dir, find the matching file (exact
-  subject; if omitted, newest match for that direction), print an `[INFO]` line
-  naming the file to stderr, then cat its content to stdout; error to stderr +
-  exit 1 if none. **Size guard:** if the file exceeds a threshold (default
-  ~28000 bytes, configurable `max_bytes` in config), skip cat-ing and instead
-  print the path with a `[WARN]` that it is too large to inline (avoids Bash
-  tool-output truncation, which is ~30000 chars) — Claude reads it directly then.
-- `ctx_list` -> for each `ctx-*.md`: age (days from mtime), direction, subject.
+- `ctx_capture_meta` -> emits the front-matter block: `git rev-parse` (branch,
+  short commit), dirty flag (`git status --porcelain` non-empty), `pwd`, ISO
+  timestamp. Git fields are `unknown` outside a repo (no error).
+- `ctx_stale_note <file>` -> read the file's `git_commit`; if a repo is present and
+  its `HEAD` differs, print `[WARN] stale: repo moved since handover (was <c>, now
+  <h>)`; empty/no-op if same or not comparable.
+- `ctx_send <target> <subject>` -> ensure dir, prune, compute path via
+  `ctx_filename send`, determine `supersedes` (the currently-live handover on this
+  direction, else `none`), write `ctx_capture_meta` + the piped body to the file,
+  print the path.
+- `ctx_receive <source> <subject>` -> resolve dir, find the matching file
+  (`ctx_filename receive`; exact subject, else newest for that direction by mtime),
+  print an `[INFO]` line naming the file to stderr, run `ctx_stale_note`, then cat
+  the file to stdout; error to stderr + exit 1 if none. **Size guard:** if the file
+  exceeds `max_bytes` (default 28000), skip cat-ing and print the path with a
+  `[WARN]` that it is too large to inline (avoids Bash tool-output truncation,
+  ~30000 chars) — Claude reads it directly then.
+- `ctx_list` -> for each `ctx-*.md`: age (days from mtime), direction, subject,
+  **status** (LIVE if it is the newest on its direction, else SUPERSEDED), and a
+  stale marker if the repo has drifted. Newest-per-direction determined by mtime.
 - `ctx_prune` -> delete `ctx-*.md` older than `ttl_days`; report removed. Never
   touches non-`ctx-*.md` files.
 - `ctx_clean` -> delete all `ctx-*.md` (keep README); report count.
@@ -156,11 +206,20 @@ Bash tests (`tests/test_context_manage.sh`) with an isolated environment (temp
 - `ttl_days` parsed from config; malformed -> 90.
 - Direction mapping: `send child X` -> `ctx-parent-to-child-X.md`; `send parent X`
   -> `ctx-child-to-parent-X.md`; sibling -> `ctx-sibling-to-sibling-X.md`.
-- `send` writes stdin to the correct file and prints its path; content matches.
-- `receive parent X` outputs to stdout the content `send child X` wrote (matches);
-  `receive` with no subject outputs the newest matching handover; no match -> exit 1.
+- `send` writes front-matter + stdin body to the correct file and prints its path;
+  the body round-trips; front-matter has from/to/subject/created/git_*/cwd.
+- `receive parent X` outputs the content `send child X` wrote (front-matter + body
+  match); `receive` with no subject outputs the newest matching handover; no
+  match -> exit 1.
 - Size guard: a handover larger than `max_bytes` is not cat-ed; `receive` prints
   its path with a `[WARN]` instead (exit 0).
+- Staleness: a handover written at commit C, then a new commit made -> `receive`/
+  `list` emit `[WARN] stale`; no warning when `HEAD` is unchanged; no warning /
+  no error outside a git repo.
+- Supersession: two `parent-to-child` handovers (different subjects, staggered
+  mtime) -> `list` marks the newer LIVE and the older SUPERSEDED; the newer records
+  `supersedes:` the older's basename; `receive parent` (no subject) returns the LIVE
+  one. `prune` does NOT delete the superseded one on age grounds alone.
 - `prune`: a `ctx-*.md` with an old mtime (`touch -d`) is removed; a fresh one is
   kept; a non-`ctx-*.md` (README) is never removed.
 - `clean`: removes all `ctx-*.md`, keeps README.
