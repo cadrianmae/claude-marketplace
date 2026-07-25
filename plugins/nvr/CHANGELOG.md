@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Refactored `bin/` to hold the command logic directly instead of thin
+  wrappers that `exec`'d `scripts/*.sh`. The `scripts/` directory is removed;
+  the five commands (`nvr-open`, `nvr-list`, `nvr-status`, `nvr-workspace`,
+  `nvr-discover`) are unchanged in behaviour and still invoked as bare
+  PATH commands. Reference cleanup for the marketplace `bin/`+`scripts/`
+  convention (see `plugins/CONVENTIONS.md`).
+
 ## [2.0.1] - 2026-04-13
 
 ### Fixed
