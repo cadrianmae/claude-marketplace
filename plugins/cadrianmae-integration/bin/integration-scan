@@ -1,0 +1,49 @@
+#!/bin/bash
+# List every marketplace plugin's plugin.json path, one per line (absolute).
+#
+# Self-locating: ${CLAUDE_PLUGIN_ROOT} is NOT available inside skills (neither
+# substituted nor set as an env var -- see plugins/CONVENTIONS.md and
+# anthropics/claude-code#9354, #44057), so this script resolves the marketplace
+# plugins directory from its own location instead. Invoked by bare name from the
+# integration skill (bin/ is auto-added to PATH).
+#
+# Handles both layouts:
+#   dev repo:  <repo>/plugins/<name>/.claude-plugin/plugin.json
+#   installed: ~/.claude/plugins/cache/<marketplace>/<name>/<version>/.claude-plugin/plugin.json
+set -u
+
+HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+root="$(cd "$HERE/.." && pwd)"   # this plugin's own root
+
+# Emit the plugin.json path for each plugin directly under $1, checking both a
+# direct child (dev repo) and a child/<version> (install cache). Returns 0 if any
+# were emitted.
+emit_from() {
+    local base="$1" p v found=1
+    for p in "$base"/*/; do
+        case "$(basename "$p")" in _*) continue ;; esac   # skip _archived, internal
+        if [ -f "${p}.claude-plugin/plugin.json" ]; then
+            printf '%s\n' "${p}.claude-plugin/plugin.json"; found=0
+        else
+            for v in "$p"*/; do
+                if [ -f "${v}.claude-plugin/plugin.json" ]; then
+                    printf '%s\n' "${v}.claude-plugin/plugin.json"; found=0
+                fi
+            done
+        fi
+    done
+    return "$found"
+}
+
+# The marketplace plugins directory is an ancestor of this plugin's root:
+# <root>/..  in the dev repo (plugins/), or <root>/../.. in the install cache.
+for cand in "$root/.." "$root/../.."; do
+    if resolved="$(cd "$cand" 2>/dev/null && pwd)"; then
+        if emit_from "$resolved"; then
+            exit 0
+        fi
+    fi
+done
+
+echo "[WARN] no marketplace plugins found near $root" >&2
+exit 1
