@@ -11,7 +11,7 @@ Generate documentation for installed marketplace plugins and add to CLAUDE.md.
 ## Quick Example
 
 ```bash
-# Scans ${CLAUDE_PLUGIN_ROOT}/../ (marketplace plugins directory)
+# Scans installed marketplace plugins (via the integration-scan helper)
 # Generates marketplace-plugins.md with skills and commands from each plugin
 # Adds import to ~/.claude/CLAUDE.md
 ```
@@ -47,11 +47,13 @@ Options:
 ### 2. Scan Installed Plugins
 
 ```bash
-MARKETPLACE_DIR="${CLAUDE_PLUGIN_ROOT}/.."
-
-# List all installed plugins
-for plugin in "$MARKETPLACE_DIR"/*/; do
-    plugin_name=$(basename "$plugin")
+# integration-scan prints each installed plugin's plugin.json path. It
+# self-locates the marketplace plugins directory, because ${CLAUDE_PLUGIN_ROOT}
+# is not available inside skills (see plugins/CONVENTIONS.md). Call it by bare
+# name -- the plugin's bin/ is auto-added to PATH.
+for plugin_json in $(integration-scan); do
+    plugin_dir="$(dirname "$(dirname "$plugin_json")")"
+    plugin_name="$(basename "$plugin_dir")"
     echo "Found: $plugin_name"
 done
 ```
@@ -211,8 +213,7 @@ Verify with: /memory
 
 **No plugins installed:**
 ```
-No marketplace plugins found in:
-  ${CLAUDE_PLUGIN_ROOT}/../
+No marketplace plugins found (integration-scan returned nothing).
 
 Install plugins first, then run this skill.
 ```
@@ -282,4 +283,4 @@ and pandoc for generating reports.
 
 - Global CLAUDE.md: `~/.claude/CLAUDE.md`
 - Project CLAUDE.md: `./CLAUDE.md` (workspace root)
-- Plugin directory: `${CLAUDE_PLUGIN_ROOT}/../` (parent of any installed plugin)
+- Plugin directory: resolved by `integration-scan` (self-locating; parent of installed plugins)

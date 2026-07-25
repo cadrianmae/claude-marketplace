@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Marketplace scan no longer relies on `${CLAUDE_PLUGIN_ROOT}` (unset in skills,
+  which made `MARKETPLACE_DIR` resolve to `/..`). A new self-locating
+  `bin/integration-scan` resolves the plugins directory and lists each plugin's
+  `plugin.json` (handles both the dev-repo and install-cache layouts, skips
+  `_archived`). Fixes #32.
+
+
 ## [1.0.4] - 2026-04-13
 
 ### Fixed
