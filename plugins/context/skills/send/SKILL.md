@@ -24,7 +24,7 @@ disable-model-invocation: true
 context-manage send parent "bug-fix" <<'EOF'
 [handover body]
 EOF
-# /tmp/claude-context/ctx-child-to-parent-bug-fix.md  (or wherever `context-manage path` resolves)
+# ~/.local/state/claude-context/ctx-child-to-parent-bug-fix.md  (or wherever `context-manage path` resolves)
 ```
 
 ---

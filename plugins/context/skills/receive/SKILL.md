@@ -2,7 +2,7 @@
 name: receive
 description: Receive context from parent, child, or sibling session
 argument-hint: <direction> [subject]
-allowed-tools: Bash
+allowed-tools: Bash, Read
 disable-model-invocation: true
 ---
 
