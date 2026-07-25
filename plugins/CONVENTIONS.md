@@ -8,6 +8,34 @@ Verified against the official docs (July 2026):
 [plugins-reference](https://code.claude.com/docs/en/plugins-reference.md),
 [hooks](https://code.claude.com/docs/en/hooks.md).
 
+## Do NOT delete `commands/` in favour of user-invocable skills (yet)
+
+The docs say custom commands were "merged into skills" and a user-invocable
+skill (`SKILL.md`, `user-invocable` defaults true) creates `/plugin:x` the same
+as `commands/x.md`. **In practice this is buggy as of Claude Code 2.1.220** — do
+not drop a plugin's `commands/` dir on the strength of the docs:
+
+- **Autocomplete visibility:** plugin skills execute when the user types the full
+  `/plugin:skill`, but frequently do NOT appear in the `/` autocomplete dropdown,
+  so users cannot discover them. Canonical bug
+  [#17509](https://github.com/anthropics/claude-code/issues/17509) — closed *not
+  planned*; dupes [#20935](https://github.com/anthropics/claude-code/issues/20935),
+  [#21125](https://github.com/anthropics/claude-code/issues/21125),
+  [#57737](https://github.com/anthropics/claude-code/issues/57737). Only adjacent
+  fixes shipped (prefix v2.1.182, de-dup v2.1.186) — the absence-from-menu itself
+  is not confirmed fixed.
+- **`disable-model-invocation: true`** (how we make a user-only slash command) has
+  its own live cluster: [#38969](https://github.com/anthropics/claude-code/issues/38969)
+  (`/skill` errors "cannot be used with Skill tool"),
+  [#43875](https://github.com/anthropics/claude-code/issues/43875) (Apr 2026 — the
+  skill is hidden *entirely*). All closed as duplicates, no confirmed fix version.
+
+**Rule:** a plugin that wants a discoverable `/plugin:x` slash command keeps a
+`commands/x.md`, even when an equivalent user-invocable skill exists. `commands/`
+is the reliable slash surface; the skill can duplicate it (or be model-invocable
+for auto-trigger). Revisit consolidating onto skills only once #17509 / #43875 are
+confirmed fixed and verified locally (type `/`, confirm the entry appears).
+
 ## TL;DR decision tree
 
 ```
