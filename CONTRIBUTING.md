@@ -30,7 +30,7 @@ cadrianmae-claude-marketplace/
 │   │   ├── agents/            [Optional]
 │   │   └── README.md
 │   └── ...
-├── TESTING.md
+├── docs/                  [Testing guide, versioning, archived reports]
 ├── CONTRIBUTING.md
 └── README.md
 ```
@@ -57,7 +57,7 @@ Follow the guidelines below for your contribution type.
 
 ### 3. Test Thoroughly
 
-**Required**: All contributions must pass testing procedures documented in [TESTING.md](TESTING.md).
+**Required**: All contributions must pass testing procedures documented in [TESTING.md](docs/TESTING.md).
 
 **Minimum Testing Requirements**:
 - [ ] All skills/commands tested individually
@@ -67,7 +67,7 @@ Follow the guidelines below for your contribution type.
 - [ ] Backward compatibility confirmed (for updates)
 - [ ] Documentation updated
 
-See [TESTING.md](TESTING.md) for detailed testing procedures.
+See [TESTING.md](docs/TESTING.md) for detailed testing procedures.
 
 ### 4. Document Changes
 
@@ -489,13 +489,13 @@ All contributions must include:
 4. **Documentation Testing**: Examples work as documented
 5. **Performance Testing**: No significant performance regression
 
-See [TESTING.md](TESTING.md) for detailed procedures.
+See [TESTING.md](docs/TESTING.md) for detailed procedures.
 
 ## Pull Request Process
 
 ### Before Submitting
 
-- [ ] All tests pass (see TESTING.md)
+- [ ] All tests pass (see docs/TESTING.md)
 - [ ] Documentation updated
 - [ ] Version bumped appropriately
 - [ ] Changelog updated (if exists)
