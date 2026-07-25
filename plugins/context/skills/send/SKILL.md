@@ -43,17 +43,15 @@ Create a context handoff file for transitioning between sessions.
 
 **IMPORTANT: Direction is REQUIRED.** Must be one of: `parent`, `child`, or `sibling`.
 
-Subject is optional - Claude will infer it from the current conversation context if not provided. The handover location is managed by `context-manage` (see `context-manage path`).
+Subject is optional -- infer it from the current conversation if the user omits it. The handover location is managed by `context-manage` (see `context-manage path`).
 
-## What it does
+## Steps
 
-1. **Validates direction** - Errors if direction is not parent|child|sibling
-2. Determines direction flow based on argument
-3. **Auto-captures project state** (timestamp, git branch, working dir, git status)
-4. If no subject provided, infers one from current conversation context
-5. Assembles the handover body, then pipes it to the script:
-
-   Assemble the handover body, then write it via the script (it names the file,
+1. **Validate the direction** - error if it is not parent|child|sibling
+2. Map the direction from the argument
+3. **Auto-capture project state** (timestamp, git branch, working dir, git status)
+4. If the user did not provide a subject, infer one from the current conversation
+5. Assemble the handover body and pipe it to the script (it names the file,
    captures git/cwd/time, prunes stale handovers, and prints the path):
 
    ```bash
@@ -61,8 +59,7 @@ Subject is optional - Claude will infer it from the current conversation context
    <handover body>
    EOF
    ```
-6. The script names the file, captures git/cwd/time, prunes stale handovers, and prints the resulting path
-7. Shows clear "next steps" for user
+6. Show the user clear next steps.
 
 **File naming pattern (handled by the script):**
 - `context-manage send child <subject>` -> `ctx-parent-to-child-<subject>.md`
@@ -156,8 +153,7 @@ The context file should include:
 
 ## Implementation Pattern
 
-Assemble the handover body, then pipe it to `context-manage send` (it names the
-file, captures git/cwd/time, prunes stale handovers, and prints the path):
+Assemble the handover body, then pipe it to `context-manage send`:
 
 ```bash
 context-manage send <direction> "<subject>" <<'EOF'

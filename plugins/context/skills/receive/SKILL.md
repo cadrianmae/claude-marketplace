@@ -36,23 +36,23 @@ Read and integrate context from session handoff file.
 
 **IMPORTANT: Direction is REQUIRED.** Must be one of: `parent`, `child`, or `sibling`.
 
-Subject is optional - Claude will infer from context if not provided; without a subject the script falls back to the newest handover for that direction. The handover location is managed by `context-manage` (see `context-manage path`).
+Subject is optional -- infer it from context if the user omits it; without a subject the script falls back to the newest handover for that direction. The handover location is managed by `context-manage` (see `context-manage path`).
 
-## What it does
+## Steps
 
-1. **Validates direction** - Errors if direction is not parent|child|sibling
-2. Determines direction flow based on argument
-3. **Records received timestamp** (auto-captured)
-4. Calls the script, whose output is the handover content itself:
+1. **Validate the direction** - error if it is not parent|child|sibling
+2. Map the direction from the argument
+3. **Record the received timestamp** (auto-captured)
+4. Call the script; its output is the handover content itself:
 
    ```bash
    context-manage receive <direction> [subject]
    ```
-5. Prints the content directly, or - for an oversized handover - a path with a
+5. Print the content directly, or - for an oversized handover - a path with a
    `[WARN]`, in which case read that path
-6. If subject provided, the script looks up that exact handover; if omitted, it
-   uses the newest handover for that direction
-7. Integrates context into current session understanding
+6. If the user provided a subject, the script looks up that exact handover; if
+   omitted, it uses the newest handover for that direction
+7. Integrate the context into your understanding of the current session.
 
 **Important:** Without a subject, the script picks the newest handover for that direction, ensuring you get the most recent context.
 
