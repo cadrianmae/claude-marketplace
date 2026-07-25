@@ -38,7 +38,7 @@ for dep in jq python3; do
       jq -n --arg ctx "[ERROR] cron plugin: $dep is required but not installed" \
         '{hookSpecificOutput:{hookEventName:"UserPromptSubmit",additionalContext:$ctx}}'
     fi
-    exit 2
+    exit 0
   fi
 done
 

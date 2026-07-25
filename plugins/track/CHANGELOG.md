@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- PostToolUse (`capture-sources.sh`) hook now has a 30000ms timeout, matching the Stop hook, to bound the async job. (#18)
+
+
 ## [2.7.1] - 2026-04-13
 
 ### Fixed

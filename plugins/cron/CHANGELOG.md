@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `check-cron.sh`: missing-dependency (jq/python3) path now `exit 0` with an error message instead of `exit 2`, which was blocking ALL tool use in the session. (#18)
+
+
 ## [2.2.2] - 2026-04-13
 
 ### Fixed
