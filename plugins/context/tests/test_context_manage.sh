@@ -92,4 +92,29 @@ big="$(ctx_receive parent demo 2>/dev/null)"
 assert_contains "$big" "ctx-parent-to-child-demo.md" "oversize receive prints path"
 rm -f "$HOME/.claude/.context-config"
 
+# --- list ---
+fresh_env
+printf 'a\n' | ctx_send child first >/dev/null
+sleep 1; printf 'b\n' | ctx_send child second >/dev/null
+listing="$(ctx_list)"
+assert_contains "$listing" "parent-to-child" "list shows direction"
+assert_contains "$listing" "LIVE" "list shows LIVE"
+assert_contains "$listing" "SUPERSEDED" "list shows SUPERSEDED"
+# newest (second) is LIVE
+assert_contains "$(echo "$listing" | grep second)" "LIVE" "newest is LIVE"
+assert_contains "$(echo "$listing" | grep first)" "SUPERSEDED" "older is SUPERSEDED"
+
+# --- prune ---
+d="$(ctx_dir)"
+old="$d/ctx-parent-to-child-old.md"; printf -- '---\n---\nold\n' > "$old"
+touch -d '100 days ago' "$old"
+ctx_prune | grep -q "pruned" && pass "prune removes old" || fail "prune removes old"
+[ -f "$old" ] && fail "old file gone" || pass "old file gone"
+[ -f "$d/README.md" ] && pass "prune keeps README" || fail "prune keeps README"
+
+# --- clean ---
+ctx_clean | grep -q "removed" && pass "clean reports" || fail "clean reports"
+ls "$d"/ctx-*.md >/dev/null 2>&1 && fail "clean removed all ctx" || pass "clean removed all ctx"
+[ -f "$d/README.md" ] && pass "clean keeps README" || fail "clean keeps README"
+
 echo "---"; [ "$FAILED" -eq 0 ] && echo "ALL PASS" || { echo "FAILURES"; exit 1; }

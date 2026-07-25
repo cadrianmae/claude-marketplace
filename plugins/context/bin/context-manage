@@ -90,9 +90,6 @@ ctx_capture_meta() {
     printf -- '---\n\n'
 }
 
-# Temporary stub; real implementation lands in Task 5.
-if ! declare -f ctx_prune >/dev/null; then ctx_prune() { return 0; }; fi
-
 # ctx_send TARGET SUBJECT  (body on stdin)
 ctx_send() {
     local target="$1" subj="${2:-}" dir opp fn path prior sup
@@ -144,4 +141,53 @@ ctx_receive() {
     else
         cat "$file"
     fi
+}
+
+# newest ctx-<direction>-*.md by mtime, or empty
+_ctx_newest_for_direction() {
+    ls -t "$1"/ctx-"$2"-*.md 2>/dev/null | head -1
+}
+
+ctx_list() {
+    local dir f base rest direction subject mt now age newest live stale
+    dir="$(ctx_dir)"; now="$(date +%s)"
+    for f in "$dir"/ctx-*.md; do
+        [ -f "$f" ] || continue
+        base="$(basename "$f" .md)"; rest="${base#ctx-}"
+        direction="$(printf '%s' "$rest" | grep -oE '^(parent-to-child|child-to-parent|sibling-to-sibling)')"
+        [ -n "$direction" ] || continue
+        subject="${rest#${direction}-}"
+        mt="$(stat -c %Y "$f" 2>/dev/null || echo "$now")"
+        age=$(( (now - mt) / 86400 ))
+        newest="$(_ctx_newest_for_direction "$dir" "$direction")"
+        if [ "$f" = "$newest" ]; then live="LIVE"; else live="SUPERSEDED"; fi
+        stale=""; ctx_is_stale "$f" && stale=" [stale]"
+        printf '%-4s %-18s %-11s %s%s\n' "${age}d" "$direction" "$live" "$subject" "$stale"
+    done
+}
+
+ctx_prune() {
+    local dir ttl f mt now age removed=0
+    dir="$(ctx_dir)"; ttl="$(ctx_ttl_days)"; now="$(date +%s)"
+    for f in "$dir"/ctx-*.md; do
+        [ -f "$f" ] || continue
+        mt="$(stat -c %Y "$f" 2>/dev/null || echo "$now")"
+        age=$(( (now - mt) / 86400 ))
+        if [ "$age" -gt "$ttl" ]; then
+            rm -f "$f"; echo "[OK] pruned $(basename "$f") (${age}d)"; removed=$((removed + 1))
+        fi
+    done
+    [ "$removed" -eq 0 ] && echo "[OK] nothing to prune"
+    return 0
+}
+
+ctx_clean() {
+    local dir f n=0
+    dir="$(ctx_dir)"
+    for f in "$dir"/ctx-*.md; do
+        [ -f "$f" ] || continue
+        rm -f "$f"; n=$((n + 1))
+    done
+    echo "[OK] removed $n handover(s)"
+    return 0
 }
