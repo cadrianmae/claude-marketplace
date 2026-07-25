@@ -117,4 +117,14 @@ ctx_clean | grep -q "removed" && pass "clean reports" || fail "clean reports"
 ls "$d"/ctx-*.md >/dev/null 2>&1 && fail "clean removed all ctx" || pass "clean removed all ctx"
 [ -f "$d/README.md" ] && pass "clean keeps README" || fail "clean keeps README"
 
+# --- CLI dispatcher ---
+CM="$DIR/bin/context-manage"
+fresh_env
+printf 'clibody\n' | "$CM" send child clidemo >/dev/null
+assert_contains "$("$CM" receive parent clidemo 2>/dev/null)" "clibody" "CLI send/receive round-trip"
+assert_contains "$("$CM" path)" "claude-context" "CLI path"
+assert_contains "$("$CM" list)" "parent-to-child" "CLI list"
+"$CM" bogus >/dev/null 2>&1; [ "$?" -eq 2 ] && pass "CLI unknown -> exit 2" || fail "CLI unknown -> exit 2"
+"$CM" help | grep -q "context-manage send" && pass "CLI help" || fail "CLI help"
+
 echo "---"; [ "$FAILED" -eq 0 ] && echo "ALL PASS" || { echo "FAILURES"; exit 1; }

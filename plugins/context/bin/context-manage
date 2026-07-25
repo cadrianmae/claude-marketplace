@@ -191,3 +191,28 @@ ctx_clean() {
     echo "[OK] removed $n handover(s)"
     return 0
 }
+
+# ---- CLI dispatch: runs only when executed, dormant when sourced ----
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+    set -u
+    cmd="${1:-help}"; [ "$#" -gt 0 ] && shift
+    case "$cmd" in
+        send)    ctx_send "${1:-}" "${2:-}" ;;
+        receive) ctx_receive "${1:-}" "${2:-}" ;;
+        list)    ctx_list ;;
+        prune)   ctx_prune ;;
+        clean)   ctx_clean ;;
+        path)    printf '%s\n' "$(ctx_dir)" ;;
+        help|-h|--help)
+            cat <<'USAGE'
+context-manage send <parent|child|sibling> <subject>    # stdin -> handover; prints path
+context-manage receive <parent|child|sibling> [subject] # outputs handover content
+context-manage list        # handoffs: age, direction, live/superseded, subject
+context-manage prune       # remove handoffs older than ttl_days (default 90)
+context-manage clean       # remove all handoffs
+context-manage path        # print the handover directory
+USAGE
+            ;;
+        *) echo "[WARN] unknown subcommand: $cmd (try: context-manage help)" >&2; exit 2 ;;
+    esac
+fi
