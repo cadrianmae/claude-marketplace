@@ -51,11 +51,15 @@ Options:
 # self-locates the marketplace plugins directory, because ${CLAUDE_PLUGIN_ROOT}
 # is not available inside skills (see plugins/CONVENTIONS.md). Call it by bare
 # name -- the plugin's bin/ is auto-added to PATH.
-for plugin_json in $(integration-scan); do
+# Read line-by-line (paths may contain spaces). The plugin's content dir is
+# two levels up from its plugin.json; the plugin NAME comes from plugin.json's
+# `name` field -- deriving it from the directory basename is wrong in the
+# install-cache layout (that basename is the version, not the name).
+while IFS= read -r plugin_json; do
     plugin_dir="$(dirname "$(dirname "$plugin_json")")"
-    plugin_name="$(basename "$plugin_dir")"
-    echo "Found: $plugin_name"
-done
+    plugin_name="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["name"])' "$plugin_json")"
+    echo "Found: $plugin_name  ($plugin_dir)"
+done < <(integration-scan)
 ```
 
 ### 3. Extract Plugin Information
