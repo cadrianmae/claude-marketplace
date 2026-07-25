@@ -1,0 +1,56 @@
+#!/bin/bash
+# context-manage -- handover management for the context plugin.
+# Self-contained: ctx_* functions below, a guarded dispatch appended in Task 6.
+# Called by bare name from the skills/commands (bin/ is auto-added to PATH); see
+# plugins/CONVENTIONS.md. Sourcing this file (the tests do) defines the functions
+# without running the dispatch. No side effects at source time.
+
+ctx_config_file() { printf '%s' "$HOME/.claude/.context-config"; }
+
+# ctx_cfg_get KEY DEFAULT
+ctx_cfg_get() {
+    local key="$1" def="$2" cfg val
+    cfg="$(ctx_config_file)"
+    [ -f "$cfg" ] || { printf '%s' "$def"; return; }
+    val="$(grep -E "^${key}=" "$cfg" 2>/dev/null | tail -1 | cut -d= -f2-)"
+    if [ -n "$val" ]; then printf '%s' "$val"; else printf '%s' "$def"; fi
+}
+
+ctx_ttl_days() {
+    local v; v="$(ctx_cfg_get ttl_days 90)"
+    case "$v" in ''|*[!0-9]*) echo "[WARN] invalid ttl_days '$v'; using 90" >&2; v=90 ;; esac
+    printf '%s' "$v"
+}
+
+ctx_max_bytes() {
+    local v; v="$(ctx_cfg_get max_bytes 28000)"
+    case "$v" in ''|*[!0-9]*) echo "[WARN] invalid max_bytes '$v'; using 28000" >&2; v=28000 ;; esac
+    printf '%s' "$v"
+}
+
+ctx_dir() {
+    local d
+    d="$(ctx_cfg_get dir "")"
+    [ -n "$d" ] || d="${XDG_STATE_HOME:-$HOME/.local/state}/claude-context"
+    if ! mkdir -p "$d" 2>/dev/null || [ ! -w "$d" ]; then
+        echo "[WARN] handover dir '$d' not writable; using /tmp/claude-context" >&2
+        d="/tmp/claude-context"; mkdir -p "$d"
+    fi
+    if [ ! -f "$d/README.md" ]; then
+        printf '# Claude context handovers\n\nSession-to-session handoff files (ctx-<direction>-<subject>.md),\nmanaged by the context plugin. See /context:send and /context:receive.\n' > "$d/README.md"
+    fi
+    printf '%s' "$d"
+}
+
+ctx_opposite() {
+    case "$1" in
+        parent) printf 'child' ;;
+        child)  printf 'parent' ;;
+        sibling) printf 'sibling' ;;
+        *) return 1 ;;
+    esac
+}
+
+ctx_slug() {
+    printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//'
+}
