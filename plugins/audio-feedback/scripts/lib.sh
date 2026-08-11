@@ -217,6 +217,12 @@ af_play_event_with_subtype() {
     af_load_config
     [ "$AF_ENABLED" = "true" ] || return 0
 
+    # Config gate applies to both the subtype and the generic path: an event
+    # set to "off" is silent even when a matching subtype WAV exists.
+    local sound
+    sound="$(af_sound_for_event "$event")"
+    [ "$sound" = "off" ] && return 0
+
     local sounds_dir
     sounds_dir="$(_af_sounds_dir)"
 
@@ -241,11 +247,7 @@ af_play_event_with_subtype() {
         fi
     fi
 
-    # Fall back to generic event sound from config.
-    local sound
-    sound="$(af_sound_for_event "$event")"
-    [ "$sound" = "off" ] && return 0
-
+    # Fall back to generic event sound from config (already resolved above).
     local sound_file="$sounds_dir/${sound}.wav"
     [ -f "$sound_file" ] || return 0
 

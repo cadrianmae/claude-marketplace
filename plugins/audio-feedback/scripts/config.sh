@@ -93,7 +93,7 @@ for arg in "$@"; do
             fi
             ;;
         CLICKS_EVENTS)
-            local valid_events="stop,post_tool_use,subagent_stop,notification,pre_compact"
+            valid_events="stop,post_tool_use,subagent_stop,notification,pre_compact"
             IFS=',' read -ra events <<< "$value"
             for ev in "${events[@]}"; do
                 case ",$valid_events," in

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Events set to `off` are now silent even when the active theme ships a
+  matching subtype WAV. `af_play_event_with_subtype()` resolved and played
+  the subtype file before consulting the per-event config, so
+  `PRE_TOOL_USE_SOUND=off` (and the other subtype-resolving events) had no
+  effect in practice. The `off` gate is now checked before subtype
+  resolution. (#40)
+- `audio-feedback-config CLICKS_EVENTS=...` now persists. The validation
+  arm used `local` at top-level script scope, which bash rejects
+  (`local: can only be used in a function`), aborting the write. (#41)
+
 ## [0.2.2] - 2026-04-15
 
 ### Added
