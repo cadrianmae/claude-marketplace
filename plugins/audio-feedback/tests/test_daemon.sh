@@ -31,4 +31,28 @@ for _ in $(seq 1 80); do kill -0 "$dpid" 2>/dev/null || break; sleep 0.1; done
 if kill -0 "$dpid" 2>/dev/null; then bad "daemon idle-exited"; kill "$dpid" 2>/dev/null; else ok "daemon idle-exited"; fi
 if grep -q IDLE-EXIT "$log"; then ok "logged IDLE-EXIT"; else bad "logged IDLE-EXIT"; fi
 
+# Concurrency: many parallel 'play' calls spawn exactly ONE daemon.
+SOCK2="/tmp/aftest-daemon2.sock"; rm -f "$SOCK2" "$SOCK2.spawn.lock"
+WAV="/tmp/aftest-silence.wav"
+uv run --script "$SOUNDD" selftest >/dev/null 2>&1  # warm cache
+python3 - "$WAV" <<'PY'
+import sys, wave, struct
+w = wave.open(sys.argv[1], "wb"); w.setnchannels(1); w.setsampwidth(2); w.setframerate(44100)
+w.writeframes(struct.pack("<" + "h"*2205, *([0]*2205))); w.close()
+PY
+for _ in $(seq 1 10); do
+  python3 "$SOUNDD" play --socket "$SOCK2" --path "$WAV" --idle-timeout 2 --no-audio &
+done
+wait
+n="$(pgrep -fc -- "af-soundd daemon --socket $SOCK2" || true)"
+# `uv run --script` launches the resolved interpreter as a *subprocess*
+# (not via exec) on this uv version, so one correctly-serialized daemon
+# always shows as 2 matching processes: the `uv run` supervisor plus the
+# python child it launched. n<=2 with a single parent/child pair is one
+# daemon; the race this test guards against produces multiple independent
+# pairs (n=20 for 10 concurrent spawns before the fix).
+if [ "${n:-0}" -le 2 ]; then ok "single daemon under concurrency (n=${n:-0})"; else bad "single daemon under concurrency (n=$n)"; fi
+sleep 3
+if pgrep -f -- "af-soundd daemon --socket $SOCK2" >/dev/null; then bad "concurrent daemon idle-exited"; else ok "concurrent daemon idle-exited"; fi
+
 exit "$fail"

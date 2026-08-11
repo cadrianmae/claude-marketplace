@@ -170,6 +170,73 @@ def run_selftest(_args):
     print("selftest OK")
 
 
+def _try_send(sock_path, payload):
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(sock_path)
+        s.sendall(payload.encode("utf-8"))
+        s.close()
+        return True
+    except (FileNotFoundError, ConnectionRefusedError, OSError):
+        return False
+
+
+def _spawn_daemon(args):
+    """Ensure exactly one daemon. Fork+exec it via `uv run --script`, then
+    HOLD the flock until the new daemon is actually listening on the socket.
+    Concurrent callers block on the lock; when it releases the daemon is up,
+    so their re-check succeeds and they never spawn a duplicate. Returns
+    False only if uv is missing."""
+    import fcntl
+    import shutil
+    uv = shutil.which("uv")
+    if uv is None:
+        return False
+    lock_path = args.socket + ".spawn.lock"
+    lf = open(lock_path, "w")
+    try:
+        fcntl.flock(lf, fcntl.LOCK_EX)
+        if _try_send(args.socket, ""):  # someone already started it
+            return True
+        cmd = [uv, "run", "--script", os.path.abspath(__file__), "daemon",
+               "--socket", args.socket,
+               "--idle-timeout", str(args.idle_timeout),
+               "--max-voices", str(args.max_voices)]
+        if args.no_audio:
+            cmd.append("--no-audio")
+        devnull = os.open(os.devnull, os.O_RDWR)
+        pid = os.fork()
+        if pid == 0:
+            os.setsid()
+            os.dup2(devnull, 0); os.dup2(devnull, 1); os.dup2(devnull, 2)
+            os.execv(cmd[0], cmd)
+            os._exit(127)
+        os.close(devnull)
+        # Hold the lock until the daemon is reachable (~15s covers a cold uv
+        # cache). Queued callers then find it up and skip their own spawn.
+        for _ in range(300):
+            if _try_send(args.socket, ""):
+                break
+            time.sleep(0.05)
+        return True
+    finally:
+        fcntl.flock(lf, fcntl.LOCK_UN)
+        lf.close()
+
+
+def run_play(args):
+    payload = args.path + "\n"
+    if _try_send(args.socket, payload):
+        return
+    if not _spawn_daemon(args):
+        sys.exit(1)  # no uv; caller falls back to paplay
+    for _ in range(100):  # up to ~5s for the daemon to bind
+        if _try_send(args.socket, payload):
+            return
+        time.sleep(0.05)
+    sys.exit(1)
+
+
 def main():
     ap = argparse.ArgumentParser(prog="af-soundd")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -184,6 +251,14 @@ def main():
     r = sub.add_parser("raw-send")
     r.add_argument("--socket", required=True)
     r.set_defaults(func=run_raw_send)
+
+    p = sub.add_parser("play")
+    p.add_argument("--socket", required=True)
+    p.add_argument("--path", required=True)
+    p.add_argument("--idle-timeout", type=float, default=30.0)
+    p.add_argument("--max-voices", type=int, default=8)
+    p.add_argument("--no-audio", action="store_true")
+    p.set_defaults(func=run_play)
 
     t = sub.add_parser("selftest")
     t.set_defaults(func=run_selftest)
