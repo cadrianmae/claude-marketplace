@@ -145,13 +145,20 @@ Expected: FAIL (base/dir still `sounds/`, `af_list_themes` undefined), `exit=1`.
 
 - [ ] **Step 3: Migrate the files**
 
+`sounds/src/` holds TRACKED sound-design source (`audio-feedback.rpp`,
+`vital-fxchain.rpp-fragment`, `DESIGN-NOTES.md`) — the redesign/Spec B
+source. It must be **migrated** into the new theme `src/`, NOT deleted.
+Only the untracked click-era `click_pyo.py` is dropped.
 ```bash
 cd plugins/audio-feedback
 mkdir -p sound-theme/default/sounds sound-theme/default/src
 git mv sounds/default/*.wav sound-theme/default/sounds/
+# migrate the tracked sound-design source into the theme's src/
+git mv sounds/src/DESIGN-NOTES.md sounds/src/audio-feedback.rpp \
+       sounds/src/vital-fxchain.rpp-fragment sound-theme/default/src/
+rm -f sounds/src/click_pyo.py            # untracked click-era scratch
 touch sound-theme/default/src/.gitkeep
-rm -rf sounds/src
-rmdir sounds/default sounds 2>/dev/null || true
+rmdir sounds/src sounds/default sounds 2>/dev/null || true
 ```
 
 - [ ] **Step 4: Create `theme.json`**
@@ -681,7 +688,7 @@ wait
 n="$(pgrep -fc -- "af-soundd daemon --socket $SOCK2" || true)"
 if [ "${n:-0}" -le 1 ]; then ok "single daemon under concurrency (n=${n:-0})"; else bad "single daemon under concurrency (n=$n)"; fi
 sleep 3
-pgrep -f -- "af-soundd daemon --socket $SOCK2" >/dev/null && bad "concurrent daemon idle-exited" || ok "concurrent daemon idle-exited"
+if pgrep -f -- "af-soundd daemon --socket $SOCK2" >/dev/null; then bad "concurrent daemon idle-exited"; else ok "concurrent daemon idle-exited"; fi
 ```
 Note: the silence WAV is written with stdlib `wave` (no numpy needed in the test driver).
 
@@ -706,9 +713,13 @@ def _try_send(sock_path, payload):
 
 
 def _spawn_daemon(args):
-    """Double-fork a detached daemon via `uv run --script`, guarded by a
-    flock so concurrent callers spawn at most one. Returns True if a spawn
-    was launched (or the daemon already exists), False if uv is missing."""
+    """Ensure exactly one daemon. Fork+exec it via `uv run --script`, then
+    HOLD the flock until the new daemon is actually listening on the socket.
+    Concurrent callers block on the lock; when it releases the daemon is up,
+    so their re-check succeeds and they never spawn a duplicate. (Releasing
+    the lock right after fork() — before the daemon binds — is the race that
+    lets N callers each spawn a daemon.) Returns False only if uv is
+    missing."""
     import fcntl
     import shutil
     uv = shutil.which("uv")
@@ -734,6 +745,12 @@ def _spawn_daemon(args):
             os.execv(cmd[0], cmd)
             os._exit(127)
         os.close(devnull)
+        # Hold the lock until the daemon is reachable (~15s covers a cold uv
+        # cache). Queued callers then find it up and skip their own spawn.
+        for _ in range(300):
+            if _try_send(args.socket, ""):
+                break
+            time.sleep(0.05)
         return True
     finally:
         fcntl.flock(lf, fcntl.LOCK_UN)
@@ -819,8 +836,7 @@ HOME="$CFG3" PATH="$STUB:$PATH" bash -c "
   af_load_config
   af_dispatch_play '$WAV'
 "
-grep -q "PAPLAY $WAV" /tmp/aftest-calls.log && ok "DAEMON_ENABLED=false falls back to paplay" \
-  || bad "DAEMON_ENABLED=false falls back to paplay"
+if grep -q "PAPLAY $WAV" /tmp/aftest-calls.log; then ok "DAEMON_ENABLED=false falls back to paplay"; else bad "DAEMON_ENABLED=false falls back to paplay"; fi
 ```
 
 - [ ] **Step 2: Run it to verify it fails**
