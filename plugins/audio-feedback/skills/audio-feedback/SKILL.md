@@ -1,6 +1,6 @@
 ---
 name: audio-feedback
-description: This skill should be used when the user asks to "configure audio feedback", "change sound settings", "enable/disable sounds", "set notification sound", "mute audio", "turn off sounds", "change the chime", "change theme", "tune click sounds", "audio accessibility", "audio cues", "audio settings", or anything involving the audio-feedback plugin for hook event sounds.
+description: This skill should be used when the user asks to "configure audio feedback", "change sound settings", "enable/disable sounds", "set notification sound", "mute audio", "turn off sounds", "change the chime", "change theme", "audio accessibility", "audio cues", "audio settings", or anything involving the audio-feedback plugin for hook event sounds.
 version: 0.2.2
 user-invocable: true
 allowed-tools: Bash, AskUserQuestion
@@ -9,7 +9,7 @@ argument-hint: "[config|sounds|test|help] [args...]"
 
 # Audio Feedback — Accessible Audio Cues for Claude Code
 
-The audio-feedback plugin provides non-speech audio cues for Claude Code hook events, supporting awareness of Claude's activity without needing to watch the terminal. Short synth sounds fire on response complete, notifications, context compaction, user input, tool calls, subagent completion, session start, and pre-compact. Each event maps to a configurable sound (or `off`) and is organised by theme. On Stop / PostToolUse / SubagentStop the event sound is optionally followed by a "click" sequence whose density scales with Claude's token output — an audible work-scale indicator. Independent of the tts plugin (purely non-speech).
+The audio-feedback plugin provides non-speech audio cues for Claude Code hook events, supporting awareness of Claude's activity without needing to watch the terminal. Short synth sounds fire on response complete, notifications, context compaction, user input, tool calls, subagent completion, session start, and pre-compact. Each event maps to a configurable sound (or `off`) and is organised by theme. Independent of the tts plugin (purely non-speech).
 
 ## First Step
 
@@ -49,25 +49,6 @@ Global config: `~/.claude/.audio-feedback-config`
 Set any event to `off` to silence it. Set `ENABLED=false` to silence everything.
 
 Subtype-specific sounds (e.g. `notification-permission.wav`, `post-tool-use-observe.wav`) are auto-resolved from the theme directory when present, falling back to the generic sound above.
-
-### Click sounds
-
-Clicks play after the event sound on enabled events, with start rate scaled from output tokens via a log curve.
-
-| Key | Default | Purpose |
-|---|---|---|
-| `CLICKS_ENABLED` | `true` | Master switch for click sequences |
-| `CLICKS_EVENTS` | `stop,post_tool_use,subagent_stop` | Which events get clicks (comma-separated). Also supports `notification`, `pre_compact` |
-| `CLICKS_RATE` | `25` | Start rate at the anchor token count (cps) |
-| `CLICKS_RATE_AT` | `50` | Anchor token count |
-| `CLICKS_RATE_GROWTH` | `4` | Log2 slope above the anchor |
-
-Formula: `start_rate = CLICKS_RATE + CLICKS_RATE_GROWTH * log2(tokens / CLICKS_RATE_AT)` (floored at 5 cps). Duration also scales logarithmically from tokens, clamped to [0.3, 1.5]s, with quadratic ease-out (gap grows 4× by the tail).
-
-Token sources per event:
-- `stop` — exact `output_tokens` from last assistant entry in `transcript_path`
-- `subagent_stop` — **sum** of `output_tokens` across `agent_transcript_path`
-- `post_tool_use` / `notification` — estimated as `chars(text) / 4`
 
 ## Bundled Sounds — Default Theme
 
@@ -159,5 +140,5 @@ Print the subcommand grammar, config reference table, and bundled sounds table i
 
 - **Coexistence with tts plugin:** If tts is also installed with CHIME_ENABLED=true, both plugins fire on Stop — double chime. Disable one: either `/tts config CHIME_ENABLED=false` or `/audio-feedback config STOP_SOUND=off`.
 - PreToolUse and PostToolUse default to `off` because they fire on EVERY tool call (high frequency, can be annoying during heavy tool use).
-- Hooks are non-blocking: event sound + click sequence run in a detached background subshell, so the hook script returns in ~50ms regardless of sox/paplay latency.
-- Requires PipeWire (`paplay`). Click generation additionally needs `sox` and `jq`. No fallback for Pulse-only or ALSA-direct systems.
+- Hooks are non-blocking: the event sound runs in a detached background process, so the hook script returns in ~50ms regardless of paplay latency.
+- Requires PipeWire (`paplay`). Subtype-specific sound resolution additionally needs `jq`. No fallback for Pulse-only or ALSA-direct systems.

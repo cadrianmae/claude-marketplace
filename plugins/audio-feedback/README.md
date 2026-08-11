@@ -13,8 +13,7 @@ Registers hooks on all 8 Claude Code events. Each event maps to a sound file (or
 - **Per-event sounds** — each hook event has its own configurable sound
 - **Theme system** — sounds live in `sounds/<theme>/` subdirectories, switchable via `THEME` config
 - **Master switch** — `ENABLED=true/false` silences everything at once
-- **Click sounds** — glassy sci-fi click sequences proportional to response word count, with ease-out timing. Plays on Stop, PostToolUse, SubagentStop. Requires `sox` at runtime.
-- **Lo-fi minimal default theme** — 8 sox-generated sounds with reverb, 0dB peak, mono 44.1kHz
+- **Lo-fi minimal default theme** — 8 sounds with reverb, 0dB peak, mono 44.1kHz
 - **Independent of tts** — purely non-speech audio cues
 
 ## Prerequisites
@@ -22,7 +21,7 @@ Registers hooks on all 8 Claude Code events. Each event maps to a sound file (or
 | Requirement | How to verify | Notes |
 |---|---|---|
 | Linux + PipeWire | `paplay --version` | Required for all sounds |
-| sox | `sox --version` | Required for click sounds only |
+| jq | `jq --version` | Optional — enables subtype-specific sounds (per-tool, per-notification) |
 
 ## Command
 
@@ -57,8 +56,6 @@ Global config: `~/.claude/.audio-feedback-config`
 |---|---|---|
 | `THEME` | `default` | Sound theme (subdirectory of `sounds/`) |
 | `ENABLED` | `true` | Master switch |
-| `CLICKS_ENABLED` | `true` | Master switch for click sounds |
-| `CLICKS_EVENTS` | `stop,post_tool_use,subagent_stop` | Comma-separated list of events that trigger clicks. Valid: `stop`, `post_tool_use`, `subagent_stop`, `notification`, `pre_compact` |
 | `STOP_SOUND` | `stop` | Response complete |
 | `NOTIFICATION_SOUND` | `notification` | Cron/alert fired |
 | `PRE_COMPACT_SOUND` | `pre-compact` | Context compacting |

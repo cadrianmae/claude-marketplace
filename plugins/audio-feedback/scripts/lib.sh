@@ -27,11 +27,6 @@ _af_sounds_dir() {
 # (without .wav) inside that theme directory. "off" = no sound.
 af_default_theme="default"
 af_default_enabled="true"
-af_default_clicks_enabled="true"
-af_default_clicks_events="stop,post_tool_use,subagent_stop"
-af_default_clicks_rate="25"
-af_default_clicks_rate_at="50"
-af_default_clicks_rate_growth="4"
 af_default_stop="stop"
 af_default_notification="notification"
 af_default_pre_compact="pre-compact"
@@ -50,11 +45,6 @@ af_load_config() {
 
     AF_THEME="$af_default_theme"
     AF_ENABLED="$af_default_enabled"
-    AF_CLICKS_ENABLED="$af_default_clicks_enabled"
-    AF_CLICKS_EVENTS="$af_default_clicks_events"
-    AF_CLICKS_RATE="$af_default_clicks_rate"
-    AF_CLICKS_RATE_AT="$af_default_clicks_rate_at"
-    AF_CLICKS_RATE_GROWTH="$af_default_clicks_rate_growth"
     AF_STOP_SOUND="$af_default_stop"
     AF_NOTIFICATION_SOUND="$af_default_notification"
     AF_PRE_COMPACT_SOUND="$af_default_pre_compact"
@@ -76,11 +66,6 @@ af_load_config() {
         case "$key" in
             THEME) AF_THEME="$value" ;;
             ENABLED) AF_ENABLED="$value" ;;
-            CLICKS_ENABLED) AF_CLICKS_ENABLED="$value" ;;
-            CLICKS_EVENTS) AF_CLICKS_EVENTS="$value" ;;
-            CLICKS_RATE) AF_CLICKS_RATE="$value" ;;
-            CLICKS_RATE_AT) AF_CLICKS_RATE_AT="$value" ;;
-            CLICKS_RATE_GROWTH) AF_CLICKS_RATE_GROWTH="$value" ;;
             STOP_SOUND) AF_STOP_SOUND="$value" ;;
             NOTIFICATION_SOUND) AF_NOTIFICATION_SOUND="$value" ;;
             PRE_COMPACT_SOUND) AF_PRE_COMPACT_SOUND="$value" ;;
@@ -103,11 +88,6 @@ af_ensure_config() {
     cat > "$cfg" <<EOF
 THEME=$af_default_theme
 ENABLED=$af_default_enabled
-CLICKS_ENABLED=$af_default_clicks_enabled
-CLICKS_EVENTS=$af_default_clicks_events
-CLICKS_RATE=$af_default_clicks_rate
-CLICKS_RATE_AT=$af_default_clicks_rate_at
-CLICKS_RATE_GROWTH=$af_default_clicks_rate_growth
 STOP_SOUND=$af_default_stop
 NOTIFICATION_SOUND=$af_default_notification
 PRE_COMPACT_SOUND=$af_default_pre_compact
@@ -252,150 +232,4 @@ af_play_event_with_subtype() {
     [ -f "$sound_file" ] || return 0
 
     paplay "$sound_file" 2>/dev/null || true
-}
-
-# ---- click sounds -------------------------------------------------------
-
-# Check if an event has clicks enabled.
-# Usage: af_clicks_enabled_for "stop" && echo "yes"
-af_clicks_enabled_for() {
-    local event="$1"
-    [ "$AF_CLICKS_ENABLED" = "true" ] || return 1
-    case ",$AF_CLICKS_EVENTS," in
-        *,"$event",*) return 0 ;;
-        *) return 1 ;;
-    esac
-}
-
-# Extract output tokens from a Claude Code transcript JSONL.
-# Mode "last": last assistant entry's usage.output_tokens (for Stop).
-# Mode "sum":  sum of all assistant entries' output_tokens (for SubagentStop).
-# Prints token count, or 0 on any failure.
-#
-# Usage: af_tokens_from_transcript <path> <last|sum>
-af_tokens_from_transcript() {
-    local path="$1"
-    local mode="${2:-last}"
-    if [ ! -f "$path" ] || ! command -v jq >/dev/null 2>&1; then
-        printf '0'
-        return 0
-    fi
-    local result=""
-    case "$mode" in
-        sum)
-            result="$(jq -s '[.[] | select(.type=="assistant") | .message.usage.output_tokens // 0] | add // 0' "$path" 2>/dev/null)"
-            ;;
-        *)
-            result="$(jq -s '[.[] | select(.type=="assistant")] | last | .message.usage.output_tokens // 0' "$path" 2>/dev/null)"
-            ;;
-    esac
-    printf '%s' "${result:-0}"
-}
-
-# af_clicks_duration TOKENS
-# Logarithmic duration scaling from token count. Anchored so ~65 tokens
-# ~ 0.9s (was: 20 words ~ 0.9s, roughly the same ratio given ~1.3
-# tokens/word). Clamped to [0.3, 1.5]s.
-af_clicks_duration() {
-    local tokens="$1"
-    awk -v t="$tokens" 'BEGIN {
-        d = log(t / 7) / log(2) * 0.3 + 0.3
-        if (d < 0.3) d = 0.3
-        if (d > 1.5) d = 1.5
-        printf "%.2f", d
-    }'
-}
-
-# Per-click synth duration (seconds), shared between the gap-derivation
-# math in af_clicks_base_gap and the actual synth call in af_render_clicks.
-# Keeping these in sync is what makes the real click cadence match
-# CLICKS_RATE (see Task 7 review Finding 1).
-AF_CLICK_DUR="${AF_CLICK_DUR:-0.03}"
-
-# af_clicks_base_gap TOKENS
-# Compute start rate from token count: linear-looking at low tokens,
-# log-compressed at high tokens. Floored at 5 cps. Returns the base gap
-# (seconds) between clicks at t=0, before the ease-out quadratic growth.
-#   start_rate = CLICKS_RATE + CLICKS_RATE_GROWTH * log2(tokens / CLICKS_RATE_AT)
-af_clicks_base_gap() {
-    local tokens="$1"
-    local click_dur="$AF_CLICK_DUR"
-    local start_rate
-    start_rate="$(awk \
-        -v t="$tokens" \
-        -v anchor="${AF_CLICKS_RATE:-25}" \
-        -v at="${AF_CLICKS_RATE_AT:-50}" \
-        -v g="${AF_CLICKS_RATE_GROWTH:-4}" \
-        'BEGIN {
-            r = anchor + g * log(t / at) / log(2)
-            if (r < 5) r = 5
-            printf "%.2f", r
-        }')"
-    awk -v r="$start_rate" -v cd="$click_dur" 'BEGIN {
-        g = 1/r - cd
-        if (g < 0.001) g = 0.001
-        printf "%.4f", g
-    }'
-}
-
-# af_render_clicks TOKENS OUTFILE
-# Synthesize the token-scaled glassy click sequence to OUTFILE (mono 44.1k).
-# Premium tuning vs the old inline version:
-#   - softer per-click fades (fade q) to remove ticks/clicks-on-clicks
-#   - gentle high-shelf roll-off (lowpass) to tame fizz
-#   - reverb with short pre-delay + lower wet, then normalise with headroom
-#
-# Scaling: ease-out gap growth quadratic in elapsed time (4x at the tail),
-# duration/rate curve from af_clicks_duration / af_clicks_base_gap.
-af_render_clicks() {
-    local tokens="$1" outfile="$2"
-    # Guard: non-positive tokens produce no click loop iterations, which
-    # would leave the concat glob matching nothing (a hard error). Emit a
-    # short valid silent WAV instead so callers always get a playable file.
-    if ! awk -v t="$tokens" 'BEGIN { exit !(t > 0) }' 2>/dev/null; then
-        sox -n -r 44100 -c 1 "$outfile" trim 0 0.05 2>/dev/null
-        return 0
-    fi
-    local tmpdir; tmpdir="$(mktemp -d)"
-    local max_dur; max_dur="$(af_clicks_duration "$tokens")"   # existing rate curve
-    local base_gap; base_gap="$(af_clicks_base_gap "$tokens")" # existing
-    local click_dur="$AF_CLICK_DUR" t=0 i=0 lo hi sh gap d
-    while (( $(awk -v t="$t" -v m="$max_dur" 'BEGIN{print (t<m)?1:0}') )); do
-        lo=$(( 5050 + RANDOM % 301 - 150 ))
-        hi=$(( 10000 + RANDOM % 501 - 250 ))
-        sh=$(( 3500 + RANDOM % 401 - 200 ))
-        gap="$(awk -v bg="$base_gap" -v t="$t" -v m="$max_dur" 'BEGIN{r=t/m;printf "%.4f", bg*(1+r*r*4)}')"
-        d="$tmpdir/c$(printf '%03d' "$i")"
-        sox -n -r 44100 -c 1 "${d}_lo.wav" synth "$click_dur" sine "$lo" fade q 0.0004 "$click_dur" 0.015 vol 0.018 2>/dev/null
-        sox -n -r 44100 -c 1 "${d}_hi.wav" synth "$click_dur" sine "$hi" fade q 0.0004 "$click_dur" 0.008 vol 0.012 2>/dev/null
-        sox -n -r 44100 -c 1 "${d}_sh.wav" synth "$click_dur" sine "$sh" fade q 0.0004 "$click_dur" 0.006 vol 0.010 2>/dev/null
-        sox -n -r 44100 -c 1 "${d}_n.wav"  synth "$click_dur" pinknoise fade q 0.0004 "$click_dur" 0.010 lowpass 6000 vol 0.020 2>/dev/null
-        sox -m "${d}_lo.wav" "${d}_hi.wav" "${d}_sh.wav" "${d}_n.wav" "${d}.wav" pad 0 "$gap" 2>/dev/null
-        t="$(awk -v t="$t" -v g="$gap" -v c="$click_dur" 'BEGIN{printf "%.4f", t+g+c}')"
-        i=$((i + 1))
-    done
-    sox "$tmpdir"/c???.wav "$tmpdir/full.wav" 2>/dev/null
-    # premium bus: roll off the piercing top (7.5kHz), gentle short-predelay
-    # reverb, then bring the whole click bed DOWN to a quiet -20 dBFS peak so
-    # it sits under the event sounds instead of shouting over them.
-    sox "$tmpdir/full.wav" "$outfile" lowpass 7500 reverb 22 55 60 100 8 0 gain -n -20 2>/dev/null
-    rm -rf "$tmpdir"
-}
-
-# Generate and play an ease-out click sequence proportional to token count.
-# Sound: glassy tri-tone (lo/hi/shimmer sines) + filtered pinknoise friction
-# + reverb. Glassy sci-fi aesthetic. See af_render_clicks for the synth.
-#
-# Usage: af_play_clicks <tokens>
-af_play_clicks() {
-    local tokens="${1:-0}"
-    [ "$tokens" -le 0 ] 2>/dev/null && return 0
-    [ "$AF_CLICKS_ENABLED" = "true" ] || return 0
-    command -v sox >/dev/null 2>&1 || return 0
-
-    local _af_click_tmp
-    _af_click_tmp="$(mktemp --suffix=.wav)"
-    af_render_clicks "$tokens" "$_af_click_tmp"
-    paplay "$_af_click_tmp" 2>/dev/null || true
-    rm -f "$_af_click_tmp"
 }
