@@ -121,14 +121,37 @@ Per event:
 1. Resolve event → absolute WAV path via existing `lib.sh` logic (theme +
    subtype + `off` gate — unchanged).
 2. If `ENABLED=false` or the resolved sound is `off`: send nothing, exit.
-3. Otherwise send the absolute WAV path to the daemon socket.
-4. If no daemon is running: spawn it detached (`setsid`), guarded by a
+3. Otherwise run `af-soundd play` under the **bare system `python3`**
+   (stdlib only — `socket`/`os`/`fcntl`), which connects to the daemon
+   socket and sends the path.
+4. If no daemon is running: `play` spawns it detached (`setsid` +
+   double-fork) via `uv run --script af-soundd daemon …`, guarded by a
    `flock` so concurrent agents cannot race two daemons into existence.
-5. If runtime deps are missing (no python3 / sounddevice / soundfile /
-   numpy): fall back to `paplay <path>` (today's behaviour). The dependency
-   probe result is cached so it is not re-run every event.
+5. If `uv` is absent (or delivery fails): fall back to `paplay <path>`
+   (today's behaviour). The `uv` probe result is cached.
 
-### 2.2 `af-soundd` (daemon — python + sounddevice)
+### 2.2 Dependency model — uv + PEP 723 (no managed venv)
+
+The daemon's python deps (`sounddevice`, `soundfile`, `numpy`) are declared
+as **PEP 723 inline script metadata** at the top of `af-soundd`:
+
+```python
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["sounddevice", "soundfile", "numpy"]
+# ///
+```
+
+The daemon is launched with `uv run --script af-soundd daemon …`; uv builds
+and **caches** an ephemeral environment (`~/.cache/uv`) from that block —
+no venv to create or manage, no bootstrap step. The **client** path
+(`play`, and the socket send) imports only stdlib, so it runs under bare
+`python3` with zero deps — that is the per-event hot path. numpy et al. are
+imported lazily inside daemon-only functions, so `python3 af-soundd play`
+never touches them. Net runtime dependency added: **`uv`** (plus a
+near-universal `python3`).
+
+### 2.3 `af-soundd` daemon behaviour
 
 - Listens on a Unix domain socket at
   `$XDG_RUNTIME_DIR/audio-feedback.sock` (per-user, tmpfs, auto-cleaned).
@@ -143,20 +166,20 @@ Per event:
 - Self-exits after `DAEMON_IDLE_TIMEOUT` seconds with no events, releasing
   the PipeWire client and returning idle footprint to zero.
 
-### 2.3 IPC message format
+### 2.4 IPC message format
 
 One absolute WAV path per line, newline-terminated. The daemon is
 deliberately dumb: it has zero config knowledge and only plays the paths it
 is given. A `quit` control verb may be added later; not required for 1.0.0.
 
-### 2.4 Data flow
+### 2.5 Data flow
 
 ```
-hook event -> lib.sh resolves path -> socket -> daemon mixes -> 1 PipeWire stream
-                                       |
-                                       +-- (no daemon) --> spawn detached (flock)
-                                       |
-                                       +-- (deps absent) --> paplay fallback
+hook event -> lib.sh resolves path -> python3 af-soundd play -> socket -> daemon mixes -> 1 PipeWire stream
+                                                                 |
+                                                                 +-- (no daemon) --> uv run --script daemon (flock)
+                                                                 |
+                                                                 +-- (no uv / send fails) --> paplay fallback
 ```
 
 ---
@@ -178,18 +201,20 @@ Stored in `~/.claude/.audio-feedback-config`, validated by `config.sh`.
 Each step degrades gracefully; the plugin is never silent:
 
 1. `DAEMON_ENABLED=false` -> `paplay` per event.
-2. python3 / sounddevice / soundfile / numpy missing -> `paplay` per event
-   (probe cached).
+2. `uv` missing -> `paplay` per event (probe cached).
 3. `$XDG_RUNTIME_DIR` unset -> `paplay` per event (no socket home).
 4. Socket connect fails after spawn + retry -> `paplay` that one event,
    continue.
 
 ### 3.3 Performance & resource profile
 
-- **Startup cost:** the first event in an idle period pays daemon spawn
-  (~150-250ms python start). It is backgrounded and does not block the hook.
-  Subsequent events hit the live daemon instantly; during a multi-agent
-  burst the daemon is already warm.
+- **Startup cost:** the first event in an idle period pays daemon spawn.
+  On a warm uv cache this is ~200-400ms (`uv run` resolve-from-cache +
+  python start); on a **cold** uv cache the first ever spawn also downloads
+  the wheels (seconds, one time). Spawn is backgrounded and does not block
+  the hook. A `/audio-feedback setup` pre-warms the cache via
+  `uv run --script af-soundd selftest`. Subsequent events hit the live
+  daemon instantly; during a multi-agent burst the daemon is already warm.
 - **Idle:** zero footprint — the daemon has exited.
 - **Active:** one python process (~25-40MB RSS) + one PipeWire client,
   regardless of agent count. 10 agents -> 1 daemon, not 10 `paplay`.
@@ -207,10 +232,12 @@ Real audio output is not CI-testable; test the logic around it.
 | `test_daemon.sh` | spawn-if-absent; concurrent connects -> exactly one daemon (flock); send path -> daemon ACKs receipt; idle timeout -> self-exit; deps-absent -> fallback selected |
 | `shellcheck` gate | all `.sh` clean |
 
-- **Daemon tests avoid real audio:** run the daemon against a null/dummy
-  output (sounddevice null device, or a `--no-audio` test flag that skips
-  the stream but exercises socket + lifecycle + mixing math). This verifies
-  process-collapse, idle-exit, and voice-cap logic without a sound card.
+- **Daemon tests avoid real audio:** run the daemon with a `--no-audio`
+  flag that skips the stream but exercises socket + lifecycle + mixing math,
+  and a `selftest` subcommand for the pure mixer logic. Both run via
+  `uv run --script af-soundd …`; tests `[SKIP]` cleanly when `uv` is
+  unavailable. This verifies process-collapse, idle-exit, and voice-cap
+  logic without a sound card.
 - **Migration check:** after the move, assert
   `sound-theme/default/sounds/stop.wav` resolves and no code references the
   old `sounds/<theme>/` path.
@@ -221,7 +248,7 @@ Real audio output is not CI-testable; test the logic around it.
 
 - `DAEMON_MAX_VOICES` default value — to tune.
 - Exact daemon spawn/retry/backoff timing constants.
-- Whether the dependency probe cache lives in `$XDG_RUNTIME_DIR` or is
+- Whether the `uv`-present probe result is cached in `$XDG_RUNTIME_DIR` or
   re-derived per hook invocation.
 
 ## Deferred to Spec B
