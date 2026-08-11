@@ -18,6 +18,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   arm used `local` at top-level script scope, which bash rejects
   (`local: can only be used in a function`), aborting the write. (#41)
 
+### Added
+- Single-process playback daemon (`bin/af-soundd`): holds one persistent
+  PipeWire client and mixes all event sounds, so N concurrent agents
+  produce one player process instead of N `paplay` processes. The per-event
+  client is stdlib-only under bare `python3`; the daemon's deps
+  (sounddevice/soundfile/numpy) are PEP 723 inline metadata supplied by
+  `uv run --script` (no venv). Auto-spawns on first event, self-exits after
+  `DAEMON_IDLE_TIMEOUT`. Config: `DAEMON_ENABLED`, `DAEMON_IDLE_TIMEOUT`,
+  `DAEMON_MAX_VOICES`. Falls back to `paplay` when `uv` is unavailable.
+
+### Changed
+- Sound themes now live under `sound-theme/<theme>/{sounds,src}` with a
+  `theme.json` metadata file (freedesktop-inspired layout; Claude event
+  names kept). Existing `sounds/<theme>/` is migrated.
+
+### Removed
+- Click-sounds subsystem and all `CLICKS_*` config keys. `sox` is no longer
+  a runtime dependency. Stale `CLICKS_*` lines in existing configs are
+  ignored.
+
 ## [0.2.2] - 2026-04-15
 
 ### Added

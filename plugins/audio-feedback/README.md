@@ -22,6 +22,7 @@ Registers hooks on all 8 Claude Code events. Each event maps to a sound file (or
 |---|---|---|
 | Linux + PipeWire | `paplay --version` | Required for all sounds |
 | jq | `jq --version` | Optional — enables subtype-specific sounds (per-tool, per-notification) |
+| uv | `uv --version` | Optional — enables the single-process playback daemon (supplies its python deps via PEP 723); without it, falls back to paplay per event |
 
 ## Command
 
@@ -64,6 +65,9 @@ Global config: `~/.claude/.audio-feedback-config`
 | `SUBAGENT_STOP_SOUND` | `off` | Subagent finished |
 | `PRE_TOOL_USE_SOUND` | `off` | Before tool call |
 | `POST_TOOL_USE_SOUND` | `off` | After tool call |
+| `DAEMON_ENABLED` | `true` | Use the resident playback daemon when available |
+| `DAEMON_IDLE_TIMEOUT` | `30` | Seconds of inactivity before the daemon self-exits |
+| `DAEMON_MAX_VOICES` | `8` | Max concurrent mixed voices in the daemon |
 
 Set any event to `off` to silence it. Sound values are filenames (without `.wav`) from the active theme directory.
 
@@ -92,6 +96,10 @@ To create a custom theme:
 3. Set `THEME=my-theme` in config
 
 Missing sound files are a silent no-op — you don't need all 8 files in a theme.
+
+## Playback daemon
+
+A single resident `af-soundd` process can hold one PipeWire client and mix all event sounds together, instead of spawning a separate `paplay` process per event. It auto-spawns on the first event (via `uv run --script`, which supplies its python dependencies through PEP 723 inline metadata — no venv needed) and self-exits after `DAEMON_IDLE_TIMEOUT` seconds of inactivity. This collapses N concurrent agents each firing sounds into one player process and one PipeWire client, instead of N separate `paplay` calls. The per-event client itself is stdlib-only and runs under bare `python3`; when `uv` is absent the plugin falls back to `paplay` per event as before. The first spawn on a cold `uv` cache downloads wheels once, adding a short delay — pre-warm it ahead of time with `uv run --script bin/af-soundd selftest`.
 
 ## Coexistence with TTS Plugin
 
