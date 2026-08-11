@@ -55,4 +55,21 @@ if [ "${n:-0}" -le 2 ]; then ok "single daemon under concurrency (n=${n:-0})"; e
 sleep 3
 if pgrep -f -- "af-soundd daemon --socket $SOCK2" >/dev/null; then bad "concurrent daemon idle-exited"; else ok "concurrent daemon idle-exited"; fi
 
+# Fallback: DAEMON_ENABLED=false uses paplay, not the daemon.
+STUB="/tmp/aftest-stub"; rm -rf "$STUB"; mkdir -p "$STUB"
+cat >"$STUB/paplay" <<EOF
+#!/bin/bash
+echo "PAPLAY \$*" >> /tmp/aftest-calls.log
+EOF
+chmod +x "$STUB/paplay"
+: > /tmp/aftest-calls.log
+CFG3=/tmp/aftest-cfg3; rm -rf "$CFG3"; mkdir -p "$CFG3/.claude"
+printf 'DAEMON_ENABLED=false\n' > "$CFG3/.claude/.audio-feedback-config"
+HOME="$CFG3" PATH="$STUB:$PATH" bash -c "
+  source '$PLUGIN/scripts/lib.sh'
+  af_load_config
+  af_dispatch_play '$WAV'
+"
+if grep -q "PAPLAY $WAV" /tmp/aftest-calls.log; then ok "DAEMON_ENABLED=false falls back to paplay"; else bad "DAEMON_ENABLED=false falls back to paplay"; fi
+
 exit "$fail"

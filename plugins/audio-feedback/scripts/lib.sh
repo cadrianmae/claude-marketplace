@@ -184,6 +184,40 @@ _af_tool_group() {
     esac
 }
 
+# Absolute path to the daemon socket, or empty if no runtime dir.
+_af_daemon_socket() {
+    [ -n "${XDG_RUNTIME_DIR:-}" ] || return 0
+    printf '%s/audio-feedback.sock' "$XDG_RUNTIME_DIR"
+}
+
+# Path to the af-soundd python tool (sibling bin/).
+_af_soundd() {
+    printf '%s' "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../bin/af-soundd"
+}
+
+# Daemon usable? Needs python3 (stdlib client) + uv (to spawn the daemon).
+_af_deps_ok() {
+    command -v python3 >/dev/null 2>&1 && command -v uv >/dev/null 2>&1
+}
+
+# Play one resolved WAV. Prefer the single daemon; fall back to paplay.
+# Ladder: daemon disabled -> no runtime dir -> no python3/uv -> delivery
+# failure. Any miss falls through to paplay so we are never silent.
+af_dispatch_play() {
+    local wav="$1" sock
+    [ -f "$wav" ] || return 0
+    sock="$(_af_daemon_socket)"
+    if [ "${AF_DAEMON_ENABLED:-true}" = "true" ] && [ -n "$sock" ] && _af_deps_ok; then
+        if python3 "$(_af_soundd)" play \
+                --socket "$sock" --path "$wav" \
+                --idle-timeout "${AF_DAEMON_IDLE_TIMEOUT:-30}" \
+                --max-voices "${AF_DAEMON_MAX_VOICES:-8}" 2>/dev/null; then
+            return 0
+        fi
+    fi
+    paplay "$wav" 2>/dev/null || true
+}
+
 # Play the sound for a given event. Blocks until done.
 # Silent no-op if sound is "off" or file is missing.
 af_play_event() {
@@ -200,7 +234,7 @@ af_play_event() {
     local sound_file="$sounds_dir/${sound}.wav"
     [ -f "$sound_file" ] || return 0
 
-    paplay "$sound_file" 2>/dev/null || true
+    af_dispatch_play "$sound_file"
 }
 
 # Play with subtype resolution. Tries a subtype-specific sound file first
@@ -246,7 +280,7 @@ af_play_event_with_subtype() {
 
         local subtype_file="$sounds_dir/${norm_event}-${norm_subtype}.wav"
         if [ -f "$subtype_file" ]; then
-            paplay "$subtype_file" 2>/dev/null || true
+            af_dispatch_play "$subtype_file"
             return 0
         fi
     fi
@@ -255,5 +289,5 @@ af_play_event_with_subtype() {
     local sound_file="$sounds_dir/${sound}.wav"
     [ -f "$sound_file" ] || return 0
 
-    paplay "$sound_file" 2>/dev/null || true
+    af_dispatch_play "$sound_file"
 }
