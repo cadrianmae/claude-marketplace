@@ -23,7 +23,7 @@ _af_sounds_dir() {
 
 # Default sound for each event. "off" = no sound for that event.
 # Default theme and per-event sounds. Theme is the subdirectory name
-# under sounds/ (e.g. "default"). Sound values are WAV filenames
+# under sound-theme/ (e.g. "default"). Sound values are WAV filenames
 # (without .wav) inside that theme directory. "off" = no sound.
 af_default_theme="default"
 af_default_enabled="true"
@@ -246,7 +246,7 @@ af_play_event() {
 # by replacing underscores with hyphens: "permission_prompt" -> "permission-prompt".
 #
 # Resolution order:
-# 1. sounds/<theme>/<event>-<normalized-subtype>.wav  (if file exists)
+# 1. sound-theme/<theme>/sounds/<event>-<normalized-subtype>.wav  (if file exists)
 # 2. Config-based generic sound via af_sound_for_event (existing behavior)
 af_play_event_with_subtype() {
     local event="$1"

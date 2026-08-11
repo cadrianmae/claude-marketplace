@@ -11,7 +11,7 @@ Registers hooks on all 8 Claude Code events. Each event maps to a sound file (or
 
 **Key features:**
 - **Per-event sounds** — each hook event has its own configurable sound
-- **Theme system** — sounds live in `sounds/<theme>/` subdirectories, switchable via `THEME` config
+- **Theme system** — sounds live in `sound-theme/<theme>/sounds/` subdirectories, switchable via `THEME` config
 - **Master switch** — `ENABLED=true/false` silences everything at once
 - **Lo-fi minimal default theme** — 8 sounds with reverb, 0dB peak, mono 44.1kHz
 - **Independent of tts** — purely non-speech audio cues
@@ -55,7 +55,7 @@ Global config: `~/.claude/.audio-feedback-config`
 
 | Key | Default | Purpose |
 |---|---|---|
-| `THEME` | `default` | Sound theme (subdirectory of `sounds/`) |
+| `THEME` | `default` | Sound theme (subdirectory of `sound-theme/`) |
 | `ENABLED` | `true` | Master switch |
 | `STOP_SOUND` | `stop` | Response complete |
 | `NOTIFICATION_SOUND` | `notification` | Cron/alert fired |
@@ -84,16 +84,17 @@ Set any event to `off` to silence it. Sound values are filenames (without `.wav`
 | `pre-tool-use.wav` | PreToolUse | Barely-there 500Hz tick | 0.53s |
 | `post-tool-use.wav` | PostToolUse | Short 700Hz tick | 0.54s |
 
-All sounds: lo-fi minimal aesthetic, sox synth with reverb, 0.5s decay tail, normalized to 0dB peak, mono 44.1kHz.
+All sounds: lo-fi minimal aesthetic, synthesised with reverb, 0.5s decay tail, normalized to 0dB peak, mono 44.1kHz.
 
 ## Themes
 
-Sounds are organized in `sounds/<theme>/` subdirectories. The `THEME` config key selects which directory to use.
+Sounds are organized in `sound-theme/<theme>/` subdirectories. The `THEME` config key selects which directory to use.
 
 To create a custom theme:
-1. Create `sounds/my-theme/` in the plugin directory
-2. Add WAV files named after hook events (e.g. `stop.wav`, `notification.wav`)
-3. Set `THEME=my-theme` in config
+1. Create `sound-theme/my-theme/` in the plugin directory
+2. Add a `sounds/` subdirectory with WAV files named after hook events (e.g. `sounds/stop.wav`, `sounds/notification.wav`)
+3. Add a `theme.json` (`{"name": "...", "comment": "..."}`) — without it the theme is not listed or selectable
+4. Set `THEME=my-theme` in config
 
 Missing sound files are a silent no-op — you don't need all 8 files in a theme.
 

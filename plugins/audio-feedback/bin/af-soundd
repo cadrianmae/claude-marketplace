@@ -209,8 +209,10 @@ def _spawn_daemon(args):
         if pid == 0:
             os.setsid()
             os.dup2(devnull, 0); os.dup2(devnull, 1); os.dup2(devnull, 2)
-            os.execv(cmd[0], cmd)
-            os._exit(127)
+            try:
+                os.execv(cmd[0], cmd)
+            except BaseException:
+                os._exit(127)
         os.close(devnull)
         # Hold the lock until the daemon is reachable (~15s covers a cold uv
         # cache). Queued callers then find it up and skip their own spawn.

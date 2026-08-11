@@ -55,7 +55,7 @@ Subtype-specific sounds (e.g. `notification-permission.wav`, `post-tool-use-obse
 
 ## Bundled Sounds — Default Theme
 
-Lo-fi minimal aesthetic, sox-generated, 0.5s reverb tail, normalised to 0dB peak, mono 44.1 kHz.
+Lo-fi minimal aesthetic, 0.5s reverb tail, normalised to 0dB peak, mono 44.1 kHz.
 
 ### Generic event sounds
 
@@ -112,7 +112,7 @@ Play each configured sound that isn't `off` in sequence so the user can hear the
 cfg=$(audio-feedback-config 2>/dev/null)
 plugin_root=$(dirname "$(dirname "$(readlink -f "$(which audio-feedback-config)")")")
 theme=$(printf '%s' "$cfg" | awk -F= '/^  THEME=/{print $2}')
-sounds_dir="$plugin_root/sounds/${theme:-default}"
+sounds_dir="$plugin_root/sound-theme/${theme:-default}/sounds"
 
 for key in STOP_SOUND NOTIFICATION_SOUND PRE_COMPACT_SOUND USER_PROMPT_SOUND \
            SESSION_START_SOUND SUBAGENT_STOP_SOUND PRE_TOOL_USE_SOUND POST_TOOL_USE_SOUND; do
