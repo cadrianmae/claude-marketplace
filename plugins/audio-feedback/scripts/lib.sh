@@ -27,6 +27,9 @@ _af_sounds_dir() {
 # (without .wav) inside that theme directory. "off" = no sound.
 af_default_theme="default"
 af_default_enabled="true"
+af_default_daemon_enabled="true"
+af_default_daemon_idle_timeout="30"
+af_default_daemon_max_voices="8"
 af_default_stop="stop"
 af_default_notification="notification"
 af_default_pre_compact="pre-compact"
@@ -45,6 +48,9 @@ af_load_config() {
 
     AF_THEME="$af_default_theme"
     AF_ENABLED="$af_default_enabled"
+    AF_DAEMON_ENABLED="$af_default_daemon_enabled"
+    AF_DAEMON_IDLE_TIMEOUT="$af_default_daemon_idle_timeout"
+    AF_DAEMON_MAX_VOICES="$af_default_daemon_max_voices"
     AF_STOP_SOUND="$af_default_stop"
     AF_NOTIFICATION_SOUND="$af_default_notification"
     AF_PRE_COMPACT_SOUND="$af_default_pre_compact"
@@ -66,6 +72,9 @@ af_load_config() {
         case "$key" in
             THEME) AF_THEME="$value" ;;
             ENABLED) AF_ENABLED="$value" ;;
+            DAEMON_ENABLED) AF_DAEMON_ENABLED="$value" ;;
+            DAEMON_IDLE_TIMEOUT) AF_DAEMON_IDLE_TIMEOUT="$value" ;;
+            DAEMON_MAX_VOICES) AF_DAEMON_MAX_VOICES="$value" ;;
             STOP_SOUND) AF_STOP_SOUND="$value" ;;
             NOTIFICATION_SOUND) AF_NOTIFICATION_SOUND="$value" ;;
             PRE_COMPACT_SOUND) AF_PRE_COMPACT_SOUND="$value" ;;
@@ -88,6 +97,9 @@ af_ensure_config() {
     cat > "$cfg" <<EOF
 THEME=$af_default_theme
 ENABLED=$af_default_enabled
+DAEMON_ENABLED=$af_default_daemon_enabled
+DAEMON_IDLE_TIMEOUT=$af_default_daemon_idle_timeout
+DAEMON_MAX_VOICES=$af_default_daemon_max_voices
 STOP_SOUND=$af_default_stop
 NOTIFICATION_SOUND=$af_default_notification
 PRE_COMPACT_SOUND=$af_default_pre_compact
