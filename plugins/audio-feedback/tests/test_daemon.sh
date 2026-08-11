@@ -21,14 +21,14 @@ log="/tmp/aftest-daemon.log"; : > "$log"
 uv run --script "$SOUNDD" daemon --socket "$SOCK" --idle-timeout 2 --no-audio >"$log" 2>&1 &
 dpid=$!
 for _ in $(seq 1 100); do grep -q READY "$log" 2>/dev/null && break; sleep 0.1; done
-grep -q READY "$log" && ok "daemon READY" || bad "daemon READY"
+if grep -q READY "$log"; then ok "daemon READY"; else bad "daemon READY"; fi
 
 printf '%s\n' "/tmp/does-not-matter.wav" | python3 "$SOUNDD" raw-send --socket "$SOCK"
 for _ in $(seq 1 30); do grep -q 'PLAY ' "$log" 2>/dev/null && break; sleep 0.1; done
-grep -q 'PLAY /tmp/does-not-matter.wav' "$log" && ok "daemon received PLAY" || bad "daemon received PLAY"
+if grep -q 'PLAY /tmp/does-not-matter.wav' "$log"; then ok "daemon received PLAY"; else bad "daemon received PLAY"; fi
 
 for _ in $(seq 1 80); do kill -0 "$dpid" 2>/dev/null || break; sleep 0.1; done
 if kill -0 "$dpid" 2>/dev/null; then bad "daemon idle-exited"; kill "$dpid" 2>/dev/null; else ok "daemon idle-exited"; fi
-grep -q IDLE-EXIT "$log" && ok "logged IDLE-EXIT" || bad "logged IDLE-EXIT"
+if grep -q IDLE-EXIT "$log"; then ok "logged IDLE-EXIT"; else bad "logged IDLE-EXIT"; fi
 
 exit "$fail"
