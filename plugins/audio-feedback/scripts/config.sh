@@ -32,11 +32,7 @@ if [ $# -eq 0 ]; then
     echo "  POST_TOOL_USE_SOUND=$AF_POST_TOOL_USE_SOUND"
     echo
     echo "Available sounds: $(af_list_sounds | tr '\n' ' ')"
-    # List available themes (subdirectories of sounds/)
-    themes_dir="$(_af_sounds_base)"
-    if [ -d "$themes_dir" ]; then
-        echo "Available themes: $(find "$themes_dir" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | tr '\n' ' ')"
-    fi
+    echo "Available themes: $(af_list_themes | tr '\n' ' ')"
     echo "Update with: /audio-feedback config KEY=VALUE"
     exit 0
 fi
@@ -53,10 +49,8 @@ for arg in "$@"; do
 
     case "$key" in
         THEME)
-            themes_dir="$(_af_sounds_base)"
-            if [ ! -d "$themes_dir/$value" ]; then
-                echo "Error: theme '$value' not found in $themes_dir" >&2
-                echo "Available: $(find "$themes_dir" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | tr '\n' ' ')" >&2
+            if [ ! -f "$(_af_sounds_base)/$value/theme.json" ]; then
+                echo "Error: theme '$value' not found. Available: $(af_list_themes | tr '\n' ' ')" >&2
                 exit 1
             fi
             ;;

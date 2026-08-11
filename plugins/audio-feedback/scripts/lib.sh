@@ -8,15 +8,15 @@ af_config_file() {
     printf '%s' "${HOME}/.claude/.audio-feedback-config"
 }
 
-# Resolve the plugin's sounds base directory (contains theme subdirectories).
+# Resolve the plugin's sound-theme base directory (contains theme subdirs).
 _af_sounds_base() {
-    printf '%s' "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../sounds"
+    printf '%s' "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../sound-theme"
 }
 
-# Resolve the active theme's sounds directory.
+# Resolve the active theme's rendered-sounds directory.
 # Must call af_load_config first so AF_THEME is set.
 _af_sounds_dir() {
-    printf '%s' "$(_af_sounds_base)/${AF_THEME:-default}"
+    printf '%s' "$(_af_sounds_base)/${AF_THEME:-default}/sounds"
 }
 
 # ---- config -------------------------------------------------------------
@@ -114,6 +114,18 @@ af_write_config() {
 }
 
 # ---- sounds -------------------------------------------------------------
+
+# List available theme names (one per line): subdirs of sound-theme/
+# that contain a theme.json.
+af_list_themes() {
+    local base f
+    base="$(_af_sounds_base)"
+    [ -d "$base" ] || return 0
+    for f in "$base"/*/theme.json; do
+        [ -e "$f" ] || continue
+        basename "$(dirname "$f")"
+    done | sort
+}
 
 # List available sound names (one per line).
 af_list_sounds() {
