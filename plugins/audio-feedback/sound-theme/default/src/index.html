@@ -196,7 +196,7 @@
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--color-bg); color: var(--color-text);
-         font-family: var(--font-body); padding: var(--space-3); }
+         font-family: var(--font-body); padding: var(--space-3); padding-bottom: 72px; }
   header { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
   h1 { font-family: var(--font-heading); font-size: var(--size-h2); margin: 0; }
   .status { display: flex; align-items: center; gap: var(--space-0-5); color: var(--color-subtext);
@@ -223,6 +223,13 @@
   .badge.swoosh { color: var(--color-primary); }
   canvas { width: 100%; height: 48px; display: block; margin: var(--space-1) 0; }
   .params { color: var(--color-subtext); font-size: var(--size-caption); font-family: monospace; }
+  .card audio { width: 100%; height: 32px; margin-top: var(--space-1); color-scheme: dark; }
+  #transport { position: fixed; bottom: 0; left: 0; right: 0; display: flex; align-items: center;
+               gap: var(--space-1); background: var(--color-bg-recess); border-top: 1px solid var(--color-border);
+               padding: var(--space-1) var(--space-2); z-index: 10; }
+  #transport audio { flex: 1; height: 36px; color-scheme: dark; }
+  #transport .np { color: var(--color-text); font-family: monospace; min-width: 16ch;
+                   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 </style>
 </head>
 <body>
@@ -233,10 +240,15 @@
 </header>
 <div id="banner"></div>
 <div id="root"></div>
+<div id="transport">
+  <button id="prev" title="previous">⏮</button>
+  <button id="next" title="next">⏭</button>
+  <span class="np" id="nowplaying">—</span>
+  <audio id="mainplayer" controls preload="none"></audio>
+</div>
 <script>
 const ctx = new (window.AudioContext || window.webkitAudioContext)();
 let version = 0;
-const buffers = {};   // name -> AudioBuffer
 
 const GROUPS = [
   ["base", n => !n.includes("-") || ["user-prompt-submit","pre-tool-use","post-tool-use","pre-compact","subagent-stop","session-start"].includes(n)],
@@ -247,12 +259,11 @@ const GROUPS = [
 ];
 const BASE = ["session-start","user-prompt-submit","pre-tool-use","notification","pre-compact","post-tool-use","subagent-stop","stop"];
 
-async function loadBuffer(name) {
-  const res = await fetch(`/sounds/${name}.wav?v=${version}`);
-  const buf = await res.arrayBuffer();
-  buffers[name] = await ctx.decodeAudioData(buf);
-  return buffers[name];
-}
+const cards = {};        // name -> {el, canvas, audio, params}
+let orderedNames = [];   // playback order across groups
+let curIdx = -1;
+let playingAll = false;  // transport auto-advances only during "play all"
+const main = () => document.getElementById("mainplayer");
 
 function drawWave(canvas, audiobuf) {
   const w = canvas.width = canvas.clientWidth * devicePixelRatio;
@@ -271,13 +282,11 @@ function drawWave(canvas, audiobuf) {
   g.stroke();
 }
 
-function play(name, card) {
-  const src = ctx.createBufferSource();
-  src.buffer = buffers[name];
-  src.connect(ctx.destination);
-  src.start();
-  if (card) { card.classList.add("playing"); src.onended = () => card.classList.remove("playing"); }
-  return src;
+async function drawWaveInto(canvas, name) {
+  try {
+    const res = await fetch(`/sounds/${name}.wav?v=${version}`);
+    drawWave(canvas, await ctx.decodeAudioData(await res.arrayBuffer()));
+  } catch (e) { /* transient 404 during a save race -- keep the prior waveform */ }
 }
 
 function paramText(p) {
@@ -287,47 +296,93 @@ function paramText(p) {
   return `${p.notes.join(" ")}${acc ? " · "+acc : ""}${lvl}`;
 }
 
-async function build(palette) {
-  const root = document.getElementById("root");
-  root.innerHTML = "";
+function highlight(name) {
+  Object.values(cards).forEach(c => c.el.classList.remove("playing"));
+  if (cards[name]) cards[name].el.classList.add("playing");
+}
+
+function loadInto(name, autoplay = true) {
+  curIdx = orderedNames.indexOf(name);
+  main().src = `/sounds/${name}.wav?v=${version}`;
+  document.getElementById("nowplaying").textContent = name;
+  highlight(name);
+  if (autoplay) main().play().catch(() => {});
+}
+
+function step(d) {
+  if (!orderedNames.length) return;
+  const i = (curIdx + d + orderedNames.length) % orderedNames.length;
+  loadInto(orderedNames[i]);
+}
+
+function orderedItems(palette) {
   const order = {}; BASE.forEach((n,i) => order[n] = i);
+  const groups = [];
   for (const [title, test] of GROUPS) {
     const items = palette.filter(p => test(p.name));
-    if (!items.length) continue;
-    if (title === "base") items.sort((a,b)=> (order[a.name]??99)-(order[b.name]??99));
+    if (title === "base") items.sort((a,b) => (order[a.name]??99)-(order[b.name]??99));
+    if (items.length) groups.push([title, items]);
+  }
+  return groups;
+}
+
+function makeCard(p) {
+  const el = document.createElement("div"); el.className = "card";
+  el.innerHTML = `<div class="name">${p.name} <span class="badge ${p.voice}">${p.voice}</span></div>
+    <canvas></canvas><div class="params"></div><audio controls preload="none"></audio>`;
+  const canvas = el.querySelector("canvas"), audio = el.querySelector("audio"), params = el.querySelector(".params");
+  params.textContent = paramText(p);
+  audio.src = `/sounds/${p.name}.wav?v=${version}`;
+  el.addEventListener("click", e => { if (e.target.tagName !== "AUDIO") { playingAll = false; loadInto(p.name); } });
+  cards[p.name] = { el, canvas, audio, params };
+  drawWaveInto(canvas, p.name);
+  return el;
+}
+
+function rebuild(groups) {
+  const root = document.getElementById("root"); root.innerHTML = "";
+  for (const k in cards) delete cards[k];
+  for (const [title, list] of groups) {
     const h = document.createElement("div"); h.className = "group-title"; h.textContent = title;
     const grid = document.createElement("div"); grid.className = "grid";
+    list.forEach(p => grid.append(makeCard(p)));
     root.append(h, grid);
-    for (const p of items) {
-      const card = document.createElement("div"); card.className = "card";
-      card.innerHTML = `<div class="name">${p.name} <span class="badge ${p.voice}">${p.voice}</span></div>
-        <canvas></canvas><div class="params">${paramText(p)}</div>`;
-      grid.append(card);
-      const canvas = card.querySelector("canvas");
-      try { await loadBuffer(p.name).then(b => drawWave(canvas, b)); }
-      catch (e) { card.querySelector(".params").textContent += " (load failed)"; }
-      card.onclick = () => play(p.name, card);
-    }
+  }
+}
+
+// Update existing cards in place (no DOM teardown -> no reload flicker).
+function updateInPlace(palette) {
+  for (const p of palette) {
+    const c = cards[p.name];
+    c.params.textContent = paramText(p);
+    // only reload a card's <audio> src if it isn't mid-playback (avoid interrupting)
+    if (c.audio.paused) c.audio.src = `/sounds/${p.name}.wav?v=${version}`;
+    drawWaveInto(c.canvas, p.name);
   }
 }
 
 async function refresh() {
   const palette = await (await fetch("/api/palette")).json();
-  await build(palette);
+  const groups = orderedItems(palette);
+  orderedNames = groups.flatMap(([, list]) => list.map(p => p.name));
+  const sameSet = Object.keys(cards).length === palette.length && palette.every(p => cards[p.name]);
+  if (sameSet) updateInPlace(palette); else rebuild(groups);
 }
 
-document.getElementById("playall").onclick = async () => {
-  for (const name of Object.keys(buffers)) {
-    const src = play(name); await new Promise(r => src.onended = r);
-  }
-};
+document.getElementById("prev").onclick = () => { playingAll = false; step(-1); };
+document.getElementById("next").onclick = () => { playingAll = false; step(1); };
+main().addEventListener("ended", () => {
+  if (playingAll && curIdx < orderedNames.length - 1) step(1);
+  else { playingAll = false; highlight(null); }
+});
+document.getElementById("playall").onclick = () => { playingAll = true; if (orderedNames.length) loadInto(orderedNames[0]); };
 
 const es = new EventSource("/events");
 es.onopen = () => { document.getElementById("dot").classList.remove("off"); document.getElementById("stat").textContent = "live"; };
 es.onerror = () => { document.getElementById("dot").classList.add("off"); document.getElementById("stat").textContent = "disconnected"; };
-es.addEventListener("reload", async e => {
+es.addEventListener("reload", e => {
   version = e.data; document.getElementById("banner").style.display = "none";
-  await refresh();
+  refresh();
 });
 es.addEventListener("error", e => {
   const b = document.getElementById("banner"); b.style.display = "block"; b.textContent = e.data;
