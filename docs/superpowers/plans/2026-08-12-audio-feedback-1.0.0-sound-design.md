@@ -16,7 +16,7 @@
 - **Note-map is law:** MIDI pitches + rhythm come from `note_map.json`, which mirrors the locked map exactly (session-start 48-52-55-58-60 rise; user-prompt 67; pre-tool-use 70; notification 60-67-70; pre-compact chord 43+46; post-tool-use 72; subagent-stop 64-60 fall; stop 72-71-67-64-60 fall).
 - **signalflow multi-render pattern (verified):** one `AudioGraph(config=AudioGraphConfig(sample_rate=44100), output_device="dummy")`; per bell `patch.play()` then `render_to_new_buffer(n)`, then `graph.clear()` before the next bell. Downmix stereo->mono with `np.asarray(buf.data).mean(axis=0)`.
 - **`.sh` shellcheck clean; `.py` importable and pytest-green.**
-- **Verification vs ear:** SDD's definition-of-done for sound tasks is "all expected files emitted AND `analyze.py` gates pass." Subjective timbre polish (final partial ratios, the 19 accent values, the accent level) is Mae's, done interactively later via the dev venv — NOT an SDD gate. Ship gate-passing, coherent defaults.
+- **Verification vs ear:** SDD's definition-of-done for sound tasks is "all expected files emitted AND `analyze.py` gates pass." SDD produces a functional, gate-passing *baseline* — coherent pitches + loudness, rough timbres. The subjective composing (final partial ratios, decays, reverb/EQ, the 19 accent values, the accent level) is a **collaborative post-SDD phase: Mae judges by ear, the assistant turns the knobs in the dev venv and re-renders** — NOT an SDD gate. Ship coherent, gate-passing defaults as the starting point to shape.
 - `.venv-gen/` is git-ignored.
 
 ## File Structure
