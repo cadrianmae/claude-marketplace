@@ -14,6 +14,7 @@ justfile: `just generate`, `just preview stop`, `just live stop notification`.
 
 Tuning knobs live in tuning.py. Synthesis in synth.py. Loudness in loudness.py.
 """
+import json
 import os
 import subprocess
 import sys
@@ -22,6 +23,7 @@ import time
 import theme
 import synth
 import loudness
+from variants import Sound
 
 PREVIEW_DIR = os.path.join(theme.HERE, ".preview")
 WATCH_FILES = ["tuning.py", "synth.py", "loudness.py", "theme.py", "variants.py"]
@@ -42,6 +44,37 @@ def _render_events(names: list[str] | None = None) -> dict[str, synth.Signal]:
         if db:
             sigs[name] = sig * (10 ** (db / 20))
     return sigs
+
+
+_NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+_ACCENT_KEYS = ("transpose", "brightness", "decay_scale", "detune_cents", "punch", "layer", "air_db")
+
+
+def midi_to_name(m: int) -> str:
+    return f"{_NOTE_NAMES[m % 12]}{m // 12 - 1}"
+
+
+def sound_params(name: str, sound: type[Sound]) -> dict[str, object]:
+    p: dict[str, object] = {"name": name, "voice": sound.voice, "level_db": sound.level_db}
+    if sound.voice == "swoosh":
+        p["swoosh_dir"] = sound.swoosh_dir
+    else:
+        p["notes"] = [midi_to_name(midi + sound.transpose) for midi, _ in sound.notes]
+        p["accents"] = {k: getattr(sound, k) for k in _ACCENT_KEYS
+                        if getattr(sound, k) != getattr(Sound, k)}
+    return p
+
+
+def cmd_serve_dir(out: str) -> None:
+    os.makedirs(out, exist_ok=True)
+    targets = theme.all_targets()
+    for name, sig in _render_events().items():
+        theme.write_wav(os.path.join(out, name + ".wav"), sig)
+    theme.write_wav(os.path.join(out, "subagent-accent.wav"), synth.render_subagent_accent())
+    palette = [sound_params(name, targets[name]) for name in targets]
+    with open(os.path.join(out, "palette.json"), "w") as f:
+        json.dump(palette, f, indent=2)
+    print(f"serve-dir: 28 wavs + palette.json -> {out}")
 
 
 def cmd_generate(argv: list[str]) -> None:
@@ -112,6 +145,10 @@ def cmd_live(names: list[str]) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
+    if "--serve-dir" in argv:
+        i = argv.index("--serve-dir")
+        cmd_serve_dir(argv[i + 1])
+        return 0
     if argv and argv[0] in ("generate", "preview", "live"):
         cmd, rest = argv[0], argv[1:]
     else:
