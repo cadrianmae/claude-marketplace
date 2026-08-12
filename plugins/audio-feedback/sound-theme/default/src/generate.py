@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.12,<3.13"
-# dependencies = ["signalflow", "numpy", "scipy"]
+# dependencies = ["signalflow==0.5.3", "numpy", "scipy"]  # 0.5.3 is the last x86_64 wheel
 # ///
 """Generate / preview the audio-feedback default theme (additive bell synthesis).
 

@@ -1,26 +1,22 @@
 # audio-feedback sound development
 # Run from this directory (plugins/audio-feedback). `just` lists recipes.
 
-src    := "sound-theme/default/src"
-sounds := "sound-theme/default/sounds"
-py     := src / ".venv-gen/bin/python"
+proj   := "sound-theme/default"
+src    := proj / "src"
+sounds := proj / "sounds"
+py     := proj / ".venv/bin/python"
 
 # list recipes
 default:
     @just --list
 
-# (re)create the dev venv (uv-managed Python 3.12 + signalflow/numpy/scipy)
+# sync the dev env from pyproject.toml (uv-managed Python 3.12 + signalflow/numpy/scipy + pytest)
 venv:
-    UV_PYTHON_PREFERENCE=only-managed uv venv --python 3.12 {{src}}/.venv-gen
-    UV_PYTHON_PREFERENCE=only-managed uv pip install --python {{src}}/.venv-gen signalflow numpy scipy pytest
+    cd {{proj}} && UV_PYTHON_PREFERENCE=only-managed uv sync
 
-# render the full palette to sounds/ (the real output)
+# render the full palette to sounds/ (always full: loudness is palette-normalized)
 generate:
     {{py}} {{src}}/generate.py
-
-# render one sound into sounds/
-one NAME:
-    {{py}} {{src}}/generate.py --only {{NAME}}
 
 # render + play one or more sounds to a temp dir (does NOT touch sounds/)
 preview +NAMES:

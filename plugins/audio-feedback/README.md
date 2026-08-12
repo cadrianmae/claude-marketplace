@@ -100,27 +100,31 @@ by ear.
 
 ## Regenerating sounds
 
-The palette is generated programmatically, not hand-mixed. Regenerate it with:
+The palette is generated programmatically, not hand-mixed. The generator is a uv
+project rooted at `sound-theme/default/` (deps in its `pyproject.toml`, pinned via
+`uv.lock`). Use the `justfile` in this directory:
 
 ```bash
-# One-time: dev venv for analyze.py (needs numpy/scipy; generate.py supplies
-# its own deps via PEP 723 + uv run --script, so it doesn't need this venv).
 cd plugins/audio-feedback
-uv venv sound-theme/default/src/.venv-gen
-uv pip install --python sound-theme/default/src/.venv-gen numpy scipy
-
-# Regenerate the full palette (renders into sound-theme/default/sounds/):
-UV_PYTHON_PREFERENCE=only-managed uv run --script \
-  sound-theme/default/src/generate.py
-
-# Verify the palette loudness gate (RMS spread <=3 dB, peak max <=-0.7 dBFS):
-sound-theme/default/src/.venv-gen/bin/python scripts/analyze.py --palette \
-  sound-theme/default/sounds
+just venv        # one-time: uv sync the dev env (Python 3.12 + signalflow/numpy/scipy)
+just generate    # render the full palette into sound-theme/default/sounds/
+just verify      # palette loudness gate (RMS spread <=3 dB, peak max <=-0.7 dBFS)
+just test        # note-map + generator tests
 ```
 
-Use `generate.py --only NAME` to re-render a single sound. Tuning (brightness, decay,
-levels) lives entirely in `generate.py` / `variants.py` - never loosen the loudness
-gate in `analyze.py` to make a bad render pass.
+Iterate on a single sound by ear:
+
+```bash
+just live stop notification   # watch the src files; re-render + play on save
+just preview pre-tool-use-network   # render + play once (temp; sounds/ untouched)
+just one stop                 # render just this one into sounds/
+```
+
+`just` (or `uv run` in `sound-theme/default/`) drives the synced venv; `generate.py`
+also carries PEP 723 metadata so `uv run --script src/generate.py` works standalone.
+Tuning lives in `sound-theme/default/src/` (`tuning.py` = the voice; `variants.py` =
+per-event note-map + accents) - never loosen the loudness gate in `analyze.py` to make
+a bad render pass.
 
 ## Themes
 
