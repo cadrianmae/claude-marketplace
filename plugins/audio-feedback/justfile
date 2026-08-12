@@ -26,6 +26,10 @@ preview +NAMES:
 live +NAMES:
     {{py}} {{src}}/generate.py live {{NAMES}}
 
+# live sound-preview dashboard (lumae Dusk) at http://127.0.0.1:8765
+serve:
+    {{py}} {{src}}/serve.py
+
 # play the current committed wav (no re-render)
 play NAME:
     paplay {{sounds}}/{{NAME}}.wav

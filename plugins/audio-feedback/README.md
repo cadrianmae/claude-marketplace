@@ -119,6 +119,10 @@ just live stop notification   # watch the src files; re-render + play on save
 just preview pre-tool-use-network   # render + play once (temp; sounds/ untouched)
 ```
 
+Or preview the whole palette in the browser (lumae Dusk), with live-reload on save:
+
+    just serve        # http://127.0.0.1:8765 — all sounds, waveforms, click to play
+
 `just` (or `uv run` in `sound-theme/default/`) drives the synced venv; `generate.py`
 also carries PEP 723 metadata so `uv run --script src/generate.py` works standalone.
 Tuning lives in `sound-theme/default/src/` (`tuning.py` = the voice; `variants.py` =
