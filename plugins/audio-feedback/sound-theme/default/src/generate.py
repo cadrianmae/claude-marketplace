@@ -96,6 +96,9 @@ def postprocess(sig, accent):
 
 
 PEAK_CEILING = 10 ** (-1 / 20)   # -1 dBFS, comfortably under the -0.7 dBFS gate
+CREST_TOLERANCE_DB = 1.0         # only touch files that deviate from the palette mean by more than this
+PEAK_GUARD_S = 0.015             # keep the transient (peak sample + this much after it) untouched
+CROSSFADE_S = 0.015              # smooth splice into the shaped tail, avoids a click at the guard boundary
 
 
 def _crest_db(sig):
@@ -105,16 +108,33 @@ def _crest_db(sig):
     return 20 * np.log10(peak / rms)
 
 
-def _shape(sig, p):
-    """Sign-preserving power-law dynamics shaper. p<1 gently compresses (boosts
-    quiet portions relative to the peak, lowering crest factor); p>1 gently
-    expands (raises crest factor). p=1 is a no-op."""
-    return np.sign(sig) * (np.abs(sig) ** p)
+def _shape_tail(sig, p):
+    """Sign-preserving power-law dynamics shaper, applied only to the decay
+    tail *after* the signal's transient peak (crossfaded in to avoid a click).
+    The attack/transient region is left bit-for-bit untouched, so this cannot
+    blunt the struck-bell attack -- only how the ring-out decays. p<1 gently
+    compresses the tail (boosts quiet portions, lowering crest factor); p>1
+    gently expands it (raising crest factor). p=1 is a no-op."""
+    if abs(p - 1.0) < 1e-6:
+        return sig
+    peak_i = int(np.argmax(np.abs(sig)))
+    guard = min(peak_i + int(SR * PEAK_GUARD_S), len(sig))
+    if guard >= len(sig):
+        return sig
+    out = sig.copy()
+    tail = sig[guard:]
+    shaped_tail = np.sign(tail) * (np.abs(tail) ** p)
+    xfade = min(int(SR * CROSSFADE_S), len(tail))
+    if xfade > 0:
+        ramp = np.linspace(0.0, 1.0, xfade)
+        shaped_tail[:xfade] = tail[:xfade] * (1 - ramp) + shaped_tail[:xfade] * ramp
+    out[guard:] = shaped_tail
+    return out
 
 
 def normalize_palette(sigs):
     """Even out loudness across the palette so it survives analyze.py's
-    --palette gate.
+    --palette gate, without crushing the struck-bell character.
 
     analyze.py peak-normalizes each file to 0 dBFS *before* measuring RMS, so
     a uniform per-file gain (simple RMS matching) has zero effect on the
@@ -122,26 +142,35 @@ def normalize_palette(sigs):
     What actually varies between events is crest factor (peak-to-RMS ratio),
     driven by accent shape (e.g. `punch` extends a partial's full-envelope
     amplitude and lowers crest; the `air_db` accent adds a short bright burst
-    that raises peak without adding sustain, raising crest). So instead we
-    match crest factor: shape each signal's dynamics toward the palette's
-    median crest factor via a light power-law compressor/expander, then apply
-    a final per-file peak ceiling (a uniform gain, which does not perturb the
-    crest factor we just set)."""
+    that raises peak without adding sustain, raising crest).
+
+    Rather than bisecting every file to the exact palette median (which
+    over-corrects and, since a memoryless whole-signal power-law lifts
+    near-silent tail samples proportionally more, flattens the exponential
+    decay and adds distortion to the summed sine partials), this only nudges
+    outliers -- files whose crest factor deviates from the palette mean by
+    more than CREST_TOLERANCE_DB -- back to just inside the tolerance window,
+    and only reshapes their decay tail (the transient peak is left exactly as
+    rendered). In-tolerance files are untouched. A final per-file peak
+    ceiling (a uniform gain, which does not perturb crest factor) closes
+    things out."""
     crest = {n: _crest_db(s) for n, s in sigs.items()}
-    target = float(np.median(list(crest.values())))
+    center = float(np.mean(list(crest.values())))
     out = {}
     for n, s in sigs.items():
-        if abs(crest[n] - target) < 0.05:
+        c0 = crest[n]
+        if abs(c0 - center) <= CREST_TOLERANCE_DB:
             shaped = s
         else:
+            target = center + CREST_TOLERANCE_DB if c0 > center else center - CREST_TOLERANCE_DB
             lo, hi = 0.4, 2.5
             for _ in range(30):
                 mid = (lo + hi) / 2
-                if _crest_db(_shape(s, mid)) > target:
+                if _crest_db(_shape_tail(s, mid)) > target:
                     hi = mid
                 else:
                     lo = mid
-            shaped = _shape(s, (lo + hi) / 2)
+            shaped = _shape_tail(s, (lo + hi) / 2)
         peak = np.max(np.abs(shaped)) + 1e-9
         out[n] = shaped * (PEAK_CEILING / peak)
     return out
