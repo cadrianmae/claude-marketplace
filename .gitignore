@@ -18,3 +18,6 @@ Thumbs.db
 
 # Worktrees
 .worktrees/
+
+# Audio-feedback dev venv
+plugins/audio-feedback/sound-theme/default/src/.venv-gen/
