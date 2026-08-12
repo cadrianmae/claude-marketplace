@@ -1,7 +1,7 @@
-[![Version](https://img.shields.io/badge/version-0.2.2-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-# Audio Feedback Plugin v0.2
+# Audio Feedback Plugin v1.0
 
 Audio feedback for Claude Code hook events. Plays short synth sounds on response complete, notifications, context compaction, user input, and more. Configurable per-event with bundled theme sounds. Independent of the tts plugin.
 
@@ -68,6 +68,7 @@ Global config: `~/.claude/.audio-feedback-config`
 | `DAEMON_ENABLED` | `true` | Use the resident playback daemon when available |
 | `DAEMON_IDLE_TIMEOUT` | `30` | Seconds of inactivity before the daemon self-exits |
 | `DAEMON_MAX_VOICES` | `8` | Max concurrent mixed voices in the daemon |
+| `SUBAGENT_ACCENT` | `true` | Overlay `subagent-accent.wav` on tool sounds fired on behalf of a subagent |
 
 Set any event to `off` to silence it. Sound values are filenames (without `.wav`) from the active theme directory.
 
@@ -85,6 +86,41 @@ Set any event to `off` to silence it. Sound values are filenames (without `.wav`
 | `post-tool-use.wav` | PostToolUse | Short 700Hz tick | 0.54s |
 
 All sounds: lo-fi minimal aesthetic, synthesised with reverb, 0.5s decay tail, normalized to 0dB peak, mono 44.1kHz.
+
+## Sound design
+
+The default theme's 27 sounds (8 base events + 19 subtype variants) are all derived
+from one locked `note_map.json`: each base event is a `seq` (melodic line) or `chord`
+(simultaneous notes) of MIDI note/duration pairs, additively synthesised as bells by
+`generate.py`. Variants (e.g. `notification-permission`, `pre-tool-use-execute`) are
+declared in `variants.json` as small accent deltas (brightness, detune, punch) layered
+on top of their base event's contour, rather than hand-authored from scratch, so the
+whole palette stays sonically related while each event/subtype still reads distinctly
+by ear.
+
+## Regenerating sounds
+
+The palette is generated programmatically, not hand-mixed. Regenerate it with:
+
+```bash
+# One-time: dev venv for analyze.py (needs numpy/scipy; generate.py supplies
+# its own deps via PEP 723 + uv run --script, so it doesn't need this venv).
+cd plugins/audio-feedback
+uv venv sound-theme/default/src/.venv-gen
+uv pip install --python sound-theme/default/src/.venv-gen numpy scipy
+
+# Regenerate the full palette (renders into sound-theme/default/sounds/):
+UV_PYTHON_PREFERENCE=only-managed uv run --script \
+  sound-theme/default/src/generate.py
+
+# Verify the palette loudness gate (RMS spread <=3 dB, peak max <=-0.7 dBFS):
+sound-theme/default/src/.venv-gen/bin/python scripts/analyze.py --palette \
+  sound-theme/default/sounds
+```
+
+Use `generate.py --only NAME` to re-render a single sound. Tuning (brightness, decay,
+levels) lives entirely in `generate.py` / `variants.json` - never loosen the loudness
+gate in `analyze.py` to make a bad render pass.
 
 ## Themes
 

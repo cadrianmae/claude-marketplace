@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-12
+
 ### Fixed
 - Events set to `off` are now silent even when the active theme ships a
   matching subtype WAV. `af_play_event_with_subtype()` resolved and played
@@ -27,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `uv run --script` (no venv). Auto-spawns on first event, self-exits after
   `DAEMON_IDLE_TIMEOUT`. Config: `DAEMON_ENABLED`, `DAEMON_IDLE_TIMEOUT`,
   `DAEMON_MAX_VOICES`. Falls back to `paplay` when `uv` is unavailable.
+- Programmatic sound generation: signalflow generator (`sound-theme/default/src/generate.py`,
+  run via `uv run --script`) renders the full 27-sound palette from a locked
+  note-map with declarative accent-delta variants. Verification via
+  `scripts/analyze.py` (per-sound + `--palette` loudness gate).
+- Subagent-aware audio: a `subagent-accent.wav` is mixed over tool sounds fired
+  on behalf of a subagent (hook `agent_id`), toggled by `SUBAGENT_ACCENT`.
 
 ### Changed
 - Sound themes now live under `sound-theme/<theme>/{sounds,src}` with a
@@ -37,6 +45,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Click-sounds subsystem and all `CLICKS_*` config keys. `sox` is no longer
   a runtime dependency. Stale `CLICKS_*` lines in existing configs are
   ignored.
+- REAPER generation pipeline (`scaffold_rpp.py`, `render-sounds.py`) — superseded
+  by the signalflow generator. The `.rpp` project + Vital patch are archived in
+  `sound-theme/default/src/`.
 
 ## [0.2.2] - 2026-04-15
 
