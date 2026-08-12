@@ -21,3 +21,5 @@ Thumbs.db
 
 # Audio-feedback dev venv
 plugins/audio-feedback/sound-theme/default/src/.venv-gen/
+plugins/audio-feedback/sound-theme/default/src/.preview/
+plugins/audio-feedback/sound-theme/default/src/__pycache__/

@@ -1,0 +1,52 @@
+# audio-feedback sound development
+# Run from this directory (plugins/audio-feedback). `just` lists recipes.
+
+src    := "sound-theme/default/src"
+sounds := "sound-theme/default/sounds"
+py     := src / ".venv-gen/bin/python"
+
+# list recipes
+default:
+    @just --list
+
+# (re)create the dev venv (uv-managed Python 3.12 + signalflow/numpy/scipy)
+venv:
+    UV_PYTHON_PREFERENCE=only-managed uv venv --python 3.12 {{src}}/.venv-gen
+    UV_PYTHON_PREFERENCE=only-managed uv pip install --python {{src}}/.venv-gen signalflow numpy scipy pytest
+
+# render the full palette to sounds/ (the real output)
+generate:
+    {{py}} {{src}}/generate.py
+
+# render one sound into sounds/
+one NAME:
+    {{py}} {{src}}/generate.py --only {{NAME}}
+
+# render + play one or more sounds to a temp dir (does NOT touch sounds/)
+preview +NAMES:
+    {{py}} {{src}}/generate.py preview {{NAMES}}
+
+# watch the src files; re-render + play NAME(s) on every save
+live +NAMES:
+    {{py}} {{src}}/generate.py live {{NAMES}}
+
+# play the current committed wav (no re-render)
+play NAME:
+    paplay {{sounds}}/{{NAME}}.wav
+
+# play every committed sound back-to-back
+audition:
+    #!/usr/bin/env bash
+    for w in {{sounds}}/*.wav; do echo "$(basename "$w" .wav)"; paplay "$w"; done
+
+# verify the palette loudness gate (RMS spread <= 3 dB, peak <= -0.7 dBFS)
+verify:
+    {{py}} scripts/analyze.py --palette {{sounds}}
+
+# run the sound tests (note-map + generator)
+test:
+    {{py}} -m pytest tests/test_note_map.py tests/test_generate.py -q
+
+# remove preview scratch + pycache
+clean:
+    rm -rf {{src}}/.preview {{src}}/__pycache__
