@@ -75,6 +75,18 @@ CROSSFADE_S = 0.015       # splice smoothing into the adjusted tail (avoid a cli
 CREST_GAIN_RANGE = (0.4, 4.0)
 CREST_SHAPE_ITERS = 30
 
+# ---- swoosh voice (network variants: WebFetch/WebSearch) ----------------
+
+# A filtered-noise sweep -- a paper plane thrown to send / arriving to receive.
+# Bandpass center sweeps SWOOSH_FREQ_LO -> HI (dir "up" = send) or HI -> LO
+# (dir "down" = receive). Not pitched, so note-map/accent knobs don't apply.
+SWOOSH_DUR = 0.5          # length of the whoosh (seconds)
+SWOOSH_FREQ_LO = 400.0    # sweep low end (Hz)
+SWOOSH_FREQ_HI = 5000.0   # sweep high end (Hz)
+SWOOSH_Q = 0.7            # bandpass resonance (0..1); higher = more "whistly"
+SWOOSH_ATTACK = 0.04      # fade-in (soft, so it reads as a whoosh not a burst)
+SWOOSH_LEVEL = 0.5        # pre-normalize level
+
 # ---- subagent-accent overlay (generate.py) ------------------------------
 
 # A bare quiet shimmer mixed over tool sounds fired on behalf of a subagent.

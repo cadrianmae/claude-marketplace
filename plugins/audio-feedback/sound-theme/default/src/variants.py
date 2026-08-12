@@ -28,7 +28,11 @@ class Sound(ABC):
     mode: ClassVar[str] = "seq"                       # "seq" | "chord"
     notes: ClassVar[list[tuple[int, str]]] = []       # (midi, "quaver"|"crotchet"|"minim")
 
-    # ---- accent knobs (neutral defaults; a variant overrides) ----
+    # ---- voice: which synth renders this sound ----
+    voice: ClassVar[str] = "bell"          # "bell" (note-map) | "swoosh" (noise sweep)
+    swoosh_dir: ClassVar[str] = "up"       # swoosh only: "up" = send, "down" = receive
+
+    # ---- accent knobs (bell voice only; neutral defaults; a variant overrides) ----
     transpose: ClassVar[int] = 0
     brightness: ClassVar[float] = 1.0
     decay_scale: ClassVar[float] = 1.0
@@ -74,14 +78,14 @@ class Stop(Sound):             # Ionian fall, settle, full bar
 class PreToolUseExecute(PreToolUse):    transpose = -2; punch = 1.2
 class PreToolUseObserve(PreToolUse):    brightness = 0.9
 class PreToolUseModify(PreToolUse):     layer = "shimmer"
-class PreToolUseNetwork(PreToolUse):    brightness = 1.3; air_db = -12
+class PreToolUseNetwork(PreToolUse):    voice = "swoosh"; swoosh_dir = "up"    # WebFetch/WebSearch send
 class PreToolUseDispatch(PreToolUse):   transpose = 3
 class PreToolUseInteract(PreToolUse):   detune_cents = 6
 
 class PostToolUseExecute(PostToolUse):  transpose = -2; punch = 1.2
 class PostToolUseObserve(PostToolUse):  brightness = 0.9
 class PostToolUseModify(PostToolUse):   layer = "shimmer"
-class PostToolUseNetwork(PostToolUse):  brightness = 1.3; air_db = -12
+class PostToolUseNetwork(PostToolUse):  voice = "swoosh"; swoosh_dir = "down"  # WebFetch/WebSearch receive
 class PostToolUseDispatch(PostToolUse): transpose = 3
 class PostToolUseInteract(PostToolUse): detune_cents = 6
 

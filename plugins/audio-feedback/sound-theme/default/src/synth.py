@@ -93,11 +93,28 @@ def postprocess(sig: Signal) -> Signal:
     return sig
 
 
-def render_event(sound: type[Sound]) -> Signal:
-    """Render a full event phrase from a variants.Sound class.
+def render_swoosh(sound: type[Sound]) -> Signal:
+    """Filtered-noise sweep -- a paper plane thrown (send) or arriving (receive).
+    Not pitched: ignores the note-map/accent knobs, reads sound.swoosh_dir."""
+    _graph_get()   # graph must exist before building nodes
+    dur = tuning.SWOOSH_DUR
+    lo, hi = tuning.SWOOSH_FREQ_LO, tuning.SWOOSH_FREQ_HI
+    if sound.swoosh_dir == "down":
+        lo, hi = hi, lo
+    cutoff = sf.Line(lo, hi, dur)
+    filt = sf.SVFilter(sf.PinkNoise(), sf.SIGNALFLOW_FILTER_TYPE_BAND_PASS, cutoff, tuning.SWOOSH_Q)
+    env = sf.ASREnvelope(tuning.SWOOSH_ATTACK, 0.0, dur)
+    patch = filt * env * tuning.SWOOSH_LEVEL
+    return postprocess(_render_patch(patch, dur))
 
-    Reads the note-map (sound.mode, sound.notes) and accent knobs
-    (sound.transpose/brightness/... class attributes) off the class."""
+
+def render_event(sound: type[Sound]) -> Signal:
+    """Render a sound from a variants.Sound class, dispatching on its voice.
+
+    "bell" (default) uses the note-map (sound.mode, sound.notes) + accent knobs
+    (sound.transpose/brightness/...); "swoosh" uses render_swoosh."""
+    if sound.voice == "swoosh":
+        return render_swoosh(sound)
     kw = {
         "brightness": sound.brightness,
         "decay_scale": sound.decay_scale,
