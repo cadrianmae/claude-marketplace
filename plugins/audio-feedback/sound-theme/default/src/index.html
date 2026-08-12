@@ -1,2 +1,336 @@
-<!doctype html><html><head><title>audio-feedback sounds</title></head>
-<body><h1>sound preview</h1></body></html>
+<!doctype html>
+<html lang="en" data-theme="dusk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>audio-feedback sound preview</title>
+<style id="lumae">/**
+ * Do not edit directly, this file was auto-generated.
+ */
+
+:root {
+  --color-grey-50: #fdf8f8;
+  --color-grey-100: #ede8e8;
+  --color-grey-200: #d8d2d2;
+  --color-grey-300: #b4afaf;
+  --color-grey-400: #8e8989;
+  --color-grey-500: #6b6666;
+  --color-grey-600: #4e4949;
+  --color-grey-700: #2f2b2b;
+  --color-grey-800: #161212;
+  --color-taupe-50: #fcf9f5;
+  --color-taupe-100: #f0e8e0;
+  --color-taupe-200: #ddd2c6;
+  --color-taupe-300: #bbaea1;
+  --color-taupe-400: #96887a;
+  --color-taupe-500: #716659;
+  --color-taupe-600: #52493f;
+  --color-taupe-700: #322b25;
+  --color-taupe-800: #16120f;
+  --color-magenta-50: #fff7f9;
+  --color-magenta-100: #ffdfe7;
+  --color-magenta-200: #ffbed0;
+  --color-magenta-300: #f18eac;
+  --color-magenta-400: #e14a84;
+  --color-magenta-500: #b62162;
+  --color-magenta-600: #861346;
+  --color-magenta-700: #570029;
+  --color-magenta-800: #2c0012;
+  --color-red-50: #fff7f6;
+  --color-red-100: #ffe2dc;
+  --color-red-200: #ffc3b7;
+  --color-red-300: #f09584;
+  --color-red-400: #d36654;
+  --color-red-500: #ad3d2c;
+  --color-red-600: #832417;
+  --color-red-700: #560d04;
+  --color-red-800: #2c0200;
+  --color-orange-50: #fff8f2;
+  --color-orange-100: #ffe4cf;
+  --color-orange-200: #ffc799;
+  --color-orange-300: #eb9c58;
+  --color-orange-400: #c6731c;
+  --color-orange-500: #995400;
+  --color-orange-600: #6f3c01;
+  --color-orange-700: #452300;
+  --color-orange-800: #210e00;
+  --color-yellow-50: #fff9e9;
+  --color-yellow-100: #fbe8bd;
+  --color-yellow-200: #edd192;
+  --color-yellow-300: #cfac5c;
+  --color-yellow-400: #a88630;
+  --color-yellow-500: #806419;
+  --color-yellow-600: #5b4716;
+  --color-yellow-700: #382a08;
+  --color-yellow-800: #1a1201;
+  --color-green-50: #effef4;
+  --color-green-100: #c9f6d9;
+  --color-green-200: #a4e5bd;
+  --color-green-300: #68c892;
+  --color-green-400: #25a468;
+  --color-green-500: #007d49;
+  --color-green-600: #045a35;
+  --color-green-700: #00371d;
+  --color-green-800: #00190a;
+  --color-cyan-50: #f3fbfa;
+  --color-cyan-100: #d1f1ee;
+  --color-cyan-200: #9fe3dd;
+  --color-cyan-300: #5dc5bd;
+  --color-cyan-400: #369d96;
+  --color-cyan-500: #0c7772;
+  --color-cyan-600: #045753;
+  --color-cyan-700: #013633;
+  --color-cyan-800: #001917;
+  --color-blue-50: #f5faff;
+  --color-blue-100: #daecff;
+  --color-blue-200: #b3d8ff;
+  --color-blue-300: #82b5ed;
+  --color-blue-400: #5e8ec2;
+  --color-blue-500: #406b98;
+  --color-blue-600: #274d74;
+  --color-blue-700: #112e4b;
+  --color-blue-800: #031427;
+  --color-indigo-50: #f8f8ff;
+  --color-indigo-100: #e6e7fe;
+  --color-indigo-200: #cccffe;
+  --color-indigo-300: #a5a7fd;
+  --color-indigo-400: #7e7ce2;
+  --color-indigo-500: #5d5ab5;
+  --color-indigo-600: #434084;
+  --color-indigo-700: #272554;
+  --color-indigo-800: #100f2b;
+  --color-violet-50: #fdf7fe;
+  --color-violet-100: #f6e1fd;
+  --color-violet-200: #edc1fa;
+  --color-violet-300: #d693ea;
+  --color-violet-400: #b366ca;
+  --color-violet-500: #8c44a2;
+  --color-violet-600: #662f76;
+  --color-violet-700: #440e53;
+  --color-violet-800: #22012b;
+}
+:root {
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-6: 48px;
+  --space-8: 64px;
+  --space-12: 96px;
+  --space-0-5: 4px;
+  --gutter: 24px;
+  --container-reading: 640px;
+  --container-content: 768px;
+  --container-wide: 1024px;
+  --container-full: 1280px;
+  --radius-sharp: 0;
+  --radius-window: 4px;
+  --radius-input: 8px;
+  --radius-card: 12px;
+  --radius-pill: 999px;
+  --size-caption: 0.8rem;
+  --size-body: 1rem;
+  --size-lead: 1.25rem;
+  --size-h3: 1.5625rem;
+  --size-h2: 1.9531rem;
+  --size-h1: 2.4414rem;
+  --size-hero: 3.0518rem;
+  --size-display: 3.8147rem;
+  --font-heading: 'Zilla Slab', Georgia, 'Times New Roman', serif;
+  --font-body: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-a11y: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  --font-mono: 'Fira Mono', ui-monospace, Menlo, Consolas, monospace;
+  --font-logo: Sarina, cursive;
+  --font-signature: Caveat, cursive;
+  --font-display: 'Bungee Shade', cursive;
+  --font-pixel: 'Pixelify Sans', system-ui, sans-serif;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --leading-body: 1.6;
+  --leading-a11y: 1.8;
+  --leading-tight: 1.05;
+  --measure-reading: 60ch;
+  --measure-mono: 62ch;
+  --tracking-display: -0.015em;
+  --tracking-heading: -0.005em;
+  --tracking-body: 0;
+  --tracking-caps: 0.04em;
+  --tracking-a11y: 0.02em;
+  --ease-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-magnet: cubic-bezier(0.34, 1.3, 0.4, 1.06);
+  --dur-instant: 0ms;
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+  --dur-deliberate: 500ms;
+  --bevel-glass: inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(20,18,18,.10),inset 1px 0 0 rgba(255,255,255,.3),inset -1px 0 0 rgba(20,18,18,.07);
+}
+/**
+ * Do not edit directly, this file was auto-generated.
+ */
+
+[data-theme="dusk"] {
+  --color-bg: var(--color-grey-700);
+  --color-bg-recess: var(--color-grey-800);
+  --color-surface: var(--color-grey-600);
+  --color-overlay: var(--color-grey-400);
+  --color-border: var(--color-grey-500);
+  --color-text: var(--color-grey-50);
+  --color-subtext: var(--color-grey-300);
+  --color-primary: var(--color-magenta-300);
+  --color-primary-emphasis: var(--color-magenta-400);
+  --color-secondary: var(--color-violet-300);
+  --color-secondary-emphasis: var(--color-violet-400);
+  --color-info: var(--color-indigo-300);
+  --color-info-emphasis: var(--color-indigo-400);
+  --color-success: var(--color-green-300);
+  --color-success-emphasis: var(--color-green-400);
+  --color-warning: var(--color-orange-300);
+  --color-warning-emphasis: var(--color-orange-400);
+  --color-danger: var(--color-red-300);
+  --color-danger-emphasis: var(--color-red-400);
+}
+</style>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--color-bg); color: var(--color-text);
+         font-family: var(--font-body); padding: var(--space-3); }
+  header { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+  h1 { font-family: var(--font-heading); font-size: var(--size-h2); margin: 0; }
+  .status { display: flex; align-items: center; gap: var(--space-0-5); color: var(--color-subtext);
+            font-size: var(--size-caption); }
+  .dot { width: 10px; height: 10px; border-radius: var(--radius-pill); background: var(--color-success); }
+  .dot.off { background: var(--color-danger); }
+  button { font-family: var(--font-body); cursor: pointer; border: 1px solid var(--color-border);
+           background: var(--color-surface); color: var(--color-text); border-radius: var(--radius-input);
+           padding: var(--space-0-5) var(--space-1); }
+  #banner { display: none; background: var(--color-danger); color: var(--color-grey-800);
+            padding: var(--space-1); border-radius: var(--radius-input); white-space: pre-wrap;
+            font-family: monospace; font-size: var(--size-caption); margin-bottom: var(--space-2); }
+  .group-title { font-family: var(--font-heading); font-size: var(--size-lead);
+                 color: var(--color-subtext); margin: var(--space-3) 0 var(--space-1); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-2); }
+  .card { background: var(--color-surface); border: 1px solid var(--color-border);
+          border-radius: var(--radius-card); padding: var(--space-2); cursor: pointer; transition: border-color .1s; }
+  .card:hover { border-color: var(--color-overlay); }
+  .card.playing { border-color: var(--color-primary-emphasis); }
+  .card .name { font-weight: 600; }
+  .badge { font-size: var(--size-caption); padding: 0 var(--space-0-5); border-radius: var(--radius-pill);
+           border: 1px solid currentColor; }
+  .badge.bell { color: var(--color-success); }
+  .badge.swoosh { color: var(--color-primary); }
+  canvas { width: 100%; height: 48px; display: block; margin: var(--space-1) 0; }
+  .params { color: var(--color-subtext); font-size: var(--size-caption); font-family: monospace; }
+</style>
+</head>
+<body>
+<header>
+  <h1>audio-feedback sounds</h1>
+  <button id="playall">play all</button>
+  <span class="status"><span class="dot" id="dot"></span><span id="stat">connecting…</span></span>
+</header>
+<div id="banner"></div>
+<div id="root"></div>
+<script>
+const ctx = new (window.AudioContext || window.webkitAudioContext)();
+let version = 0;
+const buffers = {};   // name -> AudioBuffer
+
+const GROUPS = [
+  ["base", n => !n.includes("-") || ["user-prompt-submit","pre-tool-use","post-tool-use","pre-compact","subagent-stop","session-start"].includes(n)],
+  ["pre-tool-use", n => n.startsWith("pre-tool-use-")],
+  ["post-tool-use", n => n.startsWith("post-tool-use-")],
+  ["notification", n => n.startsWith("notification-")],
+  ["session-start", n => n.startsWith("session-start-")],
+];
+const BASE = ["session-start","user-prompt-submit","pre-tool-use","notification","pre-compact","post-tool-use","subagent-stop","stop"];
+
+async function loadBuffer(name) {
+  const res = await fetch(`/sounds/${name}.wav?v=${version}`);
+  const buf = await res.arrayBuffer();
+  buffers[name] = await ctx.decodeAudioData(buf);
+  return buffers[name];
+}
+
+function drawWave(canvas, audiobuf) {
+  const w = canvas.width = canvas.clientWidth * devicePixelRatio;
+  const h = canvas.height = canvas.clientHeight * devicePixelRatio;
+  const g = canvas.getContext("2d");
+  const data = audiobuf.getChannelData(0);
+  const step = Math.max(1, Math.floor(data.length / w));
+  g.clearRect(0, 0, w, h);
+  g.strokeStyle = getComputedStyle(document.body).getPropertyValue("--color-info");
+  g.beginPath();
+  for (let x = 0; x < w; x++) {
+    let min = 1, max = -1;
+    for (let i = 0; i < step; i++) { const v = data[x*step+i] || 0; if (v<min) min=v; if (v>max) max=v; }
+    g.moveTo(x, (1-min)*h/2); g.lineTo(x, (1-max)*h/2);
+  }
+  g.stroke();
+}
+
+function play(name, card) {
+  const src = ctx.createBufferSource();
+  src.buffer = buffers[name];
+  src.connect(ctx.destination);
+  src.start();
+  if (card) { card.classList.add("playing"); src.onended = () => card.classList.remove("playing"); }
+  return src;
+}
+
+function paramText(p) {
+  if (p.voice === "swoosh") return `swoosh ${p.swoosh_dir === "up" ? "↑ send" : "↓ receive"}`;
+  const acc = Object.entries(p.accents || {}).map(([k,v]) => `${k}=${v}`).join(" ");
+  const lvl = p.level_db ? ` ${p.level_db}dB` : "";
+  return `${p.notes.join(" ")}${acc ? " · "+acc : ""}${lvl}`;
+}
+
+async function build(palette) {
+  const root = document.getElementById("root");
+  root.innerHTML = "";
+  const order = {}; BASE.forEach((n,i) => order[n] = i);
+  for (const [title, test] of GROUPS) {
+    const items = palette.filter(p => test(p.name));
+    if (!items.length) continue;
+    if (title === "base") items.sort((a,b)=> (order[a.name]??99)-(order[b.name]??99));
+    const h = document.createElement("div"); h.className = "group-title"; h.textContent = title;
+    const grid = document.createElement("div"); grid.className = "grid";
+    root.append(h, grid);
+    for (const p of items) {
+      const card = document.createElement("div"); card.className = "card";
+      card.innerHTML = `<div class="name">${p.name} <span class="badge ${p.voice}">${p.voice}</span></div>
+        <canvas></canvas><div class="params">${paramText(p)}</div>`;
+      grid.append(card);
+      const canvas = card.querySelector("canvas");
+      await loadBuffer(p.name).then(b => drawWave(canvas, b));
+      card.onclick = () => play(p.name, card);
+    }
+  }
+}
+
+async function refresh() {
+  const palette = await (await fetch("/api/palette")).json();
+  await build(palette);
+}
+
+document.getElementById("playall").onclick = async () => {
+  for (const name of Object.keys(buffers)) {
+    const src = play(name); await new Promise(r => src.onended = r);
+  }
+};
+
+const es = new EventSource("/events");
+es.onopen = () => { document.getElementById("dot").classList.remove("off"); document.getElementById("stat").textContent = "live"; };
+es.onerror = () => { document.getElementById("dot").classList.add("off"); document.getElementById("stat").textContent = "disconnected"; };
+es.addEventListener("reload", async e => {
+  version = e.data; document.getElementById("banner").style.display = "none";
+  await refresh();
+});
+es.addEventListener("error", e => {
+  const b = document.getElementById("banner"); b.style.display = "block"; b.textContent = e.data;
+});
+</script>
+</body>
+</html>
