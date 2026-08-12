@@ -30,6 +30,7 @@ af_default_enabled="true"
 af_default_daemon_enabled="true"
 af_default_daemon_idle_timeout="30"
 af_default_daemon_max_voices="8"
+af_default_subagent_accent="true"
 af_default_stop="stop"
 af_default_notification="notification"
 af_default_pre_compact="pre-compact"
@@ -51,6 +52,7 @@ af_load_config() {
     AF_DAEMON_ENABLED="$af_default_daemon_enabled"
     AF_DAEMON_IDLE_TIMEOUT="$af_default_daemon_idle_timeout"
     AF_DAEMON_MAX_VOICES="$af_default_daemon_max_voices"
+    AF_SUBAGENT_ACCENT="$af_default_subagent_accent"
     AF_STOP_SOUND="$af_default_stop"
     AF_NOTIFICATION_SOUND="$af_default_notification"
     AF_PRE_COMPACT_SOUND="$af_default_pre_compact"
@@ -75,6 +77,7 @@ af_load_config() {
             DAEMON_ENABLED) AF_DAEMON_ENABLED="$value" ;;
             DAEMON_IDLE_TIMEOUT) AF_DAEMON_IDLE_TIMEOUT="$value" ;;
             DAEMON_MAX_VOICES) AF_DAEMON_MAX_VOICES="$value" ;;
+            SUBAGENT_ACCENT) AF_SUBAGENT_ACCENT="$value" ;;
             STOP_SOUND) AF_STOP_SOUND="$value" ;;
             NOTIFICATION_SOUND) AF_NOTIFICATION_SOUND="$value" ;;
             PRE_COMPACT_SOUND) AF_PRE_COMPACT_SOUND="$value" ;;
@@ -100,6 +103,7 @@ ENABLED=$af_default_enabled
 DAEMON_ENABLED=$af_default_daemon_enabled
 DAEMON_IDLE_TIMEOUT=$af_default_daemon_idle_timeout
 DAEMON_MAX_VOICES=$af_default_daemon_max_voices
+SUBAGENT_ACCENT=$af_default_subagent_accent
 STOP_SOUND=$af_default_stop
 NOTIFICATION_SOUND=$af_default_notification
 PRE_COMPACT_SOUND=$af_default_pre_compact
@@ -216,6 +220,15 @@ af_dispatch_play() {
         fi
     fi
     paplay "$wav" 2>/dev/null || true
+}
+
+# Mix the subagent accent over the current event sound (daemon overlays it).
+# No-op unless enabled and the accent file exists.
+af_play_subagent_accent() {
+    [ "${AF_SUBAGENT_ACCENT:-true}" = "true" ] || return 0
+    local accent
+    accent="$(_af_sounds_dir)/subagent-accent.wav"
+    [ -f "$accent" ] && af_dispatch_play "$accent"
 }
 
 # Play the sound for a given event. Blocks until done.

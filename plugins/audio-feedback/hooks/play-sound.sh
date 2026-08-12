@@ -40,9 +40,18 @@ if [ -n "$HOOK_JSON" ] && command -v jq >/dev/null 2>&1; then
     esac
 fi
 
+AGENT_ID=""
+if [ -n "$HOOK_JSON" ] && command -v jq >/dev/null 2>&1; then
+    AGENT_ID="$(printf '%s' "$HOOK_JSON" | jq -r '.agent_id // empty' 2>/dev/null)"
+fi
+
 # Background the event sound and detach, so the hook returns to Claude Code
-# immediately regardless of paplay latency.
-af_play_event_with_subtype "$EVENT" "$SUBTYPE" </dev/null >/dev/null 2>&1 &
+# immediately regardless of paplay latency. Overlay the subagent accent
+# (if applicable) in the same detached block.
+{
+    af_play_event_with_subtype "$EVENT" "$SUBTYPE"
+    [ -n "$AGENT_ID" ] && af_play_subagent_accent
+} </dev/null >/dev/null 2>&1 &
 disown 2>/dev/null || true
 
 exit 0
