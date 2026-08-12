@@ -223,9 +223,13 @@ af_dispatch_play() {
 }
 
 # Mix the subagent accent over the current event sound (daemon overlays it).
-# No-op unless enabled and the accent file exists.
+# Only sounds when the plugin is enabled, this event's sound is not "off",
+# SUBAGENT_ACCENT is on, and the accent file exists.
 af_play_subagent_accent() {
+    local event="$1"
+    [ "$AF_ENABLED" = "true" ] || return 0
     [ "${AF_SUBAGENT_ACCENT:-true}" = "true" ] || return 0
+    [ "$(af_sound_for_event "$event")" = "off" ] && return 0
     local accent
     accent="$(_af_sounds_dir)/subagent-accent.wav"
     [ -f "$accent" ] && af_dispatch_play "$accent"

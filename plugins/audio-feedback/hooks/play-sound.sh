@@ -50,7 +50,7 @@ fi
 # (if applicable) in the same detached block.
 {
     af_play_event_with_subtype "$EVENT" "$SUBTYPE"
-    [ -n "$AGENT_ID" ] && af_play_subagent_accent
+    [ -n "$AGENT_ID" ] && af_play_subagent_accent "$EVENT"
 } </dev/null >/dev/null 2>&1 &
 disown 2>/dev/null || true
 

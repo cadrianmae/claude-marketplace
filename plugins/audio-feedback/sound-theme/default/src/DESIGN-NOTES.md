@@ -1,11 +1,15 @@
 # Audio-Feedback Sound Design Notes
 
-Reference for designing the default theme in REAPER. Lives beside
-`audio-feedback.rpp` (the source project) so it is at hand while you work.
+Design bible for the default theme. The sounds are generated programmatically
+by `generate.py` (built on signalflow) from the locked note-map and category
+variants below, sourced from `note_map.json` and `variants.json` in this
+directory. This file documents the design intent that those JSON files and
+`generate.py` encode, so read it before touching either.
 
-The `.rpp` already contains one named track + region per sound, each with a
-notes-only MIDI item spelling the melody below. Drop an instrument on each
-track, shape it per the premium tips, then render to `../default/`.
+`audio-feedback.rpp` and the accompanying Vital fragment in this directory are
+ARCHIVED reference from an earlier REAPER-based rendering approach and are no
+longer part of the build; the note-map and premium-tips sections below still
+apply to the current signalflow synthesis.
 
 ---
 
@@ -89,27 +93,26 @@ The four that matter most for these bells: **inharmonic partials + soft attack
 
 ## Render + verify workflow
 
-1. Render settings (once, saved in the project): Mono, 44100 Hz, Normalize to
-   -1 dB, render matrix = regions -> `../default/$region.wav`.
-2. Render all regions (`../../scripts/render-sounds.py` from the REAPER action
-   list, or the render dialog).
-3. Verify each base event against its target
-   (needs `pip install -r ../../scripts/requirements-dev.txt` in a venv):
+1. Render: from this src directory (or the repo root), run
 
    ```
-   python ../../scripts/analyze.py ../default/stop.wav stop
+   UV_PYTHON_PREFERENCE=only-managed uv run --script generate.py
    ```
 
-4. Check the whole palette is loudness-consistent with headroom:
+   This synthesises the full palette from `note_map.json` + `variants.json`
+   straight to `../sounds/`; uv resolves the signalflow dependency itself, no
+   separate venv needed.
+
+2. Verify the whole palette is loudness-consistent with headroom:
 
    ```
-   python ../../scripts/analyze.py --palette ../default
+   python scripts/analyze.py --palette sound-theme/default/sounds
    ```
 
    Passes when the RMS spread is <= 3 dB and the peak stays under -0.7 dBFS.
 
 Event sounds are pre-rendered WAVs played by the audio-feedback hook
-(`scripts/lib.sh`); there is no runtime synthesis.
+(`scripts/lib.sh`); there is no runtime synthesis at play time.
 
 ---
 
