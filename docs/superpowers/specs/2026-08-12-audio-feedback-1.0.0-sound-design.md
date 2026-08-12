@@ -22,10 +22,11 @@ REAPER step is what stalled the prior effort; Spec B replaces it with code.
 ## Decisions (locked with Mae)
 
 - **Method:** programmatic synthesis (no DAW step).
-- **Library:** `signalflow` 0.5.3 — verified to install from the cp312 wheel on
-  `~/.pyenv/versions/3.12.11` (runs on host, no toolbox) and to render offline
-  to WAV. (pyo was rejected: no 3.14 wheels, and its C fails to build against
-  Fedora 44's GCC 15.)
+- **Library:** `signalflow` 0.5.3 — verified to render offline to WAV under an
+  uv-managed Python 3.12 (cp312 wheel). Run via `uv run --script` with PEP 723
+  inline metadata, exactly like af-soundd: uv fetches Python 3.12 and the deps,
+  no pyenv / manual venv / toolbox. (pyo was rejected: no 3.14 wheels, and its C
+  fails to build against Fedora 44's GCC 15.)
 - **Palette scope:** full 27 — 8 base events + 19 category variants.
 - **Variant mechanism:** declarative accent-delta + optional added layer
   (resynthesized), inheriting a base event.
@@ -103,15 +104,31 @@ light pre-delay reverb, palette-consistent loudness.
   `sound-theme/default/src/audio-feedback.rpp`,
   `sound-theme/default/src/vital-fxchain.rpp-fragment`.
 
-### 1.4 Dev environment
+### 1.4 Dev environment (uv + PEP 723)
 
-Generation is dev-time only (output WAVs are committed; not a runtime dep).
+Generation is dev-time only (output WAVs are committed; not a runtime dep). No
+pyenv, manual venv, or toolbox — `generate.py` carries PEP 723 inline metadata
+and is run with `uv run --script`, which fetches Python 3.12 and the deps into
+uv's cache:
 
-- `~/.pyenv/versions/3.12.11 -m venv .venv-gen` (git-ignored).
-- `pip install -r sound-theme/default/src/requirements-gen.txt`
-  (`signalflow`, `numpy`, `scipy`).
-- `python sound-theme/default/src/generate.py` -> renders all 28 WAVs.
-- `python plugins/audio-feedback/scripts/analyze.py --palette sound-theme/default/sounds`.
+```python
+# /// script
+# requires-python = ">=3.12,<3.13"       # signalflow has no 3.13/3.14 wheel yet
+# dependencies = ["signalflow", "numpy", "scipy"]
+# ///
+```
+
+```bash
+# from repo root; only-managed avoids pyenv shims shadowing python3.12
+UV_PYTHON_PREFERENCE=only-managed \
+  uv run --script plugins/audio-feedback/sound-theme/default/src/generate.py
+python plugins/audio-feedback/scripts/analyze.py --palette \
+  plugins/audio-feedback/sound-theme/default/sounds
+```
+
+(`analyze.py` is numpy/scipy-only and can run under any interpreter with those,
+including `uv run --with numpy --with scipy`.) No `requirements-gen.txt` — the
+PEP 723 block is the single dependency source.
 
 ---
 
@@ -206,9 +223,9 @@ The generator must produce a palette that passes both gates; that is the
 definition of done for the sounds.
 
 Existing pytest (`test_analyze.py`, `test_targets.py`) keep `analyze.py` and the
-targets honest; add a lightweight `test_generate.py` that asserts the generator
-emits all 28 files and they pass the palette gate (guarded to skip when
-signalflow is unavailable, like the daemon tests skip without uv).
+targets honest; add a lightweight `test_generate.py` that runs the generator via
+`uv run --script` and asserts it emits all 28 files that pass the palette gate
+(guarded to skip when `uv` is unavailable, like the daemon tests).
 
 ---
 
