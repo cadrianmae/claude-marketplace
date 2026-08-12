@@ -199,5 +199,20 @@ def main(argv=None):
         write_wav(os.path.join(SOUNDS, name + ".wav"), sig)
         print("wrote", name + ".wav")
 
+    if not only or "subagent-accent" in only:
+        # a bare quiet shimmer: a single high struck partial, low level
+        g = _graph_get()
+        patch = sf.SineOscillator(midi_hz(84) * 6.01) * sf.ASREnvelope(0.003, 0.0, 0.3) * 0.05
+        patch = patch + sf.SineOscillator(midi_hz(84) * 4.02) * sf.ASREnvelope(0.003, 0.0, 0.25) * 0.04
+        patch.play()
+        buf = g.render_to_new_buffer(int(SR * 0.35))
+        sig = np.asarray(buf.data).mean(axis=0).astype("float32")
+        g.clear()
+        sig = postprocess(sig, {})
+        # keep the accent a few dB under the palette so the overlay stays subtle
+        sig *= 10 ** (-6 / 20)
+        write_wav(os.path.join(SOUNDS, "subagent-accent.wav"), sig)
+        print("wrote subagent-accent.wav")
+
 if __name__ == "__main__":
     main()

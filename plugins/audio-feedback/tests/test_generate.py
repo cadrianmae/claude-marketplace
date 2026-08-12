@@ -41,3 +41,10 @@ def test_full_palette_generates_and_passes_loudness():
     r = subprocess.run([sys.executable, ANALYZE, "--palette", SOUNDS],
                        capture_output=True, text=True)
     assert r.returncode == 0, f"palette gate failed: {r.stdout}\n{r.stderr}"
+
+def test_subagent_accent_emitted():
+    _run_gen()
+    p = os.path.join(SOUNDS, "subagent-accent.wav")
+    assert os.path.exists(p)
+    with wave.open(p) as w:
+        assert w.getnchannels() == 1 and w.getframerate() == 44100
