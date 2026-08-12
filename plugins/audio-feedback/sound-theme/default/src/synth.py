@@ -77,11 +77,18 @@ def postprocess(sig):
 
 
 def render_event(name, spec, accent=None):
-    """Render a full event phrase (note-map spec + optional variant accent)."""
-    accent = accent or {}
-    transpose = accent.get("transpose", 0)
-    kw = {k: accent[k] for k in ("brightness", "decay_scale", "detune_cents", "punch", "layer", "air_db")
-          if k in accent}
+    """Render a full event phrase (note-map spec + optional Accent).
+
+    `accent` is a variants.Accent instance or None (base event)."""
+    transpose = accent.transpose if accent else 0
+    kw = {} if accent is None else {
+        "brightness": accent.brightness,
+        "decay_scale": accent.decay_scale,
+        "detune_cents": accent.detune_cents,
+        "punch": accent.punch,
+        "layer": accent.layer,
+        "air_db": accent.air_db,
+    }
     notes = spec["notes"]
     onsets = []
     t = 0.0

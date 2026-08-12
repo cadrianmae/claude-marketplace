@@ -93,7 +93,7 @@ The default theme's 27 sounds (8 base events + 19 subtype variants) are all deri
 from one locked `note_map.json`: each base event is a `seq` (melodic line) or `chord`
 (simultaneous notes) of MIDI note/duration pairs, additively synthesised as bells by
 `generate.py`. Variants (e.g. `notification-permission`, `pre-tool-use-execute`) are
-declared in `variants.json` as small accent deltas (brightness, detune, punch) layered
+declared in `variants.py` as small accent deltas (brightness, detune, punch) layered
 on top of their base event's contour, rather than hand-authored from scratch, so the
 whole palette stays sonically related while each event/subtype still reads distinctly
 by ear.
@@ -119,7 +119,7 @@ sound-theme/default/src/.venv-gen/bin/python scripts/analyze.py --palette \
 ```
 
 Use `generate.py --only NAME` to re-render a single sound. Tuning (brightness, decay,
-levels) lives entirely in `generate.py` / `variants.json` - never loosen the loudness
+levels) lives entirely in `generate.py` / `variants.py` - never loosen the loudness
 gate in `analyze.py` to make a bad render pass.
 
 ## Themes

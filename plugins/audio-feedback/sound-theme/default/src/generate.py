@@ -25,7 +25,7 @@ import loudness
 
 PREVIEW_DIR = os.path.join(theme.HERE, ".preview")
 WATCH_FILES = ["tuning.py", "synth.py", "loudness.py", "theme.py",
-               "note_map.json", "variants.json"]
+               "variants.py", "note_map.json"]
 
 
 def _render_events(names=None):

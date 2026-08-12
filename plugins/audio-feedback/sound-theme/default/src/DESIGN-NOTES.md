@@ -2,7 +2,7 @@
 
 Design bible for the default theme. The sounds are generated programmatically
 by `generate.py` (built on signalflow) from the locked note-map and category
-variants below, sourced from `note_map.json` and `variants.json` in this
+variants below, sourced from `note_map.json` and `variants.py` in this
 directory. This file documents the design intent that those JSON files and
 `generate.py` encode, so read it before touching either.
 
@@ -99,7 +99,7 @@ The four that matter most for these bells: **inharmonic partials + soft attack
    UV_PYTHON_PREFERENCE=only-managed uv run --script generate.py
    ```
 
-   This synthesises the full palette from `note_map.json` + `variants.json`
+   This synthesises the full palette from `note_map.json` + `variants.py`
    straight to `../sounds/`; uv resolves the signalflow dependency itself, no
    separate venv needed.
 

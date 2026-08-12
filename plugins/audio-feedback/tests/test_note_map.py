@@ -1,6 +1,8 @@
-import json, os
+import json, os, sys
 HERE = os.path.dirname(__file__)
 SRC = os.path.join(HERE, "..", "sound-theme", "default", "src")
+sys.path.insert(0, SRC)
+from variants import VARIANTS, Accent  # noqa: E402
 BASE = ["session-start","user-prompt-submit","pre-tool-use","notification",
         "pre-compact","post-tool-use","subagent-stop","stop"]
 VALUES = {"quaver","crotchet","minim"}
@@ -17,7 +19,7 @@ def test_note_map_complete_and_valid():
 
 def test_variants_reference_valid_bases():
     nm = json.load(open(os.path.join(SRC, "note_map.json")))
-    v = json.load(open(os.path.join(SRC, "variants.json")))
-    assert len(v) == 19
-    for name, spec in v.items():
-        assert spec["base"] in nm
+    assert len(VARIANTS) == 19
+    for name, accent in VARIANTS.items():
+        assert isinstance(accent, Accent)
+        assert accent.base in nm
