@@ -35,7 +35,7 @@ audition:
     #!/usr/bin/env bash
     for w in {{sounds}}/*.wav; do echo "$(basename "$w" .wav)"; paplay "$w"; done
 
-# verify the palette loudness gate (RMS spread <= 3 dB, peak <= -0.7 dBFS)
+# verify the palette loudness gate (RMS spread <= 5 dB, peak <= -0.7 dBFS)
 verify:
     {{py}} scripts/analyze.py --palette {{sounds}}
 

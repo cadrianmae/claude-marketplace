@@ -20,7 +20,7 @@ Accent knobs (see synth.render_bell):
   air_db        add a short high "air" partial at this level in dB (e.g. -12)
 """
 from abc import ABC
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 
 class Sound(ABC):
@@ -34,8 +34,11 @@ class Sound(ABC):
     decay_scale: ClassVar[float] = 1.0
     detune_cents: ClassVar[float] = 0.0
     punch: ClassVar[float] = 1.0
-    layer: ClassVar[Optional[str]] = None
-    air_db: ClassVar[Optional[float]] = None
+    layer: ClassVar[str | None] = None
+    air_db: ClassVar[float | None] = None
+    # per-sound output level trim in dB (0 = at the palette peak ceiling; negative
+    # pulls this sound down). Sets real playback loudness, by ear.
+    level_db: ClassVar[float] = 0.0
 
 
 # ---- base events (carry the locked note-map) ----------------------------

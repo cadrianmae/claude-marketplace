@@ -64,11 +64,15 @@ TAIL_FADE_S = 0.1        # fade the final N seconds to silence (no abrupt cut)
 # ---- palette loudness policy (loudness.py) ------------------------------
 
 PEAK_CEILING_DB = -1.0    # final per-file peak ceiling (dBFS); gate wants <= -0.7
-CREST_TOLERANCE_DB = 1.0  # only reshape files whose crest deviates from the
+CREST_TOLERANCE_DB = 1.0  # only adjust files whose crest deviates from the
                           # palette mean by more than this (outliers only)
-PEAK_GUARD_S = 0.015      # protect the transient: shape only after peak + this
-CROSSFADE_S = 0.015       # splice smoothing into the shaped tail (avoid a click)
-CREST_SHAPE_RANGE = (0.4, 2.5)  # bisection search bounds for the tail shaper
+PEAK_GUARD_S = 0.015      # protect the transient: adjust only after peak + this
+CROSSFADE_S = 0.015       # splice smoothing into the adjusted tail (avoid a click)
+# The loudness pass reduces crest-factor outliers by applying a LINEAR gain to
+# the decay tail (raising its RMS), not a power-law waveshaper -- linear gain
+# adds no harmonics, so it evens loudness without the distortion artifacts a
+# waveshaper produced. Bounds on that tail gain:
+CREST_GAIN_RANGE = (0.4, 4.0)
 CREST_SHAPE_ITERS = 30
 
 # ---- subagent-accent overlay (generate.py) ------------------------------

@@ -4,17 +4,26 @@ Reads its knobs from tuning.py. Edit numbers in tuning.py, not here, for
 by-ear shaping; edit here to change the synthesis *structure* (add a layer
 type, change the reverb algorithm, etc.).
 """
+# signalflow's pybind11-generated stubs mistype every scalar-accepting node
+# parameter as `Node` (e.g. `frequency: Node = 440`), so passing the floats it
+# accepts at runtime trips reportArgumentType/reportCallIssue. Scope the
+# suppression to this file (the only one that constructs signalflow nodes).
+# pyright: reportArgumentType=false, reportCallIssue=false
 import numpy as np
+from numpy.typing import NDArray
 from scipy.signal import fftconvolve
 import signalflow as sf
 
 import tuning
 from theme import SR
+from variants import Sound
 
-_graph = None
+Signal = NDArray[np.float32]
+
+_graph: sf.AudioGraph | None = None
 
 
-def _graph_get():
+def _graph_get() -> sf.AudioGraph:
     """One shared offline AudioGraph, reused across all bell renders."""
     global _graph
     if _graph is None:
@@ -24,12 +33,12 @@ def _graph_get():
     return _graph
 
 
-def midi_hz(m):
+def midi_hz(m: float) -> float:
     return 440.0 * 2 ** ((m - 69) / 12)
 
 
-def _render_patch(patch, dur):
-    """Play one patch on the shared graph, return its mono float32, reset."""
+def _render_patch(patch: sf.Node, dur: float) -> Signal:
+    """Play one patch on the shared graph, return its mono float32, then reset."""
     g = _graph_get()
     patch.play()
     buf = g.render_to_new_buffer(int(SR * dur))
@@ -38,33 +47,41 @@ def _render_patch(patch, dur):
     return mono
 
 
-def render_bell(freq, dur=tuning.BELL_DUR, brightness=1.0, decay_scale=1.0,
-                detune_cents=0.0, punch=1.0, layer=None, air_db=None):
+def _mix(voices: list[sf.Node]) -> sf.Node:
+    """Sum a non-empty list of signalflow nodes into one patch."""
+    patch = voices[0]
+    for v in voices[1:]:
+        patch = patch + v
+    return patch
+
+
+def render_bell(freq: float, dur: float = tuning.BELL_DUR, brightness: float = 1.0,
+                decay_scale: float = 1.0, detune_cents: float = 0.0, punch: float = 1.0,
+                layer: str | None = None, air_db: float | None = None) -> Signal:
     """One struck inharmonic bell -> mono float32."""
     _graph_get()   # signalflow requires the graph to exist before building nodes
-    patch = None
+    voices: list[sf.Node] = []
     for i, (ratio, amp) in enumerate(tuning.PARTIALS):
         a = amp * (brightness ** i) * (punch if i == 0 else 1.0)
         det = 2 ** ((detune_cents * i) / 1200)
         env = sf.ASREnvelope(tuning.ATTACK_S, 0.0, dur * decay_scale)
-        v = sf.SineOscillator(freq * ratio * det) * env * a
-        patch = v if patch is None else patch + v
+        voices.append(sf.SineOscillator(freq * ratio * det) * env * a)
     if layer == "shimmer":
         r, ds, lvl = tuning.SHIMMER
-        patch = patch + sf.SineOscillator(freq * r) * sf.ASREnvelope(tuning.ATTACK_S, 0.0, dur * ds) * lvl
+        voices.append(sf.SineOscillator(freq * r) * sf.ASREnvelope(tuning.ATTACK_S, 0.0, dur * ds) * lvl)
     elif layer == "sub":
         r, ds, lvl = tuning.SUB
-        patch = patch + sf.SineOscillator(freq * r) * sf.ASREnvelope(tuning.ATTACK_S, 0.0, dur * ds) * lvl
+        voices.append(sf.SineOscillator(freq * r) * sf.ASREnvelope(tuning.ATTACK_S, 0.0, dur * ds) * lvl)
     if air_db is not None:
         air_amp = 10 ** (air_db / 20)
-        patch = patch + sf.SineOscillator(freq * tuning.AIR_RATIO) \
-            * sf.ASREnvelope(tuning.ATTACK_S, 0.0, dur * tuning.AIR_DUR_SCALE) * air_amp
-    return _render_patch(patch, dur)
+        voices.append(sf.SineOscillator(freq * tuning.AIR_RATIO)
+                      * sf.ASREnvelope(tuning.ATTACK_S, 0.0, dur * tuning.AIR_DUR_SCALE) * air_amp)
+    return _render_patch(_mix(voices), dur)
 
 
-def postprocess(sig):
+def postprocess(sig: Signal) -> Signal:
     """Reverb + tail fade. Loudness is handled once across the palette in
-    loudness.py so per-file RMS stays consistent for the analyze.py gate."""
+    loudness.py so per-file RMS stays consistent."""
     n = int(SR * tuning.REVERB_DECAY_S)
     ir = np.random.RandomState(0).randn(n) * np.exp(-np.linspace(0, tuning.REVERB_DAMP, n))
     ir = np.concatenate([np.zeros(int(SR * tuning.REVERB_PREDELAY_S)), ir])
@@ -76,7 +93,7 @@ def postprocess(sig):
     return sig
 
 
-def render_event(sound):
+def render_event(sound: type[Sound]) -> Signal:
     """Render a full event phrase from a variants.Sound class.
 
     Reads the note-map (sound.mode, sound.notes) and accent knobs
@@ -90,7 +107,7 @@ def render_event(sound):
         "air_db": sound.air_db,
     }
     notes = sound.notes
-    onsets = []
+    onsets: list[float] = []
     t = 0.0
     for _, value in notes:
         onsets.append(t)
@@ -104,14 +121,12 @@ def render_event(sound):
     return postprocess(out)
 
 
-def render_subagent_accent():
+def render_subagent_accent() -> Signal:
     """The bare quiet shimmer mixed over subagent tool sounds at runtime."""
     _graph_get()   # graph must exist before building nodes
     freq = midi_hz(tuning.SUBAGENT_NOTE)
-    patch = None
-    for ratio, release, level in tuning.SUBAGENT_PARTIALS:
-        v = sf.SineOscillator(freq * ratio) * sf.ASREnvelope(tuning.ATTACK_S, 0.0, release) * level
-        patch = v if patch is None else patch + v
-    sig = _render_patch(patch, tuning.SUBAGENT_RENDER_S)
+    voices = [sf.SineOscillator(freq * ratio) * sf.ASREnvelope(tuning.ATTACK_S, 0.0, release) * level
+              for ratio, release, level in tuning.SUBAGENT_PARTIALS]
+    sig = _render_patch(_mix(voices), tuning.SUBAGENT_RENDER_S)
     sig = postprocess(sig)
     return sig * 10 ** (tuning.SUBAGENT_OFFSET_DB / 20)

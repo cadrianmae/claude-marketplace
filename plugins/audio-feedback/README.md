@@ -108,7 +108,7 @@ project rooted at `sound-theme/default/` (deps in its `pyproject.toml`, pinned v
 cd plugins/audio-feedback
 just venv        # one-time: uv sync the dev env (Python 3.12 + signalflow/numpy/scipy)
 just generate    # render the full palette into sound-theme/default/sounds/
-just verify      # palette loudness gate (RMS spread <=3 dB, peak max <=-0.7 dBFS)
+just verify      # palette loudness gate (RMS spread <=5 dB, peak max <=-0.7 dBFS)
 just test        # note-map + generator tests
 ```
 
@@ -117,7 +117,6 @@ Iterate on a single sound by ear:
 ```bash
 just live stop notification   # watch the src files; re-render + play on save
 just preview pre-tool-use-network   # render + play once (temp; sounds/ untouched)
-just one stop                 # render just this one into sounds/
 ```
 
 `just` (or `uv run` in `sound-theme/default/`) drives the synced venv; `generate.py`

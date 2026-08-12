@@ -109,7 +109,7 @@ The four that matter most for these bells: **inharmonic partials + soft attack
    python scripts/analyze.py --palette sound-theme/default/sounds
    ```
 
-   Passes when the RMS spread is <= 3 dB and the peak stays under -0.7 dBFS.
+   Passes when the RMS spread is <= 5 dB and the peak stays under -0.7 dBFS.
 
 Event sounds are pre-rendered WAVs played by the audio-feedback hook
 (`scripts/lib.sh`); there is no runtime synthesis at play time.

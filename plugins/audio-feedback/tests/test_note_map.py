@@ -14,7 +14,7 @@ def test_registry_complete():
     # 8 base + 19 variants, every entry a Sound subclass
     assert len(SOUNDS) == 27
     assert set(BASE) <= set(SOUNDS)
-    for name, cls in SOUNDS.items():
+    for cls in SOUNDS.values():
         assert isinstance(cls, type) and issubclass(cls, Sound)
 
 

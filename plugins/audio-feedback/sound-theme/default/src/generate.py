@@ -27,17 +27,24 @@ PREVIEW_DIR = os.path.join(theme.HERE, ".preview")
 WATCH_FILES = ["tuning.py", "synth.py", "loudness.py", "theme.py", "variants.py"]
 
 
-def _render_events(names=None):
-    """Render selected (or all) events -> {name: signal}, palette-normalized."""
-    sigs = {}
-    for name, sound in theme.all_targets().items():
+def _render_events(names: list[str] | None = None) -> dict[str, synth.Signal]:
+    """Render selected (or all) events -> {name: signal}, palette-normalized,
+    then per-sound level trims applied (real output loudness, by ear)."""
+    targets = theme.all_targets()
+    sigs: dict[str, synth.Signal] = {}
+    for name, sound in targets.items():
         if names and name not in names:
             continue
         sigs[name] = synth.render_event(sound)
-    return loudness.normalize_palette(sigs)
+    sigs = loudness.normalize_palette(sigs)
+    for name, sig in sigs.items():
+        db = targets[name].level_db
+        if db:
+            sigs[name] = sig * (10 ** (db / 20))
+    return sigs
 
 
-def cmd_generate(argv):
+def cmd_generate(argv: list[str]) -> None:
     only = [argv[i + 1] for i, a in enumerate(argv) if a == "--only"]
     os.makedirs(theme.SOUNDS, exist_ok=True)
     for name, sig in _render_events(only or None).items():
@@ -49,11 +56,11 @@ def cmd_generate(argv):
         print("wrote subagent-accent.wav")
 
 
-def _play(path):
+def _play(path: str) -> None:
     subprocess.run(["paplay", path], check=False)
 
 
-def cmd_preview(names):
+def cmd_preview(names: list[str]) -> int:
     if not names:
         print("usage: preview NAME [NAME ...]", file=sys.stderr)
         return 2
@@ -71,8 +78,8 @@ def cmd_preview(names):
     return 0
 
 
-def _mtimes():
-    out = {}
+def _mtimes() -> dict[str, float]:
+    out: dict[str, float] = {}
     for f in WATCH_FILES:
         p = os.path.join(theme.HERE, f)
         try:
@@ -82,7 +89,7 @@ def _mtimes():
     return out
 
 
-def cmd_live(names):
+def cmd_live(names: list[str]) -> int:
     if not names:
         print("usage: live NAME [NAME ...]", file=sys.stderr)
         return 2
@@ -103,7 +110,7 @@ def cmd_live(names):
     return 0
 
 
-def main(argv=None):
+def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv and argv[0] in ("generate", "preview", "live"):
         cmd, rest = argv[0], argv[1:]
@@ -113,8 +120,9 @@ def main(argv=None):
         return cmd_preview(rest)
     if cmd == "live":
         return cmd_live(rest)
-    return cmd_generate(rest)
+    cmd_generate(rest)
+    return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main() or 0)
+    sys.exit(main())
