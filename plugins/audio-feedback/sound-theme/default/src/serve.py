@@ -27,9 +27,8 @@ _lock = threading.Lock()
 
 def render(preview_dir: str) -> str | None:
     """Run the generator subprocess -> preview_dir. Return an error string or None."""
-    env = dict(os.environ, UV_PYTHON_PREFERENCE="only-managed")
     r = subprocess.run([sys.executable, GEN, "--serve-dir", preview_dir],
-                       capture_output=True, text=True, env=env)
+                       capture_output=True, text=True)
     return None if r.returncode == 0 else (r.stderr or "render failed")
 
 
@@ -75,7 +74,10 @@ def create_app(preview_dir: str) -> flask.Flask:
 
     @app.route("/api/palette")
     def palette() -> flask.Response:
-        with open(os.path.join(preview_dir, "palette.json")) as f:
+        path = os.path.join(preview_dir, "palette.json")
+        if not os.path.exists(path):
+            return flask.make_response(flask.jsonify([]), 503)
+        with open(path) as f:
             data = json.load(f)
         return flask.jsonify(data)
 
@@ -112,7 +114,8 @@ def main() -> None:
     err = render(preview_dir)          # initial render
     if err:
         print(err, file=sys.stderr)
-    _state["version"] = 1
+    if not err:
+        _state["version"] = 1
     threading.Thread(target=_watch, args=(preview_dir,), daemon=True).start()
     print("audio-feedback preview: http://127.0.0.1:8765")
     create_app(preview_dir).run(host="127.0.0.1", port=8765, threaded=True)

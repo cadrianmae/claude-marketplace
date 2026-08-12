@@ -86,6 +86,7 @@ SWOOSH_FREQ_HI = 5000.0   # sweep high end (Hz)
 SWOOSH_Q = 0.7            # bandpass resonance (0..1); higher = more "whistly"
 SWOOSH_ATTACK = 0.04      # fade-in (soft, so it reads as a whoosh not a burst)
 SWOOSH_LEVEL = 0.5        # pre-normalize level
+SWOOSH_SEED = 18   # seed the noise so swoosh renders are deterministic
 
 # ---- subagent-accent overlay (generate.py) ------------------------------
 

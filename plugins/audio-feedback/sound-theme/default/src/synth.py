@@ -102,7 +102,14 @@ def render_swoosh(sound: type[Sound]) -> Signal:
     if sound.swoosh_dir == "down":
         lo, hi = hi, lo
     cutoff = sf.Line(lo, hi, dur)
-    filt = sf.SVFilter(sf.PinkNoise(), sf.SIGNALFLOW_FILTER_TYPE_BAND_PASS, cutoff, tuning.SWOOSH_Q)
+    # sf.random_seed() (the global RNG seed) does NOT make PinkNoise
+    # deterministic in practice -- confirmed empirically: two renders with
+    # the same sf.random_seed() call still differ. StochasticNode.set_seed()
+    # on the node instance itself does reproduce byte-identically, so seed
+    # the noise node directly rather than the global RNG.
+    noise = sf.PinkNoise()
+    noise.set_seed(tuning.SWOOSH_SEED)
+    filt = sf.SVFilter(noise, sf.SIGNALFLOW_FILTER_TYPE_BAND_PASS, cutoff, tuning.SWOOSH_Q)
     env = sf.ASREnvelope(tuning.SWOOSH_ATTACK, 0.0, dur)
     patch = filt * env * tuning.SWOOSH_LEVEL
     return postprocess(_render_patch(patch, dur))

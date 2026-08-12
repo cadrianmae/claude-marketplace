@@ -304,7 +304,8 @@ async function build(palette) {
         <canvas></canvas><div class="params">${paramText(p)}</div>`;
       grid.append(card);
       const canvas = card.querySelector("canvas");
-      await loadBuffer(p.name).then(b => drawWave(canvas, b));
+      try { await loadBuffer(p.name).then(b => drawWave(canvas, b)); }
+      catch (e) { card.querySelector(".params").textContent += " (load failed)"; }
       card.onclick = () => play(p.name, card);
     }
   }
@@ -331,6 +332,7 @@ es.addEventListener("reload", async e => {
 es.addEventListener("error", e => {
   const b = document.getElementById("banner"); b.style.display = "block"; b.textContent = e.data;
 });
+refresh();
 </script>
 </body>
 </html>
