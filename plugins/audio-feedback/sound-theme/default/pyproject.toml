@@ -6,4 +6,17 @@ requires-python = ">=3.12,<3.13"   # signalflow ships a cp312 wheel; no 3.13/3.1
 dependencies = ["signalflow==0.5.3", "numpy", "scipy"]
 
 [dependency-groups]
-dev = ["pytest"]
+dev = ["pytest", "flask"]
+
+[tool.basedpyright]
+# basedpyright roots here (nearest pyproject.toml). Use pyright's "standard"
+# mode instead of basedpyright's stricter default -- signalflow/numpy/scipy are
+# untyped-ish, so reportAny/reportUnknown*/reportUnannotatedClassAttribute are
+# noise for a small dev-time generator. src/ is the import root; the venv
+# resolves signalflow.
+venvPath = "."
+venv = ".venv"
+extraPaths = ["src"]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
+reportMissingModuleSource = "none"

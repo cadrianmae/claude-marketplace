@@ -32,3 +32,28 @@ def test_serve_dir_emits_wavs_and_palette(tmp_path):
     assert by["pre-tool-use-network"]["voice"] == "swoosh"
     assert by["pre-tool-use-network"]["swoosh_dir"] == "up"
     assert "level_db" in by["stop"]
+
+
+flask = pytest.importorskip("flask")
+
+
+def _app(tmp_path):
+    src = os.path.join(PLUGIN, "sound-theme", "default", "src")
+    sys.path.insert(0, src)
+    import serve
+    out = str(tmp_path / "preview")
+    subprocess.run([_py(), GEN, "--serve-dir", out], capture_output=True, text=True, check=True)
+    return serve.create_app(out)
+
+
+def test_routes(tmp_path):
+    app = _app(tmp_path)
+    c = app.test_client()
+    assert c.get("/").status_code == 200
+    assert b"sound" in c.get("/").data.lower()
+    pal = c.get("/api/palette")
+    assert pal.status_code == 200 and len(pal.get_json()) == 27
+    wav = c.get("/sounds/stop.wav")
+    assert wav.status_code == 200 and wav.data[:4] == b"RIFF"
+    ev = c.get("/events")
+    assert "text/event-stream" in ev.headers["Content-Type"]
