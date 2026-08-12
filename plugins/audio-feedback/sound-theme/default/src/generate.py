@@ -38,7 +38,7 @@ def midi_hz(m):
     return 440.0 * 2 ** ((m - 69) / 12)
 
 def render_bell(freq, dur=BELL_DUR, brightness=1.0, decay_scale=1.0,
-                detune_cents=0.0, punch=1.0, layer=None):
+                detune_cents=0.0, punch=1.0, layer=None, air_db=None):
     """One struck inharmonic bell -> mono float32."""
     g = _graph_get()
     patch = None
@@ -52,6 +52,10 @@ def render_bell(freq, dur=BELL_DUR, brightness=1.0, decay_scale=1.0,
         patch = patch + sf.SineOscillator(freq * 6.01) * sf.ASREnvelope(0.003, 0.0, dur * 0.5) * 0.06
     elif layer == "sub":
         patch = patch + sf.SineOscillator(freq * 0.5) * sf.ASREnvelope(0.003, 0.0, dur) * 0.2
+    if air_db is not None:
+        # subtle high "air" partial, gentle and short so it stays under the palette gate
+        air_amp = 10 ** (air_db / 20)
+        patch = patch + sf.SineOscillator(freq * 8.0) * sf.ASREnvelope(0.003, 0.0, dur * 0.35) * air_amp
     patch.play()
     buf = g.render_to_new_buffer(int(SR * dur))
     mono = np.asarray(buf.data).mean(axis=0).astype("float32")
@@ -61,7 +65,7 @@ def render_bell(freq, dur=BELL_DUR, brightness=1.0, decay_scale=1.0,
 def render_event(name, spec, accent=None):
     accent = accent or {}
     transpose = accent.get("transpose", 0)
-    kw = {k: accent[k] for k in ("brightness","decay_scale","detune_cents","punch","layer")
+    kw = {k: accent[k] for k in ("brightness","decay_scale","detune_cents","punch","layer","air_db")
           if k in accent}
     notes = spec["notes"]
     onsets = []
@@ -78,7 +82,9 @@ def render_event(name, spec, accent=None):
     return postprocess(out, accent)
 
 def postprocess(sig, accent):
-    # air layer as broadband high-shelf-ish noise-free partial already handled; here: reverb + EQ + normalize
+    # air layer as broadband high-shelf-ish noise-free partial already handled; here: reverb + EQ.
+    # Loudness normalization happens once across the whole palette (see normalize_palette) so
+    # per-file RMS stays consistent for the analyze.py --palette gate.
     ir = np.random.RandomState(0).randn(int(SR * 0.35)) * np.exp(-np.linspace(0, 6, int(SR * 0.35)))
     ir = np.concatenate([np.zeros(int(SR * 0.008)), ir])
     wet = fftconvolve(sig, ir)[:len(sig)]
@@ -86,8 +92,59 @@ def postprocess(sig, accent):
     f = int(SR * 0.1)                        # 100ms tail fade
     if len(sig) > f:
         sig[-f:] *= np.linspace(1, 0, f)
+    return sig
+
+
+PEAK_CEILING = 10 ** (-1 / 20)   # -1 dBFS, comfortably under the -0.7 dBFS gate
+
+
+def _crest_db(sig):
+    """peak/RMS ratio in dB. Scale-invariant: a uniform gain does not change it."""
     peak = np.max(np.abs(sig)) + 1e-9
-    return (sig / peak) * 10 ** (-1 / 20)    # -1 dBFS
+    rms = np.sqrt(np.mean(sig.astype(np.float64) ** 2)) + 1e-9
+    return 20 * np.log10(peak / rms)
+
+
+def _shape(sig, p):
+    """Sign-preserving power-law dynamics shaper. p<1 gently compresses (boosts
+    quiet portions relative to the peak, lowering crest factor); p>1 gently
+    expands (raises crest factor). p=1 is a no-op."""
+    return np.sign(sig) * (np.abs(sig) ** p)
+
+
+def normalize_palette(sigs):
+    """Even out loudness across the palette so it survives analyze.py's
+    --palette gate.
+
+    analyze.py peak-normalizes each file to 0 dBFS *before* measuring RMS, so
+    a uniform per-file gain (simple RMS matching) has zero effect on the
+    measured spread -- it's cancelled out by that per-file peak-normalize.
+    What actually varies between events is crest factor (peak-to-RMS ratio),
+    driven by accent shape (e.g. `punch` extends a partial's full-envelope
+    amplitude and lowers crest; the `air_db` accent adds a short bright burst
+    that raises peak without adding sustain, raising crest). So instead we
+    match crest factor: shape each signal's dynamics toward the palette's
+    median crest factor via a light power-law compressor/expander, then apply
+    a final per-file peak ceiling (a uniform gain, which does not perturb the
+    crest factor we just set)."""
+    crest = {n: _crest_db(s) for n, s in sigs.items()}
+    target = float(np.median(list(crest.values())))
+    out = {}
+    for n, s in sigs.items():
+        if abs(crest[n] - target) < 0.05:
+            shaped = s
+        else:
+            lo, hi = 0.4, 2.5
+            for _ in range(30):
+                mid = (lo + hi) / 2
+                if _crest_db(_shape(s, mid)) > target:
+                    hi = mid
+                else:
+                    lo = mid
+            shaped = _shape(s, (lo + hi) / 2)
+        peak = np.max(np.abs(shaped)) + 1e-9
+        out[n] = shaped * (PEAK_CEILING / peak)
+    return out
 
 def write_wav(path, sig):
     import scipy.io.wavfile as wav
@@ -103,10 +160,13 @@ def main(argv=None):
     argv = argv if argv is not None else sys.argv[1:]
     only = [argv[i + 1] for i, a in enumerate(argv) if a == "--only"]
     os.makedirs(SOUNDS, exist_ok=True)
+    sigs = {}
     for name, (spec, accent) in all_targets().items():
         if only and name not in only:
             continue
-        sig = render_event(name, spec, accent)
+        sigs[name] = render_event(name, spec, accent)
+    sigs = normalize_palette(sigs)
+    for name, sig in sigs.items():
         write_wav(os.path.join(SOUNDS, name + ".wav"), sig)
         print("wrote", name + ".wav")
 
