@@ -23,10 +23,11 @@ REAPER step is what stalled the prior effort; Spec B replaces it with code.
 
 - **Method:** programmatic synthesis (no DAW step).
 - **Library:** `signalflow` 0.5.3 — verified to render offline to WAV under an
-  uv-managed Python 3.12 (cp312 wheel). Run via `uv run --script` with PEP 723
-  inline metadata, exactly like af-soundd: uv fetches Python 3.12 and the deps,
-  no pyenv / manual venv / toolbox. (pyo was rejected: no 3.14 wheels, and its C
-  fails to build against Fedora 44's GCC 15.)
+  uv-managed Python 3.12 (cp312 wheel). Dev uses a uv-created venv
+  (`uv venv --python 3.12`) for interactive iteration, plus PEP 723 + `uv run
+  --script` for reproducible/test runs — uv provides Python 3.12 both ways, no
+  pyenv or toolbox. The venv dir is git-ignored. (pyo was rejected: no 3.14
+  wheels, and its C fails to build against Fedora 44's GCC 15.)
 - **Palette scope:** full 27 — 8 base events + 19 category variants.
 - **Variant mechanism:** declarative accent-delta + optional added layer
   (resynthesized), inheriting a base event.
@@ -104,12 +105,29 @@ light pre-delay reverb, palette-consistent loudness.
   `sound-theme/default/src/audio-feedback.rpp`,
   `sound-theme/default/src/vital-fxchain.rpp-fragment`.
 
-### 1.4 Dev environment (uv + PEP 723)
+### 1.4 Dev environment (uv — persistent venv + PEP 723)
 
 Generation is dev-time only (output WAVs are committed; not a runtime dep). No
-pyenv, manual venv, or toolbox — `generate.py` carries PEP 723 inline metadata
-and is run with `uv run --script`, which fetches Python 3.12 and the deps into
-uv's cache:
+pyenv or toolbox — uv provides Python 3.12 both ways. Two complementary paths,
+one dependency source.
+
+**Persistent venv (primary — interactive sound iteration).** A real activatable
+venv so you can work by ear: REPL, run patches piecemeal, re-render one sound,
+tweak, repeat.
+
+```bash
+# only-managed avoids pyenv shims shadowing python3.12
+UV_PYTHON_PREFERENCE=only-managed uv venv --python 3.12 \
+  plugins/audio-feedback/sound-theme/default/src/.venv-gen          # git-ignored
+uv pip install --python plugins/audio-feedback/sound-theme/default/src/.venv-gen \
+  signalflow numpy scipy
+source plugins/audio-feedback/sound-theme/default/src/.venv-gen/bin/activate
+python plugins/audio-feedback/sound-theme/default/src/generate.py    # or iterate in a REPL
+```
+
+**One-shot / reproducible / tests (`uv run --script`).** `generate.py` also
+carries PEP 723 inline metadata, so it runs standalone with no prior setup —
+used by `test_generate.py` and for clean regeneration:
 
 ```python
 # /// script
@@ -117,18 +135,14 @@ uv's cache:
 # dependencies = ["signalflow", "numpy", "scipy"]
 # ///
 ```
-
 ```bash
-# from repo root; only-managed avoids pyenv shims shadowing python3.12
 UV_PYTHON_PREFERENCE=only-managed \
   uv run --script plugins/audio-feedback/sound-theme/default/src/generate.py
-python plugins/audio-feedback/scripts/analyze.py --palette \
-  plugins/audio-feedback/sound-theme/default/sounds
 ```
 
-(`analyze.py` is numpy/scipy-only and can run under any interpreter with those,
-including `uv run --with numpy --with scipy`.) No `requirements-gen.txt` — the
-PEP 723 block is the single dependency source.
+The PEP 723 block is the single dependency source; the venv installs the same
+three packages (no separate `requirements-gen.txt`). `analyze.py` is
+numpy/scipy-only and runs under the same venv (or `uv run --with numpy --with scipy`).
 
 ---
 
