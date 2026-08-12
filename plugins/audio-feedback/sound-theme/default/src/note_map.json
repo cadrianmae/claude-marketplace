@@ -1,0 +1,10 @@
+{
+  "session-start":      {"mode": "seq",   "notes": [[48,"quaver"],[52,"quaver"],[55,"quaver"],[58,"quaver"],[60,"minim"]]},
+  "user-prompt-submit": {"mode": "seq",   "notes": [[67,"quaver"]]},
+  "pre-tool-use":       {"mode": "seq",   "notes": [[70,"quaver"]]},
+  "notification":       {"mode": "seq",   "notes": [[60,"quaver"],[67,"quaver"],[70,"crotchet"]]},
+  "pre-compact":        {"mode": "chord", "notes": [[43,"minim"],[46,"minim"]]},
+  "post-tool-use":      {"mode": "seq",   "notes": [[72,"quaver"]]},
+  "subagent-stop":      {"mode": "seq",   "notes": [[64,"quaver"],[60,"crotchet"]]},
+  "stop":               {"mode": "seq",   "notes": [[72,"quaver"],[71,"quaver"],[67,"quaver"],[64,"quaver"],[60,"minim"]]}
+}
