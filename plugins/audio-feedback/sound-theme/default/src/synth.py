@@ -76,29 +76,29 @@ def postprocess(sig):
     return sig
 
 
-def render_event(name, spec, accent=None):
-    """Render a full event phrase (note-map spec + optional Accent).
+def render_event(sound):
+    """Render a full event phrase from a variants.Sound class.
 
-    `accent` is a variants.Accent instance or None (base event)."""
-    transpose = accent.transpose if accent else 0
-    kw = {} if accent is None else {
-        "brightness": accent.brightness,
-        "decay_scale": accent.decay_scale,
-        "detune_cents": accent.detune_cents,
-        "punch": accent.punch,
-        "layer": accent.layer,
-        "air_db": accent.air_db,
+    Reads the note-map (sound.mode, sound.notes) and accent knobs
+    (sound.transpose/brightness/... class attributes) off the class."""
+    kw = {
+        "brightness": sound.brightness,
+        "decay_scale": sound.decay_scale,
+        "detune_cents": sound.detune_cents,
+        "punch": sound.punch,
+        "layer": sound.layer,
+        "air_db": sound.air_db,
     }
-    notes = spec["notes"]
+    notes = sound.notes
     onsets = []
     t = 0.0
     for _, value in notes:
         onsets.append(t)
-        t += 0.0 if spec["mode"] == "chord" else tuning.VALUE_SEC[value]
+        t += 0.0 if sound.mode == "chord" else tuning.VALUE_SEC[value]
     total = int(SR * (max(onsets) + tuning.BELL_DUR))
     out = np.zeros(total, dtype="float32")
     for (midi, _), onset in zip(notes, onsets):
-        bell = render_bell(midi_hz(midi + transpose), **kw)
+        bell = render_bell(midi_hz(midi + sound.transpose), **kw)
         i = int(SR * onset)
         out[i:i + len(bell)] += bell[:total - i]
     return postprocess(out)

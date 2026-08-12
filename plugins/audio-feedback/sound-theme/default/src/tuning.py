@@ -10,7 +10,7 @@ generate.py. Change a number, then re-render and listen:
     just live stop notification  # auto re-render + play on save
 
 Per-variant accents (transpose, brightness, layers, ...) live in variants.py.
-The note pitches + rhythm live in note_map.json. This file is the *voice*: how
+The note pitches + rhythm live in variants.py (each Sound class). This file is the *voice*: how
 a single struck bell sounds, how phrases are spaced, the reverb, and the
 palette loudness policy.
 """

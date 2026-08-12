@@ -1,30 +1,24 @@
-"""Theme data + I/O for the audio-feedback generator.
+"""Theme paths + WAV I/O for the audio-feedback generator.
 
-Plumbing: paths, sample rate, loading note_map.json / variants.py, resolving
-the render list, and writing WAVs. No synthesis or tuning lives here.
+Plumbing only: paths, sample rate, the sound registry, and writing WAVs. The
+palette (note-map + accents) lives in variants.py as a class hierarchy; the
+synthesis lives in synth.py.
 """
-import json
 import os
 
 import numpy as np
 
-from variants import VARIANTS
+from variants import SOUNDS as _SOUNDS
 
 SR = 44100  # output sample rate (fixed by the plugin's WAV format, not a tuning knob)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SOUNDS = os.path.normpath(os.path.join(HERE, "..", "sounds"))
-
-with open(os.path.join(HERE, "note_map.json")) as _f:
-    NOTE_MAP = json.load(_f)
+SOUNDS = os.path.normpath(os.path.join(HERE, "..", "sounds"))  # output WAV dir
 
 
 def all_targets():
-    """name -> (note_map_spec, Accent_or_None) for the 8 base + 19 variants."""
-    items = {n: (NOTE_MAP[n], None) for n in NOTE_MAP}
-    for vname, accent in VARIANTS.items():
-        items[vname] = (NOTE_MAP[accent.base], accent)
-    return items
+    """name -> Sound class, for the 8 base + 19 variants."""
+    return dict(_SOUNDS)
 
 
 def write_wav(path, sig):

@@ -24,17 +24,16 @@ import synth
 import loudness
 
 PREVIEW_DIR = os.path.join(theme.HERE, ".preview")
-WATCH_FILES = ["tuning.py", "synth.py", "loudness.py", "theme.py",
-               "variants.py", "note_map.json"]
+WATCH_FILES = ["tuning.py", "synth.py", "loudness.py", "theme.py", "variants.py"]
 
 
 def _render_events(names=None):
     """Render selected (or all) events -> {name: signal}, palette-normalized."""
     sigs = {}
-    for name, (spec, accent) in theme.all_targets().items():
+    for name, sound in theme.all_targets().items():
         if names and name not in names:
             continue
-        sigs[name] = synth.render_event(name, spec, accent)
+        sigs[name] = synth.render_event(sound)
     return loudness.normalize_palette(sigs)
 
 
@@ -63,8 +62,8 @@ def cmd_preview(names):
         if name == "subagent-accent":
             sig = synth.render_subagent_accent()
         else:
-            spec, accent = theme.all_targets()[name]
-            sig = next(iter(loudness.normalize_palette({name: synth.render_event(name, spec, accent)}).values()))
+            sound = theme.all_targets()[name]
+            sig = next(iter(loudness.normalize_palette({name: synth.render_event(sound)}).values()))
         path = os.path.join(PREVIEW_DIR, name + ".wav")
         theme.write_wav(path, sig)
         print("preview", name)

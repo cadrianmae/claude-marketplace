@@ -90,7 +90,7 @@ All sounds: lo-fi minimal aesthetic, synthesised with reverb, 0.5s decay tail, n
 ## Sound design
 
 The default theme's 27 sounds (8 base events + 19 subtype variants) are all derived
-from one locked `note_map.json`: each base event is a `seq` (melodic line) or `chord`
+from the locked note-map in `variants.py`: each base event is a `seq` (melodic line) or `chord`
 (simultaneous notes) of MIDI note/duration pairs, additively synthesised as bells by
 `generate.py`. Variants (e.g. `notification-permission`, `pre-tool-use-execute`) are
 declared in `variants.py` as small accent deltas (brightness, detune, punch) layered

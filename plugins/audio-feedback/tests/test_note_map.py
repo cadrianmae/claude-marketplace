@@ -1,25 +1,37 @@
-import json, os, sys
+import os, sys
+
 HERE = os.path.dirname(__file__)
 SRC = os.path.join(HERE, "..", "sound-theme", "default", "src")
 sys.path.insert(0, SRC)
-from variants import VARIANTS, Accent  # noqa: E402
-BASE = ["session-start","user-prompt-submit","pre-tool-use","notification",
-        "pre-compact","post-tool-use","subagent-stop","stop"]
-VALUES = {"quaver","crotchet","minim"}
+from variants import SOUNDS, Sound  # noqa: E402
 
-def test_note_map_complete_and_valid():
-    nm = json.load(open(os.path.join(SRC, "note_map.json")))
-    assert set(nm) == set(BASE)
-    assert nm["stop"]["notes"][0][0] == 72 and nm["session-start"]["notes"][0][0] == 48
-    assert nm["pre-compact"]["mode"] == "chord"
-    for ev in nm.values():
-        assert ev["mode"] in {"seq","chord"}
-        for midi, val in ev["notes"]:
+BASE = ["session-start", "user-prompt-submit", "pre-tool-use", "notification",
+        "pre-compact", "post-tool-use", "subagent-stop", "stop"]
+VALUES = {"quaver", "crotchet", "minim"}
+
+
+def test_registry_complete():
+    # 8 base + 19 variants, every entry a Sound subclass
+    assert len(SOUNDS) == 27
+    assert set(BASE) <= set(SOUNDS)
+    for name, cls in SOUNDS.items():
+        assert isinstance(cls, type) and issubclass(cls, Sound)
+
+
+def test_note_map_locked_and_valid():
+    assert SOUNDS["stop"].notes[0][0] == 72
+    assert SOUNDS["session-start"].notes[0][0] == 48
+    assert SOUNDS["pre-compact"].mode == "chord"
+    for name in BASE:
+        cls = SOUNDS[name]
+        assert cls.mode in {"seq", "chord"}
+        for midi, val in cls.notes:
             assert 0 <= midi <= 127 and val in VALUES
 
-def test_variants_reference_valid_bases():
-    nm = json.load(open(os.path.join(SRC, "note_map.json")))
-    assert len(VARIANTS) == 19
-    for name, accent in VARIANTS.items():
-        assert isinstance(accent, Accent)
-        assert accent.base in nm
+
+def test_variants_inherit_base_notes():
+    # a variant extends its base event -> shares its note-map
+    assert SOUNDS["pre-tool-use-execute"].notes == SOUNDS["pre-tool-use"].notes
+    assert SOUNDS["session-start-clear"].notes == SOUNDS["session-start"].notes
+    # and it overrides at least one accent knob away from the neutral default
+    assert SOUNDS["pre-tool-use-execute"].transpose == -2
