@@ -242,3 +242,87 @@ def _first_or(maybe, default):
 def parse(spec: str):
     tree = GRAMMAR.parse(spec)
     return MiniNotationVisitor().visit(tree)
+
+
+from fractions import Fraction
+
+
+def bjorklund(k: int, n: int) -> list[bool]:
+    """Euclidean rhythm: k pulses over n steps, first step a pulse."""
+    if n <= 0:
+        return []
+    if k <= 0:
+        return [False] * n
+    if k >= n:
+        return [True] * n
+    counts: list[int] = []
+    remainders = [k]
+    divisor = n - k
+    level = 0
+    while remainders[level] > 1:
+        counts.append(divisor // remainders[level])
+        remainders.append(divisor % remainders[level])
+        divisor = remainders[level]
+        level += 1
+    counts.append(divisor)
+    pattern: list[bool] = []
+
+    def build(lvl: int) -> None:
+        if lvl == -1:
+            pattern.append(False)
+        elif lvl == -2:
+            pattern.append(True)
+        else:
+            for _ in range(counts[lvl]):
+                build(lvl - 1)
+            if remainders[lvl] != 0:
+                build(lvl - 2)
+
+    build(level)
+    i = pattern.index(True)          # rotate so a pulse starts the cycle
+    return pattern[i:] + pattern[:i]
+
+
+def _emit(node: object, begin: Fraction, end: Fraction,
+          out: list[tuple[Fraction, int]]) -> None:
+    if isinstance(node, Reject):
+        raise ValueError(f"{node.sym!r} is a cross-cycle/sample operator with no "
+                         f"meaning in a one-shot sound")
+    if isinstance(node, Atom):
+        if node.midi is not None:
+            out.append((begin, node.midi))
+        return
+    if isinstance(node, Seq):
+        total = sum(w for _, w in node.steps) or 1
+        pos = begin
+        span = end - begin
+        for child, w in node.steps:
+            nxt = pos + span * Fraction(w, total)
+            _emit(child, pos, nxt, out)
+            pos = nxt
+        return
+    if isinstance(node, Stack):
+        for seq in node.seqs:
+            _emit(seq, begin, end, out)
+        return
+    if isinstance(node, Fast):
+        span = (end - begin) / node.n
+        for j in range(node.n):
+            _emit(node.child, begin + span * j, begin + span * (j + 1), out)
+        return
+    if isinstance(node, Euclid):
+        pat = bjorklund(node.k, node.n)
+        span = (end - begin) / node.n
+        for j, on in enumerate(pat):
+            if on:
+                _emit(node.child, begin + span * j, begin + span * (j + 1), out)
+        return
+    raise TypeError(f"unhandled node: {node!r}")
+
+
+def phrase(spec: str) -> list[tuple[Fraction, int]]:
+    """Parse a mini-notation string, interpret one cycle -> (onset, midi) events."""
+    out: list[tuple[Fraction, int]] = []
+    _emit(parse(spec), Fraction(0), Fraction(1), out)
+    out.sort(key=lambda ev: ev[0])
+    return out
