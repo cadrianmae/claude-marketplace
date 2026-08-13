@@ -1,10 +1,18 @@
 """The sound palette as a class hierarchy: note-map + accent per event/variant.
 
-`Sound` is the abstract base: it declares the note-map fields (mode, notes) and
-every accent knob with neutral defaults. Each base EVENT is a subclass carrying
-its own notes. Each VARIANT extends its base event class -- so it inherits the
-notes and overrides only the accent knobs that differ. Data lives with the
-class it belongs to; there is no separate note_map.json / variants.json.
+`Sound` is the abstract base: it declares the note-map fields (notes,
+cycle_sec) and every accent knob with neutral defaults. Each base EVENT is a
+subclass carrying its own notes. Each VARIANT extends its base event class --
+so it inherits the notes and overrides only the accent knobs that differ.
+Data lives with the class it belongs to; there is no separate
+note_map.json / variants.json.
+
+`notes` is a mini-notation string parsed via `phrase(...)` (see
+mininotation.py) into a sorted list of `(onset_fraction, midi)` events for one
+cycle, where onset is a Fraction in [0, 1). `,` inside the spec stacks
+sequences to play simultaneously (replaces the old mode="chord"). `cycle_sec`
+is the per-sound cycle length in seconds -- it scales the fractional onsets
+into real time (see synth.render_event).
 
 This is a tuning surface. Edit a class's notes or knobs, then re-render:
     just live stop
@@ -20,13 +28,16 @@ Accent knobs (see synth.render_bell):
   air_db        add a short high "air" partial at this level in dB (e.g. -12)
 """
 from abc import ABC
+from fractions import Fraction
 from typing import ClassVar
+
+from mininotation import phrase
 
 
 class Sound(ABC):
     # ---- note-map (a base EVENT sets these; a variant inherits them) ----
-    mode: ClassVar[str] = "seq"                       # "seq" | "chord"
-    notes: ClassVar[list[tuple[int, str]]] = []       # (midi, "quaver"|"crotchet"|"minim")
+    notes: ClassVar[list[tuple[Fraction, int]]] = []  # (onset_fraction, midi)
+    cycle_sec: ClassVar[float] = 0.12                  # per-sound cycle length
 
     # ---- voice: which synth renders this sound ----
     voice: ClassVar[str] = "bell"          # "bell" (note-map) | "swoosh" (noise sweep)
@@ -48,29 +59,28 @@ class Sound(ABC):
 # ---- base events (carry the locked note-map) ----------------------------
 
 class SessionStart(Sound):     # Mixolydian rise, full bar
-    notes = [(48, "quaver"), (52, "quaver"), (55, "quaver"), (58, "quaver"), (60, "minim")]
+    notes = phrase("c3 e3 g3 a#3 c4@4"); cycle_sec = 0.96
 
 class UserPromptSubmit(Sound):
-    notes = [(67, "quaver")]
+    notes = phrase("g4"); cycle_sec = 0.12
 
 class PreToolUse(Sound):       # open flat-7
-    notes = [(70, "quaver")]
+    notes = phrase("a#4"); cycle_sec = 0.12
 
 class Notification(Sound):     # rise, open
-    notes = [(60, "quaver"), (67, "quaver"), (70, "crotchet")]
+    notes = phrase("c4 g4 a#4@2"); cycle_sec = 0.48
 
 class PreCompact(Sound):       # low warn dyad
-    mode = "chord"
-    notes = [(43, "minim"), (46, "minim")]
+    notes = phrase("[g2,a#2]"); cycle_sec = 0.48
 
 class PostToolUse(Sound):      # tonic, resolved
-    notes = [(72, "quaver")]
+    notes = phrase("c5"); cycle_sec = 0.12
 
 class SubagentStop(Sound):     # fall (short)
-    notes = [(64, "quaver"), (60, "crotchet")]
+    notes = phrase("e4 c4@2"); cycle_sec = 0.36
 
 class Stop(Sound):             # Ionian fall, settle, full bar
-    notes = [(72, "quaver"), (71, "quaver"), (67, "quaver"), (64, "quaver"), (60, "minim")]
+    notes = phrase("c5 b4 g4 e4 c4@4"); cycle_sec = 0.96
 
 
 # ---- variants (extend a base event -> inherit its notes, add accent) ----

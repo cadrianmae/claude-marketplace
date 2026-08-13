@@ -123,8 +123,10 @@ def render_swoosh(sound: type[Sound]) -> Signal:
 def render_event(sound: type[Sound]) -> Signal:
     """Render a sound from a variants.Sound class, dispatching on its voice.
 
-    "bell" (default) uses the note-map (sound.mode, sound.notes) + accent knobs
-    (sound.transpose/brightness/...); "swoosh" uses render_swoosh."""
+    "bell" (default) uses the note-map (sound.notes, a list of
+    (onset_fraction, midi) events over one cycle of sound.cycle_sec seconds)
+    + accent knobs (sound.transpose/brightness/...); "swoosh" uses
+    render_swoosh."""
     if sound.voice == "swoosh":
         return render_swoosh(sound)
     kw = {
@@ -135,20 +137,16 @@ def render_event(sound: type[Sound]) -> Signal:
         "layer": sound.layer,
         "air_db": sound.air_db,
     }
-    notes = sound.notes
-    onsets: list[float] = []
-    t = 0.0
-    for _, value in notes:
-        onsets.append(t)
-        t += 0.0 if sound.mode == "chord" else tuning.VALUE_SEC[value]
+    events = sound.notes                       # [(Fraction, midi)]
+    cyc = sound.cycle_sec
+    bells = [render_bell(midi_hz(m + sound.transpose), **kw) for _, m in events]
+    onsets = [int(SR * float(begin) * cyc) for begin, _ in events]
     # Each bell now rings its full length; size the buffer to fit the longest
     # onset+tail so no bell is truncated (truncation was the click source).
-    bells = [render_bell(midi_hz(midi + sound.transpose), **kw) for midi, _ in notes]
-    total = max(int(SR * onset) + len(bell) for onset, bell in zip(onsets, bells))
+    total = max(o + len(b) for o, b in zip(onsets, bells))
     out = np.zeros(total, dtype="float32")
-    for bell, onset in zip(bells, onsets):
-        i = int(SR * onset)
-        out[i:i + len(bell)] += bell
+    for bell, o in zip(bells, onsets):
+        out[o:o + len(bell)] += bell
     return postprocess(out)
 
 

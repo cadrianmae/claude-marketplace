@@ -41,10 +41,9 @@ BELL_RELEASE_PAD_S = 0.01
 
 # ---- phrase timing ------------------------------------------------------
 
-# Onset spacing per note value (seconds). This is the tempo of a phrase: how
-# far apart successive notes start. Bells ring past their slot (overlap), so
-# these are spacings, not durations. Smaller = faster/tighter phrases.
-VALUE_SEC = {"quaver": 0.12, "crotchet": 0.24, "minim": 0.48}
+# Phrase tempo now lives per-sound as `cycle_sec` in variants.py (the mini-
+# notation `notes` events are fractional onsets in [0, 1) over one cycle;
+# synth.render_event scales them by cycle_sec into real seconds).
 
 # ---- optional accent layers (added by a variant's "layer"/"air_db") -----
 
