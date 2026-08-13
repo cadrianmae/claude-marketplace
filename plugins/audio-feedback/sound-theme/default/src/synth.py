@@ -76,7 +76,12 @@ def render_bell(freq: float, dur: float = tuning.BELL_DUR, brightness: float = 1
         air_amp = 10 ** (air_db / 20)
         voices.append(sf.SineOscillator(freq * tuning.AIR_RATIO)
                       * sf.ASREnvelope(tuning.ATTACK_S, 0.0, dur * tuning.AIR_DUR_SCALE) * air_amp)
-    return _render_patch(_mix(voices), dur)
+    # Render the whole envelope, not just `dur`: the longest voice rings for
+    # ATTACK_S + dur*max(decay_scale, sub-layer scale 1.0). Cutting at `dur`
+    # amputated the release and left a non-zero step -> a click. The pad lets
+    # the release land on zero.
+    full = tuning.ATTACK_S + dur * max(decay_scale, 1.0) + tuning.BELL_RELEASE_PAD_S
+    return _render_patch(_mix(voices), full)
 
 
 def postprocess(sig: Signal) -> Signal:
@@ -136,12 +141,14 @@ def render_event(sound: type[Sound]) -> Signal:
     for _, value in notes:
         onsets.append(t)
         t += 0.0 if sound.mode == "chord" else tuning.VALUE_SEC[value]
-    total = int(SR * (max(onsets) + tuning.BELL_DUR))
+    # Each bell now rings its full length; size the buffer to fit the longest
+    # onset+tail so no bell is truncated (truncation was the click source).
+    bells = [render_bell(midi_hz(midi + sound.transpose), **kw) for midi, _ in notes]
+    total = max(int(SR * onset) + len(bell) for onset, bell in zip(onsets, bells))
     out = np.zeros(total, dtype="float32")
-    for (midi, _), onset in zip(notes, onsets):
-        bell = render_bell(midi_hz(midi + sound.transpose), **kw)
+    for bell, onset in zip(bells, onsets):
         i = int(SR * onset)
-        out[i:i + len(bell)] += bell[:total - i]
+        out[i:i + len(bell)] += bell
     return postprocess(out)
 
 
