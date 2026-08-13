@@ -68,8 +68,8 @@ SINE_ATTACK_S = 0.008      # sine attack (fast pluck; NOT the slow bell ATTACK_S
 SINE_TAU_FAST = 0.026      # fast pluck decay time constant (s)
 SINE_TAU_SLOW = 0.15       # slow tail decay time constant (s)
 SINE_SUSTAIN = 0.1         # weight of the slow tail (0..1)
-SINE_TREMOLO_HZ = 27.6     # amplitude-wobble rate (the "life" in the tail)
-SINE_TREMOLO_DEPTH = 0.3   # wobble depth (0..1; 0 = off)
+SINE_TREMOLO_HZ = 27.6     # amplitude-wobble rate (unused while depth = 0)
+SINE_TREMOLO_DEPTH = 0.0   # wobble depth (0..1; 0 = off -- the warble was too much)
 # Light reverb for space (the original was dry, but a touch of room helps).
 SINE_REVERB_WET = 0.18     # wet mix (0 = dry)
 SINE_REVERB_DECAY_S = 0.4  # reverb tail length (s)
