@@ -3,7 +3,7 @@ name = "audio-feedback-soundgen"
 version = "1.0.0"
 description = "signalflow generator for the audio-feedback default sound theme (dev-time only)"
 requires-python = ">=3.12,<3.13"   # signalflow ships a cp312 wheel; no 3.13/3.14 yet
-dependencies = ["signalflow==0.5.3", "numpy", "scipy"]
+dependencies = ["signalflow==0.5.3", "numpy", "scipy", "parsimonious"]
 
 [dependency-groups]
 dev = ["pytest", "flask"]
