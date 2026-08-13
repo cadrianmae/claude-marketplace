@@ -312,6 +312,9 @@ def _emit(node: object, begin: Fraction, end: Fraction,
         return
     if isinstance(node, Euclid):
         pat = bjorklund(node.k, node.n)
+        if node.rot and node.n:
+            r = node.rot % node.n
+            pat = pat[r:] + pat[:r]
         span = (end - begin) / node.n
         for j, on in enumerate(pat):
             if on:

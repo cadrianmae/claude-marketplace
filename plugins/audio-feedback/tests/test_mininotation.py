@@ -37,6 +37,12 @@ def test_euclid_pattern():
     onsets = [b for b, _ in phrase("c4(3,8)")]
     assert onsets == [F(0), F(3, 8), F(6, 8)]
 
+def test_euclid_rotation():
+    # bjorklund(3,8) = [T,F,F,T,F,F,T,F]; left-rotate by 1 -> [F,F,T,F,F,T,F,T]
+    # pulses at slots 2,5,7 of 8
+    onsets = [b for b, _ in phrase("c4(3,8,1)")]
+    assert onsets == [F(2, 8), F(5, 8), F(7, 8)]
+
 def test_bare_midi():
     assert phrase("60 64") == [(F(0), 60), (F(1, 2), 64)]
 
