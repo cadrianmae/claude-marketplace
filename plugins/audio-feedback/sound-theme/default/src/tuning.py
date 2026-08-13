@@ -58,6 +58,23 @@ BELL_RELEASE_PAD_S = 0.01
 # override: `curve` on a Sound class.
 CURVE = 1.0
 
+# "sine" voice: a modular-synth voice (synthmod.render_voice) reverse-engineered
+# from the original sine blips -- a pure sine with a DOUBLE-exponential pluck
+# decay (fast tau into a slow sustain tail) and a gentle tremolo. No reverb: the
+# old tail is a clean decaying tone, not a reverb. The attack is the overridable
+# `attack` knob (default tuning.ATTACK_S). Matched to env-error ~3 dB.
+SINE_LENGTH_S = 0.55       # played length of a sine note (seconds)
+SINE_ATTACK_S = 0.008      # sine attack (fast pluck; NOT the slow bell ATTACK_S)
+SINE_TAU_FAST = 0.026      # fast pluck decay time constant (s)
+SINE_TAU_SLOW = 0.15       # slow tail decay time constant (s)
+SINE_SUSTAIN = 0.1         # weight of the slow tail (0..1)
+SINE_TREMOLO_HZ = 27.6     # amplitude-wobble rate (the "life" in the tail)
+SINE_TREMOLO_DEPTH = 0.3   # wobble depth (0..1; 0 = off)
+# Light reverb for space (the original was dry, but a touch of room helps).
+SINE_REVERB_WET = 0.18     # wet mix (0 = dry)
+SINE_REVERB_DECAY_S = 0.4  # reverb tail length (s)
+SINE_REVERB_DAMP = 4.0     # reverb IR damping
+
 # ---- phrase timing ------------------------------------------------------
 
 # Onset spacing per note value (seconds). This is the tempo of a phrase: how

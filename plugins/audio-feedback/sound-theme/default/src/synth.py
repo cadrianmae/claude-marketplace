@@ -15,6 +15,7 @@ from scipy.signal import fftconvolve
 import signalflow as sf
 
 import tuning
+import synthmod
 from theme import SR
 from variants import Sound
 
@@ -86,8 +87,8 @@ def render_bell(freq: float, dur: float = tuning.BELL_DUR, brightness: float = 1
 
 
 def postprocess(sig: Signal) -> Signal:
-    """Reverb + tail fade. Loudness is handled once across the palette in
-    loudness.py so per-file RMS stays consistent."""
+    """Reverb + tail fade for the bell voice. Loudness is handled once across the
+    palette in loudness.py so per-file RMS stays consistent."""
     n = int(SR * tuning.REVERB_DECAY_S)
     ir = np.random.RandomState(0).randn(n) * np.exp(-np.linspace(0, tuning.REVERB_DAMP, n))
     ir = np.concatenate([np.zeros(int(SR * tuning.REVERB_PREDELAY_S)), ir])
@@ -126,22 +127,12 @@ def render_swoosh(sound: type[Sound]) -> Signal:
     return postprocess(_render_patch(patch, dur + tuning.REVERB_DECAY_S))
 
 
-def render_sine(freq: float, dur: float = tuning.BELL_DUR, decay_scale: float = 1.0,
-                attack: float = tuning.ATTACK_S, curve: float = tuning.CURVE) -> Signal:
-    """One pure sine note -> mono float32. The "sine" voice: no partials/layers,
-    just a single oscillator -- the old-style clean beep."""
-    _graph_get()   # graph must exist before building nodes
-    env = sf.ASREnvelope(attack, 0.0, dur * decay_scale, curve)
-    full = attack + dur * max(decay_scale, 1.0) + tuning.BELL_RELEASE_PAD_S
-    return _render_patch(sf.SineOscillator(freq) * env, full)
-
-
 def render_event(sound: type[Sound]) -> Signal:
     """Render a sound from a variants.Sound class, dispatching on its voice.
 
     "bell" (default) uses the note-map + accent knobs (brightness/layer/...);
-    "sine" is a pure single-oscillator beep (only decay_scale/attack/curve
-    apply); "swoosh" is the filtered-noise sweep."""
+    "sine" is the modular-synth voice (synthmod: sine + double-exp pluck +
+    tremolo, no reverb); "swoosh" is the filtered-noise sweep."""
     if sound.voice == "swoosh":
         return render_swoosh(sound)
     attack = sound.attack if sound.attack is not None else tuning.ATTACK_S
@@ -157,18 +148,32 @@ def render_event(sound: type[Sound]) -> Signal:
         dscale = max(sound.decay_scale, dur_sec / tuning.BELL_DUR)
         freq = midi_hz(m + sound.transpose)
         if sound.voice == "sine":
-            bells.append(render_sine(freq, decay_scale=dscale, attack=attack, curve=curve))
+            # sine defaults to its own fast attack, not the slow bell ATTACK_S
+            sine_attack = sound.attack if sound.attack is not None else tuning.SINE_ATTACK_S
+            bells.append(synthmod.render_voice(
+                freq, tuning.SINE_LENGTH_S, waveform="sine", attack=sine_attack,
+                tau_fast=tuning.SINE_TAU_FAST, tau_slow=tuning.SINE_TAU_SLOW,
+                sustain=tuning.SINE_SUSTAIN, tremolo_hz=tuning.SINE_TREMOLO_HZ,
+                tremolo_depth=tuning.SINE_TREMOLO_DEPTH,
+                reverb_wet=tuning.SINE_REVERB_WET, reverb_decay=tuning.SINE_REVERB_DECAY_S,
+                reverb_damp=tuning.SINE_REVERB_DAMP))
         else:
             bells.append(render_bell(freq, decay_scale=dscale, attack=attack, curve=curve,
                                      brightness=sound.brightness, detune_cents=sound.detune_cents,
                                      punch=sound.punch, layer=sound.layer, air_db=sound.air_db))
     onsets = [int(SR * float(begin) * cyc) for begin, _m, _d in events]
-    # Each bell rings its full length; size the buffer to fit the longest
-    # onset+tail so no bell is truncated (truncation was the click source).
+    # Size the buffer to fit the longest onset+tail so no note is truncated.
     total = max(o + len(b) for o, b in zip(onsets, bells))
     out = np.zeros(total, dtype="float32")
     for bell, o in zip(bells, onsets):
         out[o:o + len(bell)] += bell
+    if sound.voice == "sine":
+        # No reverb: the modular pluck envelope IS the whole sound (the old sine
+        # tail is a clean decaying tone, not a reverb). Guard the end vs a click.
+        f = int(SR * tuning.TAIL_FADE_S)
+        if len(out) > f:
+            out[-f:] *= np.linspace(1, 0, f)
+        return out
     return postprocess(out)
 
 

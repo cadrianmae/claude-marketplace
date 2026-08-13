@@ -43,7 +43,9 @@ class Sound(ABC):
     cycle_sec: ClassVar[float] = 0.12  # per-sound cycle length
 
     # ---- voice: which synth renders this sound ----
-    voice: ClassVar[str] = "bell"  # "bell" (note-map) | "swoosh" (noise sweep)
+    voice: ClassVar[str] = (
+        "bell"  # "bell" (note-map) | "sine" (pure beep) | "swoosh" (noise sweep)
+    )
     swoosh_dir: ClassVar[str] = "up"  # swoosh only: "up" = send, "down" = receive
 
     # ---- accent knobs (bell voice only; neutral defaults; a variant overrides) ----
@@ -62,8 +64,12 @@ class Sound(ABC):
     # A variant can override a global voice knob for just this sound. To add
     # more, mirror this pattern: a `X: ClassVar[T | None] = None` field here, and
     # in synth.render_event resolve `sound.X if sound.X is not None else tuning.X`.
-    attack: ClassVar[float | None] = None  # override ATTACK_S (envelope attack, seconds)
-    curve: ClassVar[float | None] = None   # override CURVE (1=linear, >1=exponential decay)
+    attack: ClassVar[float | None] = (
+        None  # override ATTACK_S (envelope attack, seconds)
+    )
+    curve: ClassVar[float | None] = (
+        None  # override CURVE (1=linear, >1=exponential decay)
+    )
 
 
 # ---- base events (carry the locked note-map) ----------------------------
@@ -75,7 +81,9 @@ class SessionStart(Sound):  # Mixolydian rise, full bar
 
 
 class UserPromptSubmit(Sound):
-    notes = phrase("g4")
+    voice = "sine"
+    notes = phrase("g5")
+    attack = 0.003
     cycle_sec = 0.12
 
 
