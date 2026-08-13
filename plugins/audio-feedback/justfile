@@ -34,9 +34,10 @@ serve:
 play NAME:
     paplay {{sounds}}/{{NAME}}.wav
 
-# play every committed sound back-to-back
+# play every committed sound back-to-back (Ctrl-C exits cleanly)
 audition:
     #!/usr/bin/env bash
+    trap 'exit 130' INT
     for w in {{sounds}}/*.wav; do echo "$(basename "$w" .wav)"; paplay "$w"; done
 
 # verify the palette loudness gate (RMS spread <= 5 dB, peak <= -0.7 dBFS)
