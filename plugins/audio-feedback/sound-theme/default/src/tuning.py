@@ -21,7 +21,20 @@ palette loudness policy.
 # fundamental. Slightly-off integers (2.01, 2.99, 4.07) make it read as a
 # glassy bell rather than a pure/organ tone. More partials + higher ratios =
 # brighter/tinklier; fewer = purer/rounder. Amplitudes taper the highs down.
-PARTIALS = [(1.0, 1.0), (2.01, 0.5), (2.99, 0.28), (4.07, 0.15)]
+# PARTIALS = [(1.0, 1.0), (2.01, 0.5), (2.99, 0.28), (4.07, 0.15)]
+PARTIALS = [(1.0, 1.0), (2.01, 0.5), (2.99, 0.28)]
+
+# --- alternative voicings: uncomment ONE (and comment the line above) ---
+# Church bell (5 named partials, ratios to the prime = the played note): hum
+# 0.5 (octave below), prime 1.0, tierce 1.2 (MINOR THIRD -- the plaintive bell
+# colour; adds a minor 3rd shadow over EVERY note), quint 1.5 (fifth), nominal
+# 2.0 (octave), + superquint 3.0 / upper octave 4.0. On a real bell the low
+# partials are quiet+long and the high ones loud+short (our envelope is uniform,
+# so this is an approximation). Research: hibberts.co.uk / keltektrust.org.uk.
+# PARTIALS = [(0.5, 0.25), (1.0, 1.0), (1.2, 0.30), (1.5, 0.25), (2.0, 0.40), (3.0, 0.15), (4.0, 0.10)]
+# Tubular bell / orchestral chime (stretched + inharmonic, "twangy"; the ear
+# infers a virtual strike tone an octave below the 4th partial):
+# PARTIALS = [(1.0, 1.0), (2.76, 0.5), (5.40, 0.28), (8.93, 0.15)]
 
 # Per-bell ring-out length in seconds (how long one struck note sounds).
 # Longer = more sustain/tail; shorter = plinkier. `decay_scale` in a variant
@@ -39,11 +52,18 @@ ATTACK_S = BELL_DUR / 2
 # ATTACK_S + BELL_DUR*max(decay_scale, 1) + this pad.
 BELL_RELEASE_PAD_S = 0.01
 
+# Envelope segment curve (attack + release shape). 1.0 = linear; >1 = exponential
+# (fast initial drop then a long quiet tail -- how a real struck bell decays);
+# <1 = logarithmic (slow then fast). ~3-5 reads as a natural bell. Per-variant
+# override: `curve` on a Sound class.
+CURVE = 1.0
+
 # ---- phrase timing ------------------------------------------------------
 
-# Phrase tempo now lives per-sound as `cycle_sec` in variants.py (the mini-
-# notation `notes` events are fractional onsets in [0, 1) over one cycle;
-# synth.render_event scales them by cycle_sec into real seconds).
+# Onset spacing per note value (seconds). This is the tempo of a phrase: how
+# far apart successive notes start. Bells ring past their slot (overlap), so
+# these are spacings, not durations. Smaller = faster/tighter phrases.
+VALUE_SEC = {"quaver": 0.12, "crotchet": 0.24, "minim": 0.48}
 
 # ---- optional accent layers (added by a variant's "layer"/"air_db") -----
 
@@ -86,7 +106,7 @@ CREST_SHAPE_ITERS = 30
 # A filtered-noise sweep -- a paper plane thrown to send / arriving to receive.
 # Bandpass center sweeps SWOOSH_FREQ_LO -> HI (dir "up" = send) or HI -> LO
 # (dir "down" = receive). Not pitched, so note-map/accent knobs don't apply.
-SWOOSH_DUR = 0.5  # length of the whoosh (seconds)
+SWOOSH_DUR = 0.2  # length of the whoosh (seconds)
 SWOOSH_FREQ_LO = 400.0  # sweep low end (Hz)
 SWOOSH_FREQ_HI = 5000.0  # sweep high end (Hz)
 SWOOSH_Q = 0.7  # bandpass resonance (0..1); higher = more "whistly"

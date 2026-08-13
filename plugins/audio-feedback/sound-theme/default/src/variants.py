@@ -27,6 +27,7 @@ Accent knobs (see synth.render_bell):
   layer         add a named layer: "shimmer" (airy high) or "sub" (octave down)
   air_db        add a short high "air" partial at this level in dB (e.g. -12)
 """
+
 from abc import ABC
 from fractions import Fraction
 from typing import ClassVar
@@ -36,12 +37,14 @@ from mininotation import phrase
 
 class Sound(ABC):
     # ---- note-map (a base EVENT sets these; a variant inherits them) ----
-    notes: ClassVar[list[tuple[Fraction, int]]] = []  # (onset_fraction, midi)
-    cycle_sec: ClassVar[float] = 0.12                  # per-sound cycle length
+    notes: ClassVar[
+        list[tuple[Fraction, int, Fraction]]
+    ] = []  # (onset, midi, duration) fractions
+    cycle_sec: ClassVar[float] = 0.12  # per-sound cycle length
 
     # ---- voice: which synth renders this sound ----
-    voice: ClassVar[str] = "bell"          # "bell" (note-map) | "swoosh" (noise sweep)
-    swoosh_dir: ClassVar[str] = "up"       # swoosh only: "up" = send, "down" = receive
+    voice: ClassVar[str] = "bell"  # "bell" (note-map) | "swoosh" (noise sweep)
+    swoosh_dir: ClassVar[str] = "up"  # swoosh only: "up" = send, "down" = receive
 
     # ---- accent knobs (bell voice only; neutral defaults; a variant overrides) ----
     transpose: ClassVar[int] = 0
@@ -55,58 +58,143 @@ class Sound(ABC):
     # pulls this sound down). Sets real playback loudness, by ear.
     level_db: ClassVar[float] = 0.0
 
+    # ---- tuning-surface overrides (None = use the tuning.py global) ----
+    # A variant can override a global voice knob for just this sound. To add
+    # more, mirror this pattern: a `X: ClassVar[T | None] = None` field here, and
+    # in synth.render_event resolve `sound.X if sound.X is not None else tuning.X`.
+    attack: ClassVar[float | None] = None  # override ATTACK_S (envelope attack, seconds)
+    curve: ClassVar[float | None] = None   # override CURVE (1=linear, >1=exponential decay)
+
 
 # ---- base events (carry the locked note-map) ----------------------------
 
-class SessionStart(Sound):     # Mixolydian rise, full bar
-    notes = phrase("c3 e3 g3 a#3 c4@4"); cycle_sec = 0.96
+
+class SessionStart(Sound):  # Mixolydian rise, full bar
+    notes = phrase("c3@3 e3@3 g3 [a#3 c4]")
+    cycle_sec = 0.96
+
 
 class UserPromptSubmit(Sound):
-    notes = phrase("g4"); cycle_sec = 0.12
+    notes = phrase("g4")
+    cycle_sec = 0.12
 
-class PreToolUse(Sound):       # open flat-7
-    notes = phrase("a#4"); cycle_sec = 0.12
 
-class Notification(Sound):     # rise, open
-    notes = phrase("c4 g4 a#4@2"); cycle_sec = 0.48
+class PreToolUse(Sound):  # open flat-7
+    notes = phrase("a#4")
+    cycle_sec = 0.12 / 2
 
-class PreCompact(Sound):       # low warn dyad
-    notes = phrase("[g2,a#2]"); cycle_sec = 0.48
 
-class PostToolUse(Sound):      # tonic, resolved
-    notes = phrase("c5"); cycle_sec = 0.12
+class Notification(Sound):  # rise, open
+    notes = phrase("c4 g4 a#4@2")
+    cycle_sec = 0.48
 
-class SubagentStop(Sound):     # fall (short)
-    notes = phrase("e4 c4@2"); cycle_sec = 0.36
 
-class Stop(Sound):             # Ionian fall, settle, full bar
-    notes = phrase("c5 b4 g4 e4 c4@4"); cycle_sec = 0.96
+class PreCompact(Sound):  # low warn dyad
+    notes = phrase("[g2,a#2]")
+    cycle_sec = 0.48 * 2
+
+
+class PostToolUse(Sound):  # tonic, resolved
+    notes = phrase("c5")
+    cycle_sec = 0.12 / 2
+
+
+class SubagentStop(Sound):  # fall (short)
+    notes = phrase("e4 c4@2")
+    cycle_sec = 0.36
+
+
+class Stop(Sound):  # Ionian fall, settle, full bar
+    notes = phrase("[c5 b4] g4 e4@2 c4@3")
+    cycle_sec = 0.96
 
 
 # ---- variants (extend a base event -> inherit its notes, add accent) ----
 
-class PreToolUseExecute(PreToolUse):    transpose = -2; punch = 1.2
-class PreToolUseObserve(PreToolUse):    brightness = 0.9
-class PreToolUseModify(PreToolUse):     layer = "shimmer"
-class PreToolUseNetwork(PreToolUse):    voice = "swoosh"; swoosh_dir = "up"    # WebFetch/WebSearch send
-class PreToolUseDispatch(PreToolUse):   transpose = 3
-class PreToolUseInteract(PreToolUse):   detune_cents = 6
 
-class PostToolUseExecute(PostToolUse):  transpose = -2; punch = 1.2
-class PostToolUseObserve(PostToolUse):  brightness = 0.9
-class PostToolUseModify(PostToolUse):   layer = "shimmer"
-class PostToolUseNetwork(PostToolUse):  voice = "swoosh"; swoosh_dir = "down"  # WebFetch/WebSearch receive
-class PostToolUseDispatch(PostToolUse): transpose = 3
-class PostToolUseInteract(PostToolUse): detune_cents = 6
+class PreToolUseExecute(PreToolUse):
+    transpose = -2
+    punch = 1.2
 
-class NotificationPermission(Notification):   brightness = 1.15
-class NotificationIdle(Notification):         transpose = -2; brightness = 0.9
-class NotificationAuth(Notification):         layer = "shimmer"
-class NotificationElicitation(Notification):  transpose = 2
 
-class SessionStartResume(SessionStart):   brightness = 1.05
-class SessionStartCompact(SessionStart):  transpose = -2
-class SessionStartClear(SessionStart):    brightness = 1.1; air_db = -14
+class PreToolUseObserve(PreToolUse):
+    brightness = 0.9
+
+
+class PreToolUseModify(PreToolUse):
+    layer = "shimmer"
+
+
+class PreToolUseNetwork(PreToolUse):
+    voice = "swoosh"
+    swoosh_dir = "up"  # WebFetch/WebSearch send
+
+
+class PreToolUseDispatch(PreToolUse):
+    transpose = 3
+
+
+class PreToolUseInteract(PreToolUse):
+    detune_cents = 6
+
+
+class PostToolUseExecute(PostToolUse):
+    transpose = -2
+    punch = 1.2
+
+
+class PostToolUseObserve(PostToolUse):
+    brightness = 0.9
+
+
+class PostToolUseModify(PostToolUse):
+    layer = "shimmer"
+
+
+class PostToolUseNetwork(PostToolUse):
+    voice = "swoosh"
+    swoosh_dir = "down"  # WebFetch/WebSearch receive
+
+
+class PostToolUseDispatch(PostToolUse):
+    transpose = 3
+
+
+class PostToolUseInteract(PostToolUse):
+    detune_cents = 6
+
+
+class NotificationPermission(Notification):
+    brightness = 1.15
+
+
+class NotificationIdle(Notification):
+    notes = phrase("[c4,g4,a#4@2,c5]")
+    cycle_sec = 0.48 * 2
+    attack = 0.2
+    transpose = -2
+    brightness = 0.9
+
+
+class NotificationAuth(Notification):
+    layer = "shimmer"
+
+
+class NotificationElicitation(Notification):
+    transpose = 2
+
+
+class SessionStartResume(SessionStart):
+    brightness = 1.05
+
+
+class SessionStartCompact(SessionStart):
+    transpose = -2
+
+
+class SessionStartClear(SessionStart):
+    brightness = 1.1
+    air_db = -14
 
 
 # ---- registry: sound name -> class (8 base + 19 variants) ----------------

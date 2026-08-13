@@ -53,7 +53,8 @@ GRAMMAR = Grammar(r"""
     root      = ws? choose ws?
     choose    = stack (ws? "|" ws? stack)*
     stack     = group (ws? "," ws? group)*
-    group     = element (ws element)*
+    group     = element (ws item)*
+    item      = hold / element
     element   = value ops
     ops       = op*
     op        = euclid / fast / slow / replicate / degrade / weight / index
@@ -63,6 +64,7 @@ GRAMMAR = Grammar(r"""
     psteps    = "%" number
     angle     = "<" ws? choose ws? ">"
     term      = rest / note / number
+    hold      = "_"
     rest      = "~"
     note      = ~"[a-gA-G][#b]?-?[0-9]+"
     number    = ~"-?[0-9]+"
@@ -70,7 +72,7 @@ GRAMMAR = Grammar(r"""
     slow      = "/" value
     replicate = "!" number?
     degrade   = "?" number?
-    weight    = "@" number
+    weight    = "@" number?
     euclid    = "(" ws? number ws? "," ws? number (ws? "," ws? number)? ws? ")"
     index     = ":" number
     ws        = ~"\s+"
@@ -149,8 +151,17 @@ class MiniNotationVisitor(NodeVisitor):
         return ("degrade",)
 
     def visit_weight(self, node, visited_children):
-        _, n = visited_children
-        return ("weight", n)
+        # "@" number?  -- bare "@" defaults to weight 2 (Strudel convention)
+        _, maybe_n = visited_children
+        return ("weight", _first_or(maybe_n, 2))
+
+    def visit_hold(self, node, visited_children):
+        # standalone "_" elongates the previous element by one unit
+        return ("hold",)
+
+    def visit_item(self, node, visited_children):
+        (child,) = visited_children
+        return child   # either ("hold",) or element_steps (a list)
 
     def visit_euclid(self, node, visited_children):
         (
@@ -202,9 +213,15 @@ class MiniNotationVisitor(NodeVisitor):
         first, rest = visited_children
         steps = list(first)
         for pair in rest:
-            # pair = (ws, element_steps)
-            _, elem_steps = pair
-            steps.extend(elem_steps)
+            # pair = (ws, item); item is ("hold",) or element_steps (a list)
+            _, item = pair
+            if item == ("hold",):
+                if not steps:
+                    raise ValueError("'_' cannot start a phrase (nothing to elongate)")
+                prev_node, w = steps[-1]
+                steps[-1] = (prev_node, w + 1)
+            else:
+                steps.extend(item)
         return Seq(steps=steps)
 
     def visit_stack(self, node, visited_children):
@@ -284,13 +301,14 @@ def bjorklund(k: int, n: int) -> list[bool]:
 
 
 def _emit(node: object, begin: Fraction, end: Fraction,
-          out: list[tuple[Fraction, int]]) -> None:
+          out: list[tuple[Fraction, int, Fraction]]) -> None:
     if isinstance(node, Reject):
         raise ValueError(f"{node.sym!r} is a cross-cycle/sample operator with no "
                          f"meaning in a one-shot sound")
     if isinstance(node, Atom):
         if node.midi is not None:
-            out.append((begin, node.midi))
+            # duration = the note's slot span; render_event turns it into ring length
+            out.append((begin, node.midi, end - begin))
         return
     if isinstance(node, Seq):
         total = sum(w for _, w in node.steps) or 1
@@ -323,9 +341,11 @@ def _emit(node: object, begin: Fraction, end: Fraction,
     raise TypeError(f"unhandled node: {node!r}")
 
 
-def phrase(spec: str) -> list[tuple[Fraction, int]]:
-    """Parse a mini-notation string, interpret one cycle -> (onset, midi) events."""
-    out: list[tuple[Fraction, int]] = []
+def phrase(spec: str) -> list[tuple[Fraction, int, Fraction]]:
+    """Parse a mini-notation string, interpret one cycle -> (onset, midi, duration)
+    events. duration is the note's slot span as a fraction of the cycle; render_event
+    scales it by cycle_sec and uses it (floored at the natural decay) as ring length."""
+    out: list[tuple[Fraction, int, Fraction]] = []
     _emit(parse(spec), Fraction(0), Fraction(1), out)
     out.sort(key=lambda ev: ev[0])
     return out

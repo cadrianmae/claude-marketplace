@@ -59,7 +59,7 @@ def sound_params(name: str, sound: type[Sound]) -> dict[str, object]:
     if sound.voice == "swoosh":
         p["swoosh_dir"] = sound.swoosh_dir
     else:
-        p["notes"] = [midi_to_name(midi + sound.transpose) for _, midi in sound.notes]
+        p["notes"] = [midi_to_name(midi + sound.transpose) for _, midi, _ in sound.notes]
         p["accents"] = {k: getattr(sound, k) for k in _ACCENT_KEYS
                         if getattr(sound, k) != getattr(Sound, k)}
     return p

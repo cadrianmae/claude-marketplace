@@ -24,9 +24,10 @@ def test_note_map_locked_and_valid():
     assert len(SOUNDS["pre-compact"].notes) == 2  # "[g2,a#2]" -> simultaneous stack
     for name in BASE:
         cls = SOUNDS[name]
-        for begin, midi in cls.notes:
+        for begin, midi, dur in cls.notes:
             assert 0 <= midi <= 127
             assert 0 <= begin < 1
+            assert dur > 0
 
 
 def test_variants_inherit_base_notes():

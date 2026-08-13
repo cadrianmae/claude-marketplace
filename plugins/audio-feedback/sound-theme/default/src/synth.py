@@ -57,30 +57,31 @@ def _mix(voices: list[sf.Node]) -> sf.Node:
 
 def render_bell(freq: float, dur: float = tuning.BELL_DUR, brightness: float = 1.0,
                 decay_scale: float = 1.0, detune_cents: float = 0.0, punch: float = 1.0,
-                layer: str | None = None, air_db: float | None = None) -> Signal:
+                layer: str | None = None, air_db: float | None = None,
+                attack: float = tuning.ATTACK_S, curve: float = tuning.CURVE) -> Signal:
     """One struck inharmonic bell -> mono float32."""
     _graph_get()   # signalflow requires the graph to exist before building nodes
     voices: list[sf.Node] = []
     for i, (ratio, amp) in enumerate(tuning.PARTIALS):
         a = amp * (brightness ** i) * (punch if i == 0 else 1.0)
         det = 2 ** ((detune_cents * i) / 1200)
-        env = sf.ASREnvelope(tuning.ATTACK_S, 0.0, dur * decay_scale)
+        env = sf.ASREnvelope(attack, 0.0, dur * decay_scale, curve)
         voices.append(sf.SineOscillator(freq * ratio * det) * env * a)
     if layer == "shimmer":
         r, ds, lvl = tuning.SHIMMER
-        voices.append(sf.SineOscillator(freq * r) * sf.ASREnvelope(tuning.ATTACK_S, 0.0, dur * ds) * lvl)
+        voices.append(sf.SineOscillator(freq * r) * sf.ASREnvelope(attack, 0.0, dur * ds, curve) * lvl)
     elif layer == "sub":
         r, ds, lvl = tuning.SUB
-        voices.append(sf.SineOscillator(freq * r) * sf.ASREnvelope(tuning.ATTACK_S, 0.0, dur * ds) * lvl)
+        voices.append(sf.SineOscillator(freq * r) * sf.ASREnvelope(attack, 0.0, dur * ds, curve) * lvl)
     if air_db is not None:
         air_amp = 10 ** (air_db / 20)
         voices.append(sf.SineOscillator(freq * tuning.AIR_RATIO)
-                      * sf.ASREnvelope(tuning.ATTACK_S, 0.0, dur * tuning.AIR_DUR_SCALE) * air_amp)
+                      * sf.ASREnvelope(attack, 0.0, dur * tuning.AIR_DUR_SCALE, curve) * air_amp)
     # Render the whole envelope, not just `dur`: the longest voice rings for
-    # ATTACK_S + dur*max(decay_scale, sub-layer scale 1.0). Cutting at `dur`
+    # attack + dur*max(decay_scale, sub-layer scale 1.0). Cutting at `dur`
     # amputated the release and left a non-zero step -> a click. The pad lets
     # the release land on zero.
-    full = tuning.ATTACK_S + dur * max(decay_scale, 1.0) + tuning.BELL_RELEASE_PAD_S
+    full = attack + dur * max(decay_scale, 1.0) + tuning.BELL_RELEASE_PAD_S
     return _render_patch(_mix(voices), full)
 
 
@@ -115,9 +116,14 @@ def render_swoosh(sound: type[Sound]) -> Signal:
     noise = sf.PinkNoise()
     noise.set_seed(tuning.SWOOSH_SEED)
     filt = sf.SVFilter(noise, sf.SIGNALFLOW_FILTER_TYPE_BAND_PASS, cutoff, tuning.SWOOSH_Q)
-    env = sf.ASREnvelope(tuning.SWOOSH_ATTACK, 0.0, dur)
+    # Fade the whoosh to silence BY the end of the sweep (release reaches 0 at
+    # `dur`), so a short SWOOSH_DUR still ends cleanly instead of being chopped
+    # mid-fade. Then render past `dur` so the reverb tail rings out rather than
+    # being truncated -- that truncation was the tail-cut at small SWOOSH_DUR.
+    release = max(dur - tuning.SWOOSH_ATTACK, 0.01)
+    env = sf.ASREnvelope(tuning.SWOOSH_ATTACK, 0.0, release)
     patch = filt * env * tuning.SWOOSH_LEVEL
-    return postprocess(_render_patch(patch, dur))
+    return postprocess(_render_patch(patch, dur + tuning.REVERB_DECAY_S))
 
 
 def render_event(sound: type[Sound]) -> Signal:
@@ -131,17 +137,26 @@ def render_event(sound: type[Sound]) -> Signal:
         return render_swoosh(sound)
     kw = {
         "brightness": sound.brightness,
-        "decay_scale": sound.decay_scale,
         "detune_cents": sound.detune_cents,
         "punch": sound.punch,
         "layer": sound.layer,
         "air_db": sound.air_db,
+        # tuning-surface overrides: None falls back to the tuning.py global
+        "attack": sound.attack if sound.attack is not None else tuning.ATTACK_S,
+        "curve": sound.curve if sound.curve is not None else tuning.CURVE,
     }
-    events = sound.notes                       # [(Fraction, midi)]
+    events = sound.notes                       # [(Fraction, midi, Fraction)]
     cyc = sound.cycle_sec
-    bells = [render_bell(midi_hz(m + sound.transpose), **kw) for _, m in events]
-    onsets = [int(SR * float(begin) * cyc) for begin, _ in events]
-    # Each bell now rings its full length; size the buffer to fit the longest
+    bells: list[Signal] = []
+    for _begin, m, dur_f in events:
+        # A note's slot duration drives its ring (sustain), floored at the
+        # sound's natural decay so short notes keep their pluck (and never get
+        # cut into a click). A note longer than the natural decay rings on.
+        dur_sec = float(dur_f) * cyc
+        dscale = max(sound.decay_scale, dur_sec / tuning.BELL_DUR)
+        bells.append(render_bell(midi_hz(m + sound.transpose), decay_scale=dscale, **kw))
+    onsets = [int(SR * float(begin) * cyc) for begin, _m, _d in events]
+    # Each bell rings its full length; size the buffer to fit the longest
     # onset+tail so no bell is truncated (truncation was the click source).
     total = max(o + len(b) for o, b in zip(onsets, bells))
     out = np.zeros(total, dtype="float32")
