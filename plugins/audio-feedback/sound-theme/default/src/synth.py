@@ -126,25 +126,26 @@ def render_swoosh(sound: type[Sound]) -> Signal:
     return postprocess(_render_patch(patch, dur + tuning.REVERB_DECAY_S))
 
 
+def render_sine(freq: float, dur: float = tuning.BELL_DUR, decay_scale: float = 1.0,
+                attack: float = tuning.ATTACK_S, curve: float = tuning.CURVE) -> Signal:
+    """One pure sine note -> mono float32. The "sine" voice: no partials/layers,
+    just a single oscillator -- the old-style clean beep."""
+    _graph_get()   # graph must exist before building nodes
+    env = sf.ASREnvelope(attack, 0.0, dur * decay_scale, curve)
+    full = attack + dur * max(decay_scale, 1.0) + tuning.BELL_RELEASE_PAD_S
+    return _render_patch(sf.SineOscillator(freq) * env, full)
+
+
 def render_event(sound: type[Sound]) -> Signal:
     """Render a sound from a variants.Sound class, dispatching on its voice.
 
-    "bell" (default) uses the note-map (sound.notes, a list of
-    (onset_fraction, midi) events over one cycle of sound.cycle_sec seconds)
-    + accent knobs (sound.transpose/brightness/...); "swoosh" uses
-    render_swoosh."""
+    "bell" (default) uses the note-map + accent knobs (brightness/layer/...);
+    "sine" is a pure single-oscillator beep (only decay_scale/attack/curve
+    apply); "swoosh" is the filtered-noise sweep."""
     if sound.voice == "swoosh":
         return render_swoosh(sound)
-    kw = {
-        "brightness": sound.brightness,
-        "detune_cents": sound.detune_cents,
-        "punch": sound.punch,
-        "layer": sound.layer,
-        "air_db": sound.air_db,
-        # tuning-surface overrides: None falls back to the tuning.py global
-        "attack": sound.attack if sound.attack is not None else tuning.ATTACK_S,
-        "curve": sound.curve if sound.curve is not None else tuning.CURVE,
-    }
+    attack = sound.attack if sound.attack is not None else tuning.ATTACK_S
+    curve = sound.curve if sound.curve is not None else tuning.CURVE
     events = sound.notes                       # [(Fraction, midi, Fraction)]
     cyc = sound.cycle_sec
     bells: list[Signal] = []
@@ -154,7 +155,13 @@ def render_event(sound: type[Sound]) -> Signal:
         # cut into a click). A note longer than the natural decay rings on.
         dur_sec = float(dur_f) * cyc
         dscale = max(sound.decay_scale, dur_sec / tuning.BELL_DUR)
-        bells.append(render_bell(midi_hz(m + sound.transpose), decay_scale=dscale, **kw))
+        freq = midi_hz(m + sound.transpose)
+        if sound.voice == "sine":
+            bells.append(render_sine(freq, decay_scale=dscale, attack=attack, curve=curve))
+        else:
+            bells.append(render_bell(freq, decay_scale=dscale, attack=attack, curve=curve,
+                                     brightness=sound.brightness, detune_cents=sound.detune_cents,
+                                     punch=sound.punch, layer=sound.layer, air_db=sound.air_db))
     onsets = [int(SR * float(begin) * cyc) for begin, _m, _d in events]
     # Each bell rings its full length; size the buffer to fit the longest
     # onset+tail so no bell is truncated (truncation was the click source).
