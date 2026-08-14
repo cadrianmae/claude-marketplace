@@ -1,9 +1,7 @@
 import os
-import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-import generate  # noqa: E402
-import theme      # noqa: E402
+import generate
+import theme
 
 
 def test_serve_dir_writes_full_palette(tmp_path):

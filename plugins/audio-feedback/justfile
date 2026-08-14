@@ -52,9 +52,9 @@ audition:
 verify:
     {{py}} scripts/analyze.py --palette {{sounds}}
 
-# run the sound tests (dsp + voices + generator + live mixer)
+# run the full sound test suite (dsp/voices/generate/live + note-map/daemon/loudness/...)
 test:
-    {{py}} -m pytest {{proj}}/tests/ -q
+    {{py}} -m pytest tests/ -q
 
 # remove preview scratch + pycache
 clean:

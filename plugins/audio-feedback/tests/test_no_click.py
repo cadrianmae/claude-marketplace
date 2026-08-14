@@ -17,7 +17,8 @@ SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                    "..", "sound-theme", "default", "src")
 sys.path.insert(0, os.path.abspath(SRC))
 
-from synth import render_bell, render_event, midi_hz  # noqa: E402
+from voices import bell, render_event   # noqa: E402
+from dsp import midi_hz                  # noqa: E402
 from variants import SOUNDS             # noqa: E402
 
 RING_OUT = 0.02      # a bell must decay below this before its buffer ends
@@ -42,7 +43,7 @@ def _isolation(sig):
 
 def test_raw_bell_rings_out():
     """A struck bell decays to ~silence within its own buffer (no truncation)."""
-    tail = abs(float(render_bell(midi_hz(72))[-1]))
+    tail = abs(float(bell(midi_hz(72))[-1]))
     assert tail < RING_OUT, f"bell truncated at |{tail:.3f}| (envelope amputated)"
 
 
