@@ -1,19 +1,18 @@
 [project]
 name = "audio-feedback-soundgen"
 version = "1.0.0"
-description = "signalflow generator for the audio-feedback default sound theme (dev-time only)"
-requires-python = ">=3.12,<3.13"   # signalflow ships a cp312 wheel; no 3.13/3.14 yet
-dependencies = ["signalflow==0.5.3", "numpy", "scipy", "parsimonious", "numba", "sounddevice", "python-rtmidi"]
+description = "numpy real-time synth generator for the audio-feedback default sound theme (dev-time only)"
+requires-python = ">=3.12"
+dependencies = ["numpy", "scipy", "parsimonious", "numba", "sounddevice", "python-rtmidi"]
 
 [dependency-groups]
 dev = ["pytest", "flask", "jupyter", "ipython", "matplotlib", "nbconvert", "nbformat"]
 
 [tool.basedpyright]
 # basedpyright roots here (nearest pyproject.toml). Use pyright's "standard"
-# mode instead of basedpyright's stricter default -- signalflow/numpy/scipy are
+# mode instead of basedpyright's stricter default -- numpy/scipy are
 # untyped-ish, so reportAny/reportUnknown*/reportUnannotatedClassAttribute are
-# noise for a small dev-time generator. src/ is the import root; the venv
-# resolves signalflow.
+# noise for a small dev-time generator. src/ is the import root.
 venvPath = "."
 venv = ".venv"
 extraPaths = ["src"]

@@ -1,6 +1,5 @@
 # /// script
-# requires-python = ">=3.12,<3.13"
-# dependencies = ["signalflow==0.5.3", "numpy", "scipy", "parsimonious"]  # 0.5.3 is the last x86_64 wheel
+# dependencies = ["numpy", "scipy", "parsimonious", "numba"]
 # ///
 """Generate / preview the audio-feedback default theme (additive bell synthesis).
 
@@ -12,7 +11,7 @@ With no subcommand it behaves as `generate` (so `generate.py --only stop` works)
 Run via `uv run --script generate.py ...` or the activated dev venv. Prefer the
 justfile: `just generate`, `just preview stop`, `just live stop notification`.
 
-Tuning knobs live in tuning.py. Synthesis in synth.py. Loudness in loudness.py.
+Tuning knobs live in tuning.py. Synthesis in voices.py/dsp.py. Loudness in loudness.py.
 """
 import json
 import os
@@ -21,23 +20,24 @@ import sys
 import time
 
 import theme
-import synth
+import voices
+import dsp
 import loudness
 from variants import Sound
 
 PREVIEW_DIR = os.path.join(theme.HERE, ".preview")
-WATCH_FILES = ["tuning.py", "synth.py", "loudness.py", "theme.py", "variants.py"]
+WATCH_FILES = ["tuning.py", "voices.py", "dsp.py", "loudness.py", "theme.py", "variants.py"]
 
 
-def _render_events(names: list[str] | None = None) -> dict[str, synth.Signal]:
+def _render_events(names: list[str] | None = None) -> dict[str, dsp.Signal]:
     """Render selected (or all) events -> {name: signal}, palette-normalized,
     then per-sound level trims applied (real output loudness, by ear)."""
     targets = theme.all_targets()
-    sigs: dict[str, synth.Signal] = {}
+    sigs: dict[str, dsp.Signal] = {}
     for name, sound in targets.items():
         if names and name not in names:
             continue
-        sigs[name] = synth.render_event(sound)
+        sigs[name] = voices.render_event(sound)
     sigs = loudness.normalize_palette(sigs)
     for name, sig in sigs.items():
         db = targets[name].level_db
@@ -70,7 +70,7 @@ def cmd_serve_dir(out: str) -> None:
     targets = theme.all_targets()
     for name, sig in _render_events().items():
         theme.write_wav(os.path.join(out, name + ".wav"), sig)
-    theme.write_wav(os.path.join(out, "subagent-accent.wav"), synth.render_subagent_accent())
+    theme.write_wav(os.path.join(out, "subagent-accent.wav"), voices.render_subagent_accent())
     palette = [sound_params(name, targets[name]) for name in targets]
     with open(os.path.join(out, "palette.json"), "w") as f:
         json.dump(palette, f, indent=2)
@@ -85,7 +85,7 @@ def cmd_generate(argv: list[str]) -> None:
         print("wrote", name + ".wav")
     if not only or "subagent-accent" in only:
         theme.write_wav(os.path.join(theme.SOUNDS, "subagent-accent.wav"),
-                        synth.render_subagent_accent())
+                        voices.render_subagent_accent())
         print("wrote subagent-accent.wav")
 
 
@@ -100,10 +100,10 @@ def cmd_preview(names: list[str]) -> int:
     os.makedirs(PREVIEW_DIR, exist_ok=True)
     for name in names:
         if name == "subagent-accent":
-            sig = synth.render_subagent_accent()
+            sig = voices.render_subagent_accent()
         else:
             sound = theme.all_targets()[name]
-            sig = next(iter(loudness.normalize_palette({name: synth.render_event(sound)}).values()))
+            sig = next(iter(loudness.normalize_palette({name: voices.render_event(sound)}).values()))
         path = os.path.join(PREVIEW_DIR, name + ".wav")
         theme.write_wav(path, sig)
         print("preview", name)

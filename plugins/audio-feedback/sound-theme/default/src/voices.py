@@ -3,8 +3,8 @@
 Each voice renders one note (or, for swoosh, one unpitched gesture) to a mono
 float32 signal. `render_event` assembles a variants.Sound's note-map into the
 finished signal; `VOICES` maps a Sound.voice string to a pitched per-note
-callable for real-time play (live.py). This replaces the signalflow synth.py
-with equivalent numpy math -- edit numbers in tuning.py for by-ear shaping,
+callable for real-time play (live.py). This replaces the old node-graph
+synth.py with equivalent numpy math -- edit numbers in tuning.py for by-ear shaping,
 edit here to change synthesis structure.
 """
 import numpy as np
