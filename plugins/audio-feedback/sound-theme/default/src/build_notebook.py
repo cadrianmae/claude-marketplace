@@ -8,8 +8,7 @@ CELLS = [
     ("markdown", "# audio-feedback: design by ear\n\n"
                  "Render voices, listen (`Audio` autoplays), and inspect waveform + FFT.\n"
                  "Edit `voices.py` / `tuning.py`, then re-run the imports cell to reload."),
-    ("code", "import matplotlib\n"
-             "matplotlib.use('Agg')\n"
+    ("code", "%matplotlib inline\n"
              "import importlib\n"
              "import numpy as np\n"
              "import matplotlib.pyplot as plt\n"
