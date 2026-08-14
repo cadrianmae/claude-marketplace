@@ -10,7 +10,7 @@ py     := proj / ".venv/bin/python"
 default:
     @just --list
 
-# sync the dev env from pyproject.toml (uv-managed Python 3.12 + signalflow/numpy/scipy + pytest)
+# sync the dev env from pyproject.toml (uv-managed Python 3.12 + numpy/scipy/numba/sounddevice/rtmidi + pytest/jupyter)
 venv:
     cd {{proj}} && UV_PYTHON_PREFERENCE=only-managed uv sync
 
@@ -30,6 +30,14 @@ live +NAMES:
 serve:
     {{py}} {{src}}/serve.py
 
+# real-time: play a MIDI keyboard (or a demo arpeggio); hot-reloads voices.py/tuning.py on save
+live-play:
+    {{py}} {{src}}/live.py
+
+# open the by-ear design notebook
+notebook:
+    cd {{src}} && ../.venv/bin/jupyter notebook design.ipynb
+
 # play the current committed wav (no re-render)
 play NAME:
     paplay {{sounds}}/{{NAME}}.wav
@@ -44,9 +52,9 @@ audition:
 verify:
     {{py}} scripts/analyze.py --palette {{sounds}}
 
-# run the sound tests (note-map + generator)
+# run the sound tests (dsp + voices + generator + live mixer)
 test:
-    {{py}} -m pytest tests/test_note_map.py tests/test_generate.py -q
+    {{py}} -m pytest {{proj}}/tests/ -q
 
 # remove preview scratch + pycache
 clean:
