@@ -17,7 +17,7 @@ import flask
 HERE = os.path.dirname(os.path.abspath(__file__))
 GEN = os.path.join(HERE, "generate.py")
 INDEX = os.path.join(HERE, "index.html")
-WATCH = ["tuning.py", "synth.py", "loudness.py", "theme.py", "variants.py"]
+WATCH = ["tuning.py", "voices.py", "dsp.py", "loudness.py", "theme.py", "variants.py"]
 
 # render state, shared with the watcher + SSE
 _state = {"version": 0, "error": ""}

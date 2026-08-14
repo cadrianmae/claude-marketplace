@@ -106,7 +106,7 @@ project rooted at `sound-theme/default/` (deps in its `pyproject.toml`, pinned v
 
 ```bash
 cd plugins/audio-feedback
-just venv        # one-time: uv sync the dev env (Python 3.12 + signalflow/numpy/scipy)
+just venv        # one-time: uv sync the dev env (Python 3.12 + numpy/scipy/numba)
 just generate    # render the full palette into sound-theme/default/sounds/
 just verify      # palette loudness gate (RMS spread <=5 dB, peak max <=-0.7 dBFS)
 just test        # note-map + generator tests
