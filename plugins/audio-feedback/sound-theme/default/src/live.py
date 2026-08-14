@@ -68,7 +68,7 @@ class Mixer:
 
 def make_callback(mixer: Mixer):
     """PortAudio callback: fill `outdata` (frames x 2) from the mixer, clipped to
-    [-1, 1] so a hot buffer can't wrap. Allocation-free copy into the device buffer."""
+    [-1, 1] so a hot buffer can't wrap. Copies the mixed block into the device buffer."""
     def callback(outdata, frames, time_info, status):
         block = mixer.render_block(frames)
         np.clip(block, -1.0, 1.0, out=block)

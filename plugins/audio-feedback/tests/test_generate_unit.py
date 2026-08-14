@@ -16,7 +16,7 @@ def test_serve_dir_writes_full_palette(tmp_path):
 
 
 def test_generate_module_has_no_signalflow():
-    import importlib
+    import importlib.util
     src = importlib.util.find_spec("generate").origin
     with open(src) as f:
         assert "signalflow" not in f.read().lower()
