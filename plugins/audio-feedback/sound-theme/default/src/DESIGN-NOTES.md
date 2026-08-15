@@ -125,14 +125,12 @@ justfile (run from `plugins/audio-feedback`):
   attached) through the voices, hot-reloading `voices.py`/`tuning.py` on
   save via `importlib`. Needs a working PortAudio output device and, for a
   real keyboard, `python-rtmidi`.
-- **`just notebook`** - opens `design.ipynb` in Jupyter for inline
-  audio-playback + FFT/waveform inspection of individual voices and events.
 
 ## Dev prerequisites
 
 - **Python**: uv-managed Python 3.12 venv (`just venv` syncs it from
-  `pyproject.toml`: numpy/scipy/numba/sounddevice/rtmidi, plus
-  pytest/jupyter/matplotlib in the dev group).
+  `pyproject.toml`: numpy/scipy/numba/sounddevice/rtmidi, plus pytest in
+  the dev group).
 - **`python-rtmidi`**: needs ALSA (Linux) or JACK development headers
   installed on the system to build from source during `uv sync`.
 - **Real-time audio** (`just live-play`): needs a working PortAudio output

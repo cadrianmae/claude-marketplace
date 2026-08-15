@@ -6,7 +6,7 @@ requires-python = ">=3.12"
 dependencies = ["numpy", "scipy", "parsimonious", "numba", "sounddevice", "python-rtmidi"]
 
 [dependency-groups]
-dev = ["pytest", "flask", "jupyter", "ipython", "matplotlib", "nbconvert", "nbformat"]
+dev = ["pytest", "flask"]
 
 [tool.basedpyright]
 # basedpyright roots here (nearest pyproject.toml). Use pyright's "standard"

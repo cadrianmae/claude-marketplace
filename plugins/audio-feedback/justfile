@@ -34,10 +34,6 @@ serve:
 live-play:
     {{py}} {{src}}/live.py
 
-# open the by-ear design notebook
-notebook:
-    cd {{src}} && ../.venv/bin/jupyter notebook design.ipynb
-
 # play the current committed wav (no re-render)
 play NAME:
     paplay {{sounds}}/{{NAME}}.wav
