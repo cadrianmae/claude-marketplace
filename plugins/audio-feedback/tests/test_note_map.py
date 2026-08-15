@@ -21,7 +21,7 @@ def test_note_map_locked_and_valid():
     # notes are (onset_fraction, midi) events, sorted by onset, over one cycle
     assert SOUNDS["stop"].notes[0][1] == 72
     assert SOUNDS["session-start"].notes[0][1] == 48
-    assert len(SOUNDS["pre-compact"].notes) == 2  # "[g2,a#2]" -> simultaneous stack
+    assert len(SOUNDS["pre-compact"].notes) == 3  # "[c3,e3,g3]" -> simultaneous stack
     for name in BASE:
         cls = SOUNDS[name]
         for begin, midi, dur in cls.notes:

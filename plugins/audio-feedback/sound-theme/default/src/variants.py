@@ -34,17 +34,28 @@ from typing import ClassVar
 
 from mininotation import phrase
 
+# ---- cycle_sec grid: bar-fraction durations (seconds) --------------------
+# cycle_sec scales a sound's mini-notation onsets (fractions of one cycle) into
+# real time, so it sets that sound's tempo. One "bar" = FULL_BAR seconds; the
+# rest are its halvings. Odd values combine them (SubagentStop = 3 * EIGHTH_BAR,
+# a three-eighths bar). Use these instead of raw seconds for cycle_sec.
+FULL_BAR = 0.96
+HALF_BAR = 0.48
+QUARTER_BAR = 0.24
+EIGHTH_BAR = 0.12
+SIXTEENTH_BAR = 0.06
+
 
 class Sound(ABC):
     # ---- note-map (a base EVENT sets these; a variant inherits them) ----
     notes: ClassVar[
         list[tuple[Fraction, int, Fraction]]
     ] = []  # (onset, midi, duration) fractions
-    cycle_sec: ClassVar[float] = 0.12  # per-sound cycle length
+    cycle_sec: ClassVar[float] = EIGHTH_BAR  # per-sound cycle length
 
     # ---- voice: which synth renders this sound ----
     voice: ClassVar[str] = (
-        "bell"  # "bell" (note-map) | "sine" (pure beep) | "swoosh" (noise sweep)
+        "pluck"  # "bell" (note-map) | "pluck" (decaying beep) | "sine" (sustained) | "swoosh" (sweep)
     )
     swoosh_dir: ClassVar[str] = "up"  # swoosh only: "up" = send, "down" = receive
 
@@ -60,77 +71,93 @@ class Sound(ABC):
     # pulls this sound down). Sets real playback loudness, by ear.
     level_db: ClassVar[float] = 0.0
 
-    # ---- tuning-surface overrides (None = use the tuning.py global) ----
-    # A variant can override a global voice knob for just this sound. To add
-    # more, mirror this pattern: a `X: ClassVar[T | None] = None` field here, and
-    # in synth.render_event resolve `sound.X if sound.X is not None else tuning.X`.
-    attack: ClassVar[float | None] = (
-        None  # override ATTACK_S (envelope attack, seconds)
-    )
-    curve: ClassVar[float | None] = (
-        None  # override CURVE (1=linear, >1=exponential decay)
-    )
+    # ---- per-sound DSP overrides (pluck / sine / swoosh voices) ----------
+    # `dsp` overrides any of the current voice's tuning knobs for JUST this sound:
+    # the voice reads knob(sound, "key", tuning.DEFAULT). Keys per voice (voices.py):
+    #   pluck:  length_s attack tau_fast tau_slow sustain tremolo_hz tremolo_depth reverb_mult
+    #   sine:   length_s attack release_s tremolo_hz tremolo_depth reverb_mult
+    #   swoosh: dur freq_lo freq_hi q attack level
+    # e.g. dsp = {"reverb_mult": 2.0, "tremolo_depth": 0.3, "length_s": 0.8}
+    dsp: ClassVar[dict[str, float]] = {}
+
+    # ---- bell-voice envelope overrides (None = use the tuning.py global) --
+    attack: ClassVar[float | None] = None  # override ATTACK_S (bell attack, seconds)
+    curve: ClassVar[float | None] = None  # override CURVE (1=linear, >1=exp decay)
 
 
 # ---- base events (carry the locked note-map) ----------------------------
 
 
-class SessionStart(Sound):  # Mixolydian rise, full bar
-    notes = phrase("c3@3 e3@3 g3 [a#3 c4]")
-    cycle_sec = 0.96
+class SessionStart(
+    Sound
+):  # Mixolydian rise, full bar -- accelerates (durations 3,3,1,1/2,1/2)
+    notes = phrase("c3@3 e3@2 g3 [a#3 c4]")
+    cycle_sec = FULL_BAR * 1.5
 
 
 class UserPromptSubmit(Sound):
-    voice = "sine"
-    notes = phrase("g5")
-    attack = 0.003
-    cycle_sec = 0.12
+    notes = phrase("g4")
+    cycle_sec = EIGHTH_BAR
 
 
 class PreToolUse(Sound):  # open flat-7
     notes = phrase("a#4")
-    cycle_sec = 0.12 / 2
+    cycle_sec = SIXTEENTH_BAR
 
 
-class Notification(Sound):  # rise, open
-    notes = phrase("c4 g4 a#4@2")
-    cycle_sec = 0.48
+class Notification(Sound):  # rise, open -- kept subtle (quieter + sits back)
+    notes = phrase("g4 a#4@2")
+    cycle_sec = HALF_BAR
+    level_db = -8  # pull it down so it's not in your face
+    dsp = {"reverb_mult": 1.5}  # a touch more wash -> recedes into the background
 
 
 class PreCompact(Sound):  # low warn dyad
-    notes = phrase("[g2,a#2]")
-    cycle_sec = 0.48 * 2
+    voice = "sine"
+    notes = phrase("[c3,e3,g3]")
+    dsp = {
+        "attack": 0.4,
+        "release_s": 0.4,
+        "reverb_mult": 2.0,
+    }
+    cycle_sec = FULL_BAR
 
 
 class PostToolUse(Sound):  # tonic, resolved
     notes = phrase("c5")
-    cycle_sec = 0.12 / 2
+    cycle_sec = SIXTEENTH_BAR
 
 
 class SubagentStop(Sound):  # fall (short)
     notes = phrase("e4 c4@2")
-    cycle_sec = 0.36
+    cycle_sec = 3 * EIGHTH_BAR
 
 
 class Stop(Sound):  # Ionian fall, settle, full bar
-    notes = phrase("[c5 b4] g4 e4@2 c4@3")
-    cycle_sec = 0.96
+    notes = phrase("[c5 b4@2] g4 e4@2 c4@3")
+    cycle_sec = FULL_BAR
 
 
 # ---- variants (extend a base event -> inherit its notes, add accent) ----
 
 
 class PreToolUseExecute(PreToolUse):
+    voice = "pluck"  # plucked tone + glassy clicks layered over it (sci-fi typing)
     transpose = -2
-    punch = 1.2
+    dsp = {"clicks_layer": 0.4, "clicks_delay": 0.2}
 
 
 class PreToolUseObserve(PreToolUse):
-    brightness = 0.9
+    dsp = {"slide_layer": 0.6, "slide_delay": 0.05}  # page-slide rustle (reading)
 
 
 class PreToolUseModify(PreToolUse):
-    layer = "shimmer"
+    # modify = read + write: a page-slide rustle AND pitched-noise clicks over the pluck
+    dsp = {
+        "clicks_layer": 0.4,
+        "clicks_delay": 0.2,
+        "click_noise": 1.0,
+    }
 
 
 class PreToolUseNetwork(PreToolUse):
@@ -139,24 +166,30 @@ class PreToolUseNetwork(PreToolUse):
 
 
 class PreToolUseDispatch(PreToolUse):
-    transpose = 3
+    notes = phrase("e4")  # tonic, resolved
 
 
 class PreToolUseInteract(PreToolUse):
-    detune_cents = 6
+    notes = phrase("g4 c5")  # rising motif = a spoken question's upward "?" inflection
+    cycle_sec = QUARTER_BAR
 
 
 class PostToolUseExecute(PostToolUse):
     transpose = -2
-    punch = 1.2
+    dsp = {"clicks_layer": 0.4, "clicks_delay": 0.2}
 
 
 class PostToolUseObserve(PostToolUse):
-    brightness = 0.9
+    dsp = {"slide_layer": 0.6, "slide_delay": 0.05}  # page-slide rustle (reading)
 
 
 class PostToolUseModify(PostToolUse):
-    layer = "shimmer"
+    # modify = read + write: a page-slide rustle AND pitched-noise clicks over the pluck
+    dsp = {
+        "clicks_layer": 0.4,
+        "clicks_delay": 0.2,
+        "click_noise": 1.0,
+    }
 
 
 class PostToolUseNetwork(PostToolUse):
@@ -165,11 +198,14 @@ class PostToolUseNetwork(PostToolUse):
 
 
 class PostToolUseDispatch(PostToolUse):
-    transpose = 3
+    notes = phrase("g4")  # tonic, resolved
 
 
 class PostToolUseInteract(PostToolUse):
-    detune_cents = 6
+    notes = phrase(
+        "g4 c4"
+    )  # falling to the tonic = a resolved "answer" (mirrors the pre question)
+    cycle_sec = QUARTER_BAR
 
 
 class NotificationPermission(Notification):
@@ -177,11 +213,12 @@ class NotificationPermission(Notification):
 
 
 class NotificationIdle(Notification):
-    notes = phrase("[c4,g4,a#4@2,c5]")
-    cycle_sec = 0.48 * 2
-    attack = 0.2
+    voice = "sine"
+    notes = phrase("c4")
     transpose = -2
-    brightness = 0.9
+    level_db = -12
+    dsp = {"attack": 0.4, "release_s": 0.4, "reverb_mult": 2.0, "reverb_wet": 0.7}
+    cycle_sec = FULL_BAR
 
 
 class NotificationAuth(Notification):
@@ -197,6 +234,13 @@ class SessionStartResume(SessionStart):
 
 
 class SessionStartCompact(SessionStart):
+    # notes = phrase("c3 e3 g3 a#3 c4")
+    voice = "sine"
+    dsp = {
+        "attack": 0.2,
+        "release_s": 0.4,
+        "reverb_mult": 2.0,
+    }
     transpose = -2
 
 

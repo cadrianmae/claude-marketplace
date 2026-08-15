@@ -104,6 +104,8 @@ def cmd_preview(names: list[str]) -> int:
         else:
             sound = theme.all_targets()[name]
             sig = next(iter(loudness.normalize_palette({name: voices.render_event(sound)}).values()))
+            if sound.level_db:                       # match _render_events: apply the per-sound trim
+                sig = sig * (10 ** (sound.level_db / 20))
         path = os.path.join(PREVIEW_DIR, name + ".wav")
         theme.write_wav(path, sig)
         print("preview", name)

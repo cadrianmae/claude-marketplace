@@ -16,11 +16,23 @@ def test_bell_has_fundamental():
     assert abs(peak_hz - freq) < 5.0                 # fundamental dominates
 
 
-def test_sine_voice_nonempty_and_finite():
+def test_pluck_voice_nonempty_and_finite():
+    sig = voices.pluck(660.0)
+    assert sig.dtype == np.float32
+    assert len(sig) > 0
+    assert np.all(np.isfinite(sig))
+
+
+def test_sine_voice_sustains():
     sig = voices.sine(660.0)
     assert sig.dtype == np.float32
     assert len(sig) > 0
     assert np.all(np.isfinite(sig))
+    # sustained, not plucked: the mid-note level holds near the early level
+    # (a pluck decay would have fallen away by here).
+    early = float(np.abs(sig[int(SR * 0.05):int(SR * 0.10)]).mean())
+    mid = float(np.abs(sig[int(SR * 0.30):int(SR * 0.35)]).mean())
+    assert mid > 0.6 * early
 
 
 def test_swoosh_up_down_differ():
@@ -52,6 +64,69 @@ def test_subagent_accent_is_quiet():
     assert float(np.max(np.abs(sig))) < 1.0          # sits under the palette
 
 
+def test_clicks_train_decelerates():
+    from variants import Sound
+
+    class C(Sound):
+        notes = []
+        dsp = {"count": 5, "gap_start": 0.02, "decel": 1.5, "click_dur": 0.005}
+
+    train = voices._click_train(880.0, C)
+    assert train.dtype == np.float32 and len(train) > 0 and np.all(np.isfinite(train))
+    gaps = 0.02 * 1.5 ** np.arange(5)                 # gap_k = gap0 * decel^k
+    assert gaps[-1] > gaps[0]                          # gaps GROW -> rate drops off
+    assert len(train) >= int(SR * float(np.cumsum(gaps)[:-1][-1]))  # spans all onsets
+
+
+def test_clicks_layer_adds_over_base():
+    from variants import Sound
+    from mininotation import phrase
+
+    class Plain(Sound):
+        notes = phrase("c4")
+        voice = "sine"
+
+    class Layered(Sound):
+        notes = phrase("c4")
+        voice = "sine"
+        dsp = {"clicks_layer": 0.5, "clicks_delay": 0.1}
+
+    a = voices.render_event(Plain)
+    b = voices.render_event(Layered)
+    assert not np.array_equal(a, b[: len(a)])          # the clicks layer changed the render
+
+
+def test_slide_layer_adds_over_base():
+    from variants import Sound
+    from mininotation import phrase
+
+    class Plain(Sound):
+        notes = phrase("c4")
+        voice = "pluck"
+
+    class Slid(Sound):
+        notes = phrase("c4")
+        voice = "pluck"
+        dsp = {"slide_layer": 0.5}
+
+    a = voices.render_event(Plain)
+    b = voices.render_event(Slid)
+    assert not np.array_equal(a, b[: len(a)])          # the slide layer changed the render
+
+
+def test_dsp_override_applies():
+    from variants import Sound
+
+    class Tweaked(Sound):
+        notes = []
+        voice = "pluck"
+        dsp = {"length_s": 1.2}          # override the pluck note length
+
+    default = voices.pluck(440.0)          # no sound -> tuning default
+    over = voices.pluck(440.0, Tweaked)    # dsp override
+    assert len(over) != len(default)       # the length_s override took effect
+
+
 def test_voices_registry():
-    assert set(voices.VOICES) == {"bell", "sine"}
+    assert set(voices.VOICES) == {"bell", "pluck", "sine", "clicks"}
     assert callable(voices.VOICES["bell"])

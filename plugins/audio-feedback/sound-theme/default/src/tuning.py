@@ -58,22 +58,62 @@ BELL_RELEASE_PAD_S = 0.01
 # override: `curve` on a Sound class.
 CURVE = 1.0
 
-# "sine" voice: a modular-synth voice (synthmod.render_voice) reverse-engineered
-# from the original sine blips -- a pure sine with a DOUBLE-exponential pluck
-# decay (fast tau into a slow sustain tail) and a gentle tremolo. No reverb: the
-# old tail is a clean decaying tone, not a reverb. The attack is the overridable
-# `attack` knob (default tuning.ATTACK_S). Matched to env-error ~3 dB.
-SINE_LENGTH_S = 0.55       # played length of a sine note (seconds)
-SINE_ATTACK_S = 0.008      # sine attack (fast pluck; NOT the slow bell ATTACK_S)
-SINE_TAU_FAST = 0.026      # fast pluck decay time constant (s)
-SINE_TAU_SLOW = 0.15       # slow tail decay time constant (s)
-SINE_SUSTAIN = 0.1         # weight of the slow tail (0..1)
-SINE_TREMOLO_HZ = 27.6     # amplitude-wobble rate (unused while depth = 0)
-SINE_TREMOLO_DEPTH = 0.0   # wobble depth (0..1; 0 = off -- the warble was too much)
-# Light reverb for space (the original was dry, but a touch of room helps).
-SINE_REVERB_WET = 0.18     # wet mix (0 = dry)
-SINE_REVERB_DECAY_S = 0.4  # reverb tail length (s)
-SINE_REVERB_DAMP = 4.0     # reverb IR damping
+# "pluck" voice (voices.pluck) -- a pure sine with a DOUBLE-exponential pluck
+# decay (fast tau into a slow sustain tail), a gentle tremolo, and light reverb,
+# reverse-engineered from the original sine blips. (Renamed from the old "sine"
+# voice; a new sustained "sine" voice takes its own fresh SINE_* consts.)
+PLUCK_LENGTH_S = 0.55  # played length of a pluck note (seconds)
+PLUCK_ATTACK_S = 0.15  # pluck attack (fast; NOT the slow bell ATTACK_S)
+PLUCK_TAU_FAST = 0.026  # fast pluck decay time constant (s)
+PLUCK_TAU_SLOW = 0.15  # slow tail decay time constant (s)
+PLUCK_SUSTAIN = 0.1  # weight of the slow tail (0..1)
+PLUCK_TREMOLO_HZ = 1.0  # amplitude-wobble rate (unused while depth = 0)
+PLUCK_TREMOLO_DEPTH = 0.2  # wobble depth (0..1; 0 = off -- the warble was too much)
+PLUCK_REVERB_MULT = 1.0  # reverb wet as a multiple of the shared REVERB_WET
+
+# "sine" voice (voices.sine) -- the SAME chain as pluck (sine + tremolo + reverb)
+# but a SUSTAINED envelope instead of a pluck decay: an attack ramp, a flat hold
+# at full level, then a release ramp. A held tone rather than a blip.
+SINE_LENGTH_S = 0.55  # played length of a sine note (seconds)
+SINE_ATTACK_S = 0.02  # fade-in ramp to full level (s)
+SINE_RELEASE_S = 0.12  # fade-out ramp at the end (s)
+SINE_TREMOLO_HZ = 27.6  # amplitude-wobble rate (unused while depth = 0)
+SINE_TREMOLO_DEPTH = 0.0  # wobble depth (0..1; 0 = off)
+SINE_REVERB_MULT = 1.0  # reverb wet as a multiple of the shared REVERB_WET
+
+# "clicks" voice/layer (voices.clicks / _click_train) -- a train of short
+# decaying-sine blips at the note pitch: a sci-fi "agent typing a command" tick.
+# The gap between clicks GROWS each step (decel > 1) so the click rate drops off
+# toward the end (keystrokes settling). dsp keys: count, click_dur, gap_start,
+# decel, decay, reverb_mult (+ clicks_layer level when used as a layer).
+# glassy blip timbre: bright inharmonic partials (ratio, amp) -- stretched like a
+# glass chime/tubular bell, so each click rings glassy rather than a dull sine.
+CLICK_PARTIALS = [(1.0, 1.0), (2.76, 0.6), (5.40, 0.3), (8.93, 0.12)]
+CLICK_COUNT = 5  # number of clicks
+CLICK_DUR = 0.05  # length of each blip (seconds)
+CLICK_GAP_START = 0.03  # initial gap between clicks (seconds)
+CLICK_DECEL = 1.55  # gap growth ratio per click (>1 = rate drops off toward the end)
+CLICK_DECAY = 0.02  # blip decay time as a fraction of click_dur (small = tickier)
+CLICK_ATTACK = (
+    0.15  # blip attack ramp as a fraction of click_dur (>0 softens the onset)
+)
+CLICK_NOISE = 0.0  # blend to pitched NOISE (0 = glassy tonal, 1 = resonant noise burst)
+CLICK_NOISE_Q = 0.15  # noise resonance (lower = narrower band -> more pitched)
+CLICK_SEED = 7  # seed the click noise so renders stay deterministic
+CLICK_REVERB_MULT = 2.0  # reverb wet as a multiple of the shared REVERB_WET
+
+# "slide" layer (voices._slide) -- a soft filtered-noise rustle, a page-slide/turn
+# (reading = observe). Pink noise through a band-pass sweeping HI->LO (settling),
+# with a smooth swell+fade so there's no hard edge. Mixed over a base via the
+# `slide_layer` dsp key. dsp keys: slide_layer (level), slide_delay, slide_dur,
+# slide_freq_lo, slide_freq_hi.
+SLIDE_DUR = 0.18  # length of the rustle (seconds)
+SLIDE_FREQ_LO = 800.0  # sweep low end (Hz)
+SLIDE_FREQ_HI = 2000.0  # sweep high end (Hz); paper is bright/rustly
+SLIDE_Q = 1.0  # band-pass width (higher = broader/airier)
+SLIDE_ATTACK = 0.4  # swell as a fraction of dur (soft, no hard onset)
+SLIDE_LEVEL = 0.07  # pre-mix level
+SLIDE_SEED = 11  # seed the noise (deterministic renders)
 
 # ---- phrase timing ------------------------------------------------------
 
@@ -94,13 +134,18 @@ SUB = (0.5, 1.0, 0.2)  # variant: "layer": "sub"     -> octave-down body
 AIR_RATIO = 8.0
 AIR_DUR_SCALE = 0.35
 
-# ---- reverb (applied per sound in postprocess) --------------------------
-
-REVERB_DECAY_S = 0.35  # length of the impulse response tail
-REVERB_DAMP = 6.0  # exponential damping of the IR (higher = shorter/darker)
-REVERB_PREDELAY_S = 0.008  # gap before the reverb starts (keeps the transient crisp)
-REVERB_WET = 0.15  # wet mix (0..1); more = more spacious/washy
-REVERB_DRY = 0.85  # dry mix
+# ---- reverb: ONE shared room for every voice ----------------------------
+# Every voice runs through voices._reverb -- same decay/damp/predelay/low-pass,
+# with the wet scaled per voice by *_REVERB_MULT (PLUCK_/SINE_ per-voice, and
+# BELL_REVERB_MULT for the bell/swoosh/subagent postprocess path).
+REVERB_DECAY_S = 0.35  # impulse-response tail length (shared)
+REVERB_DAMP = 6.0  # IR damping (higher = shorter/darker) (shared)
+REVERB_PREDELAY_S = 0.008  # gap before reverb (postprocess path only; crisp transient)
+REVERB_WET = 0.25  # BASE wet mix (0..1); each voice = this * its *_REVERB_MULT
+BELL_REVERB_MULT = 1.0  # bell/swoosh/subagent wet, as a multiple of REVERB_WET
+LPF_CUTOFF_HZ = (
+    8000  # shared post low-pass cutoff (Hz); <= 0 = off (tame piercing highs)
+)
 
 TAIL_FADE_S = 0.2  # fade the final N seconds to silence (no abrupt cut)
 
@@ -123,12 +168,12 @@ CREST_SHAPE_ITERS = 30
 # A filtered-noise sweep -- a paper plane thrown to send / arriving to receive.
 # Bandpass center sweeps SWOOSH_FREQ_LO -> HI (dir "up" = send) or HI -> LO
 # (dir "down" = receive). Not pitched, so note-map/accent knobs don't apply.
-SWOOSH_DUR = 0.2  # length of the whoosh (seconds)
-SWOOSH_FREQ_LO = 400.0  # sweep low end (Hz)
-SWOOSH_FREQ_HI = 5000.0  # sweep high end (Hz)
-SWOOSH_Q = 0.7  # bandpass resonance (0..1); higher = more "whistly"
-SWOOSH_ATTACK = 0.04  # fade-in (soft, so it reads as a whoosh not a burst)
-SWOOSH_LEVEL = 0.5  # pre-normalize level
+SWOOSH_DUR = 0.1  # length of the whoosh (seconds)
+SWOOSH_FREQ_LO = 20.0  # sweep low end (Hz)
+SWOOSH_FREQ_HI = 700.0  # sweep high end (Hz)
+SWOOSH_Q = 1  # bandpass resonance (0..1); higher = more "whistly"
+SWOOSH_ATTACK = 0.1  # fade-in (soft, so it reads as a whoosh not a burst)
+SWOOSH_LEVEL = 0.2  # pre-normalize level
 SWOOSH_SEED = 18  # seed the noise so swoosh renders are deterministic
 
 # ---- subagent-accent overlay (generate.py) ------------------------------
