@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-08-15
+
+### Added
+- Pure numpy/scipy sound generator (`sound-theme/default/src/`): DSP
+  primitives (`dsp.py`) build voices (`voices.py` — `bell`, `pluck`, `sine`,
+  `clicks`, `swoosh`) tuned by `tuning.py`; a mini-notation grammar
+  (`mininotation.py`) drives the note-maps in `variants.py`; `generate.py`
+  renders the full palette offline via `uv run --script`. Verification via
+  `scripts/analyze.py` (per-sound + `--palette` loudness gate). Replaces the
+  former signalflow generator; `signalflow` is no longer a dependency.
+- Per-sound `dsp` overrides and overlay layers: each variant can retune its
+  voice and mix a `clicks_layer` or `slide_layer` (offset by a delay) over
+  its base contour, so the 27 cards (8 base events + 19 subtype variants)
+  stay sonically related while each reads distinctly by ear.
+- Subagent-aware audio: tool sounds fired on behalf of a subagent (hook
+  `agent_id`) render a `-subagent` background variant (extra reverb,
+  low-pass, level trim), toggled by `SUBAGENT_ACCENT`. 41 WAVs total.
+- `VOLUME` config key (linear `0.0`-`1.0`) scaling both the daemon mix and
+  `paplay` playback level.
+- Single-process playback daemon (`bin/af-soundd`): holds one persistent
+  PipeWire client and mixes all event sounds, so N concurrent agents
+  produce one player process instead of N `paplay` processes. The per-event
+  client is stdlib-only under bare `python3`; the daemon's deps
+  (sounddevice/soundfile/numpy) are PEP 723 inline metadata supplied by
+  `uv run --script` (no venv). Auto-spawns on first event, self-exits after
+  `DAEMON_IDLE_TIMEOUT`. Config: `DAEMON_ENABLED`, `DAEMON_IDLE_TIMEOUT`,
+  `DAEMON_MAX_VOICES`. Falls back to `paplay` when `uv` is unavailable.
+
+### Changed
+- Sound themes now live under `sound-theme/<theme>/{sounds,src}` with a
+  `theme.json` metadata file (freedesktop-inspired layout; Claude event
+  names kept). Existing `sounds/<theme>/` is migrated.
+
+### Fixed
+- Note-boundary clicks: the `pluck` voice's exponential decay never reached
+  zero, so each note buffer ended non-zero and stepped at every note end. A
+  raised-cosine attack plus an 8ms release fade-to-zero in `dsp.pluck`
+  removes the artifact.
+- Events set to `off` are now silent even when the active theme ships a
+  matching subtype WAV. `af_play_event_with_subtype()` resolved and played
+  the subtype file before consulting the per-event config, so
+  `PRE_TOOL_USE_SOUND=off` (and the other subtype-resolving events) had no
+  effect in practice. The `off` gate is now checked before subtype
+  resolution. (#40)
+- `audio-feedback-config CLICKS_EVENTS=...` now persists. The validation
+  arm used `local` at top-level script scope, which bash rejects
+  (`local: can only be used in a function`), aborting the write. (#41)
+
+### Removed
+- Click-sounds subsystem and all `CLICKS_*` config keys. `sox` is no longer
+  a runtime dependency. Stale `CLICKS_*` lines in existing configs are
+  ignored.
+- REAPER generation pipeline and the archived `.rpp` project + Vital patch
+  fragment, plus the Jupyter/matplotlib dev tooling — all superseded by the
+  numpy/scipy generator.
+
 ## [0.2.2] - 2026-04-15
 
 ### Added

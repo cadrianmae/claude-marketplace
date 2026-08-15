@@ -1,0 +1,57 @@
+# audio-feedback sound development
+# Run from this directory (plugins/audio-feedback). `just` lists recipes.
+
+proj   := "sound-theme/default"
+src    := proj / "src"
+sounds := proj / "sounds"
+py     := proj / ".venv/bin/python"
+
+# list recipes
+default:
+    @just --list
+
+# sync the dev env from pyproject.toml (uv-managed Python 3.12 + numpy/scipy/numba/sounddevice/rtmidi + pytest/jupyter)
+venv:
+    cd {{proj}} && UV_PYTHON_PREFERENCE=only-managed uv sync
+
+# render the full palette to sounds/ (always full: loudness is palette-normalized)
+generate:
+    {{py}} {{src}}/generate.py
+
+# render + play one or more sounds to a temp dir (does NOT touch sounds/)
+preview +NAMES:
+    {{py}} {{src}}/generate.py preview {{NAMES}}
+
+# watch the src files; re-render + play NAME(s) on every save
+live +NAMES:
+    {{py}} {{src}}/generate.py live {{NAMES}}
+
+# live sound-preview dashboard (lumae Dusk) at http://127.0.0.1:8765
+serve:
+    {{py}} {{src}}/serve.py
+
+# real-time: play a MIDI keyboard (or a demo arpeggio); hot-reloads voices.py/tuning.py on save
+live-play:
+    {{py}} {{src}}/live.py
+
+# play the current committed wav (no re-render)
+play NAME:
+    paplay {{sounds}}/{{NAME}}.wav
+
+# play every committed sound back-to-back (Ctrl-C exits cleanly)
+audition:
+    #!/usr/bin/env bash
+    trap 'exit 130' INT
+    for w in {{sounds}}/*.wav; do echo "$(basename "$w" .wav)"; paplay "$w"; done
+
+# verify the palette loudness gate (RMS spread <= 5 dB, peak <= -0.7 dBFS)
+verify:
+    {{py}} scripts/analyze.py --palette {{sounds}}
+
+# run the full sound test suite (dsp/voices/generate/live + note-map/daemon/loudness/...)
+test:
+    {{py}} -m pytest tests/ -q
+
+# remove preview scratch + pycache
+clean:
+    rm -rf {{src}}/.preview {{src}}/__pycache__

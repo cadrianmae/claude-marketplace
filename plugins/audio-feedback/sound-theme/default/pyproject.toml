@@ -1,0 +1,21 @@
+[project]
+name = "audio-feedback-soundgen"
+version = "1.0.0"
+description = "numpy real-time synth generator for the audio-feedback default sound theme (dev-time only)"
+requires-python = ">=3.12"
+dependencies = ["numpy", "scipy", "parsimonious", "numba", "sounddevice", "python-rtmidi"]
+
+[dependency-groups]
+dev = ["pytest", "flask"]
+
+[tool.basedpyright]
+# basedpyright roots here (nearest pyproject.toml). Use pyright's "standard"
+# mode instead of basedpyright's stricter default -- numpy/scipy are
+# untyped-ish, so reportAny/reportUnknown*/reportUnannotatedClassAttribute are
+# noise for a small dev-time generator. src/ is the import root.
+venvPath = "."
+venv = ".venv"
+extraPaths = ["src"]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
+reportMissingModuleSource = "none"

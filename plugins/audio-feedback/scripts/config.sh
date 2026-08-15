@@ -13,18 +13,18 @@ source "$SCRIPT_DIR/lib.sh"
 af_ensure_config
 af_load_config
 
-VALID_KEYS="THEME ENABLED CLICKS_ENABLED CLICKS_EVENTS CLICKS_RATE CLICKS_RATE_AT CLICKS_RATE_GROWTH STOP_SOUND NOTIFICATION_SOUND PRE_COMPACT_SOUND USER_PROMPT_SOUND SESSION_START_SOUND SUBAGENT_STOP_SOUND PRE_TOOL_USE_SOUND POST_TOOL_USE_SOUND"
+VALID_KEYS="THEME ENABLED DAEMON_ENABLED DAEMON_IDLE_TIMEOUT DAEMON_MAX_VOICES SUBAGENT_ACCENT VOLUME STOP_SOUND NOTIFICATION_SOUND PRE_COMPACT_SOUND USER_PROMPT_SOUND SESSION_START_SOUND SUBAGENT_STOP_SOUND PRE_TOOL_USE_SOUND POST_TOOL_USE_SOUND"
 
 if [ $# -eq 0 ]; then
     echo "audio-feedback configuration ($(af_config_file)):"
     echo
     echo "  THEME=$AF_THEME"
     echo "  ENABLED=$AF_ENABLED"
-    echo "  CLICKS_ENABLED=$AF_CLICKS_ENABLED"
-    echo "  CLICKS_EVENTS=$AF_CLICKS_EVENTS"
-    echo "  CLICKS_RATE=$AF_CLICKS_RATE"
-    echo "  CLICKS_RATE_AT=$AF_CLICKS_RATE_AT"
-    echo "  CLICKS_RATE_GROWTH=$AF_CLICKS_RATE_GROWTH"
+    echo "  DAEMON_ENABLED=$AF_DAEMON_ENABLED"
+    echo "  DAEMON_IDLE_TIMEOUT=$AF_DAEMON_IDLE_TIMEOUT"
+    echo "  DAEMON_MAX_VOICES=$AF_DAEMON_MAX_VOICES"
+    echo "  SUBAGENT_ACCENT=$AF_SUBAGENT_ACCENT"
+    echo "  VOLUME=$AF_VOLUME"
     echo
     echo "  Event sounds (set to 'off' to disable):"
     echo "  STOP_SOUND=$AF_STOP_SOUND"
@@ -37,17 +37,12 @@ if [ $# -eq 0 ]; then
     echo "  POST_TOOL_USE_SOUND=$AF_POST_TOOL_USE_SOUND"
     echo
     echo "Available sounds: $(af_list_sounds | tr '\n' ' ')"
-    # List available themes (subdirectories of sounds/)
-    themes_dir="$(_af_sounds_base)"
-    if [ -d "$themes_dir" ]; then
-        echo "Available themes: $(find "$themes_dir" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | tr '\n' ' ')"
-    fi
+    echo "Available themes: $(af_list_themes | tr '\n' ' ')"
     echo "Update with: /audio-feedback config KEY=VALUE"
     exit 0
 fi
 
 # Validate and apply
-sounds_dir="$(_af_sounds_dir)"
 for arg in "$@"; do
     if [[ "$arg" != *=* ]]; then
         echo "Error: '$arg' is not in KEY=VALUE form" >&2
@@ -58,14 +53,12 @@ for arg in "$@"; do
 
     case "$key" in
         THEME)
-            themes_dir="$(_af_sounds_base)"
-            if [ ! -d "$themes_dir/$value" ]; then
-                echo "Error: theme '$value' not found in $themes_dir" >&2
-                echo "Available: $(find "$themes_dir" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | tr '\n' ' ')" >&2
+            if [ ! -f "$(_af_sounds_base)/$value/theme.json" ]; then
+                echo "Error: theme '$value' not found. Available: $(af_list_themes | tr '\n' ' ')" >&2
                 exit 1
             fi
             ;;
-        ENABLED|CLICKS_ENABLED)
+        ENABLED|DAEMON_ENABLED|SUBAGENT_ACCENT)
             case "$value" in
                 true|false) ;;
                 *)
@@ -74,38 +67,23 @@ for arg in "$@"; do
                     ;;
             esac
             ;;
-        CLICKS_RATE)
-            if ! [[ "$value" =~ ^[0-9]+$ ]] || [ "$value" -lt 1 ] || [ "$value" -gt 50 ]; then
-                echo "Error: CLICKS_RATE must be an integer in [1, 50] (got '$value')" >&2
-                exit 1
-            fi
-            ;;
-        CLICKS_RATE_AT)
+        DAEMON_IDLE_TIMEOUT|DAEMON_MAX_VOICES)
             if ! [[ "$value" =~ ^[0-9]+$ ]] || [ "$value" -lt 1 ]; then
-                echo "Error: CLICKS_RATE_AT must be a positive integer (got '$value')" >&2
+                echo "Error: $key must be a positive integer (got '$value')" >&2
                 exit 1
             fi
             ;;
-        CLICKS_RATE_GROWTH)
-            if ! [[ "$value" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-                echo "Error: CLICKS_RATE_GROWTH must be a non-negative number (got '$value')" >&2
+        VOLUME)
+            if ! [[ "$value" =~ ^[0-9]+([.][0-9]+)?$ ]] \
+               || ! awk -v v="$value" 'BEGIN{exit !(v>=0 && v<=1)}'; then
+                echo "Error: VOLUME must be a number 0.0-1.0 (got '$value')" >&2
                 exit 1
             fi
-            ;;
-        CLICKS_EVENTS)
-            local valid_events="stop,post_tool_use,subagent_stop,notification,pre_compact"
-            IFS=',' read -ra events <<< "$value"
-            for ev in "${events[@]}"; do
-                case ",$valid_events," in
-                    *,"$ev",*) ;;
-                    *)
-                        echo "Error: unknown click event '$ev'. Valid: $valid_events" >&2
-                        exit 1
-                        ;;
-                esac
-            done
             ;;
         STOP_SOUND|NOTIFICATION_SOUND|PRE_COMPACT_SOUND|USER_PROMPT_SOUND|SESSION_START_SOUND|SUBAGENT_STOP_SOUND|PRE_TOOL_USE_SOUND|POST_TOOL_USE_SOUND)
+            # recompute per-arg: a THEME= set earlier in this same invocation
+            # has already been persisted, so validate against the pending theme
+            sounds_dir="$(_af_sounds_dir)"
             if [ "$value" != "off" ] && [ ! -f "$sounds_dir/${value}.wav" ]; then
                 echo "Error: sound '$value' not found. Use 'off' or one of: $(af_list_sounds | tr '\n' ' ')" >&2
                 exit 1
