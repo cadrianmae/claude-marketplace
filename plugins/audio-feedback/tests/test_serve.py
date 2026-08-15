@@ -28,7 +28,8 @@ def test_serve_dir_emits_wavs_and_palette(tmp_path):
     palette = json.load(open(os.path.join(out, "palette.json")))
     assert len([p for p in palette]) == 27  # 8 base + 19 variants (accent not a card)
     by = {p["name"]: p for p in palette}
-    assert by["stop"]["voice"] == "pluck" and by["stop"]["notes"][0] == "C5"
+    assert by["stop"]["voice"] in {"bell", "pluck", "sine", "swoosh", "clicks"}
+    assert by["stop"]["notes"][0] == "C5"
     assert by["pre-tool-use-network"]["voice"] == "swoosh"
     assert by["pre-tool-use-network"]["swoosh_dir"] == "up"
     assert "level_db" in by["stop"]

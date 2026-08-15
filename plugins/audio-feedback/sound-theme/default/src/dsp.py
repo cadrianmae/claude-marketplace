@@ -104,7 +104,7 @@ def reverb(
     bloom, no slapback double). `extend` appends the IR length so the tail rings
     out (sine voice) rather than being cut (bell/swoosh postprocess set
     extend=False -- their buffers are pre-padded). `wet` 0..1; 0 or decay<=0 =
-    no-op. (unifies synthmod.reverb + synth.postprocess reverb)."""
+    no-op."""
     if wet <= 0 or decay_s <= 0:
         return sig.astype("float32")
     n = int(SR * decay_s)

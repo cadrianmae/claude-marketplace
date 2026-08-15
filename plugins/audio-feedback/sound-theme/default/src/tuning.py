@@ -3,7 +3,7 @@
 THIS IS THE FILE TO EDIT WHEN SHAPING SOUNDS BY EAR.
 
 Everything here is a knob. Nothing here does I/O, manages the audio graph, or
-loops over the palette -- that lives in synth.py / loudness.py / theme.py /
+loops over the palette -- that lives in voices.py / loudness.py / theme.py /
 generate.py. Change a number, then re-render and listen:
 
     just preview stop            # render one + play
@@ -48,7 +48,7 @@ ATTACK_S = BELL_DUR / 2
 # Silence padded after a bell's envelope so the render buffer contains the FULL
 # decay (attack + release) and lands on zero. Without it the buffer was cut at
 # BELL_DUR mid-release, dropping the tail to a non-zero step -> a click at every
-# note boundary (one per note in a phrase). synth.py sizes each bell buffer to
+# note boundary (one per note in a phrase). voices.bell sizes each bell buffer to
 # ATTACK_S + BELL_DUR*max(decay_scale, 1) + this pad.
 BELL_RELEASE_PAD_S = 0.01
 

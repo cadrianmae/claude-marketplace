@@ -98,9 +98,14 @@ Pure numpy, no signalflow dependency, layered in three modules under `src/`:
 - **`dsp.py`** - low-level primitives: oscillators, envelopes, a reverb, an
   `@njit`-compiled state-variable filter, pink noise, `midi_hz`. No knowledge
   of events or the palette; just signal generation.
-- **`voices.py`** - the instrument layer built on `dsp.py`: `bell`, `sine`,
-  and `swoosh` voices plus `render_event`, which takes a `Sound` (from
-  `variants.py`) and renders its full phrase. This is where the premium-tips
+- **`voices.py`** - the instrument layer built on `dsp.py`: the `bell`, `pluck`,
+  `sine`, `swoosh`, and `clicks` voices plus `render_event`, which takes a
+  `Sound` (from `variants.py`) and renders its full phrase. A per-sound `dsp`
+  override dict lets any variant retune its voice's knobs
+  (`knob(sound, key, tuning.default)`), and overlay LAYERS (`clicks_layer`,
+  `slide_layer`, each with a `*_delay`) mix a texture over the base render via
+  `_mix_at`. Envelope ramps are raised-cosine and every note fades to true zero,
+  so there are no attack/release boundary clicks. This is where the premium-tips
   techniques below (inharmonic partials, soft attack, pre-delay reverb) live.
 - **`generate.py`** - offline batch rendering: walks the palette
   (`theme.all_targets()`), calls `voices.render_event` per target, applies

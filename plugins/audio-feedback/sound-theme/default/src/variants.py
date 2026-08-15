@@ -12,13 +12,13 @@ mininotation.py) into a sorted list of `(onset_fraction, midi)` events for one
 cycle, where onset is a Fraction in [0, 1). `,` inside the spec stacks
 sequences to play simultaneously (replaces the old mode="chord"). `cycle_sec`
 is the per-sound cycle length in seconds -- it scales the fractional onsets
-into real time (see synth.render_event).
+into real time (see voices.render_event).
 
 This is a tuning surface. Edit a class's notes or knobs, then re-render:
     just live stop
     just preview pre-tool-use-network
 
-Accent knobs (see synth.render_bell):
+Bell-voice accent knobs (see voices.bell; no-ops on pluck/sine/swoosh):
   transpose     semitones to shift the phrase (keeps mode/contour)
   brightness    partial tilt toward the highs (>1 brighter, <1 rounder)
   decay_scale   multiply BELL_DUR for this sound (longer/shorter ring)
@@ -77,7 +77,11 @@ class Sound(ABC):
     #   pluck:  length_s attack tau_fast tau_slow sustain tremolo_hz tremolo_depth reverb_mult
     #   sine:   length_s attack release_s tremolo_hz tremolo_depth reverb_mult
     #   swoosh: dur freq_lo freq_hi q attack level
-    # e.g. dsp = {"reverb_mult": 2.0, "tremolo_depth": 0.3, "length_s": 0.8}
+    #   clicks: count click_dur gap_start decel decay click_attack click_noise reverb_mult
+    # LAYERS -- mix a texture over the base render (works over ANY voice):
+    #   clicks_layer (level) + clicks_delay (s)  -- glassy clicks (+ click_noise 1.0 = pitched noise)
+    #   slide_layer  (level) + slide_delay  (s)  -- page-slide rustle
+    # e.g. dsp = {"reverb_mult": 2.0, "length_s": 0.8}  |  {"clicks_layer": 0.4, "clicks_delay": 0.2}
     dsp: ClassVar[dict[str, float]] = {}
 
     # ---- bell-voice envelope overrides (None = use the tuning.py global) --

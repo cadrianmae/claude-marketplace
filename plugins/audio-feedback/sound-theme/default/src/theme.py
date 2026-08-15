@@ -2,7 +2,7 @@
 
 Plumbing only: paths, sample rate, the sound registry, and writing WAVs. The
 palette (note-map + accents) lives in variants.py as a class hierarchy; the
-synthesis lives in synth.py.
+synthesis lives in voices.py.
 """
 import os
 
