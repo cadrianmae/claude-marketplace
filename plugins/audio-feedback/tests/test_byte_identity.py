@@ -22,6 +22,6 @@ def test_palette_render_is_deterministic(tmp_path):
     generate.cmd_serve_dir(b)
     ha, hb = _hash_dir(a), _hash_dir(b)
     assert set(ha) == set(hb)
-    assert len(ha) == 28
+    assert len(ha) == 41
     for name in ha:
         assert ha[name] == hb[name], f"{name} not reproducible across renders"

@@ -8,8 +8,8 @@ def test_serve_dir_writes_full_palette(tmp_path):
     out = str(tmp_path / "snd")
     generate.cmd_serve_dir(out)
     wavs = [f for f in os.listdir(out) if f.endswith(".wav")]
-    assert len(wavs) == 28                          # 27 palette + subagent-accent
-    assert "subagent-accent.wav" in wavs
+    assert len(wavs) == 41                          # 27 palette + 14 tool -subagent variants
+    assert "pre-tool-use-execute-subagent.wav" in wavs
     assert os.path.exists(os.path.join(out, "palette.json"))
     for name in theme.all_targets():
         assert os.path.exists(os.path.join(out, name + ".wav"))

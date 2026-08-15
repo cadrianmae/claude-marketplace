@@ -43,6 +43,10 @@ def _render_events(names: list[str] | None = None) -> dict[str, dsp.Signal]:
         db = targets[name].level_db
         if db:
             sigs[name] = sig * (10 ** (db / 20))
+    # tool sounds get a <name>-subagent variant for a tool run INSIDE a subagent:
+    # the same sound pushed into the background (extra reverb wash + low-pass).
+    for name in [n for n in sigs if n.startswith(("pre-tool-use", "post-tool-use"))]:
+        sigs[name + "-subagent"] = voices.to_background(sigs[name])
     return sigs
 
 
@@ -68,13 +72,13 @@ def sound_params(name: str, sound: type[Sound]) -> dict[str, object]:
 def cmd_serve_dir(out: str) -> None:
     os.makedirs(out, exist_ok=True)
     targets = theme.all_targets()
-    for name, sig in _render_events().items():
+    sigs = _render_events()
+    for name, sig in sigs.items():
         theme.write_wav(os.path.join(out, name + ".wav"), sig)
-    theme.write_wav(os.path.join(out, "subagent-accent.wav"), voices.render_subagent_accent())
     palette = [sound_params(name, targets[name]) for name in targets]
     with open(os.path.join(out, "palette.json"), "w") as f:
         json.dump(palette, f, indent=2)
-    print(f"serve-dir: 28 wavs + palette.json -> {out}")
+    print(f"serve-dir: {len(sigs)} wavs + palette.json -> {out}")
 
 
 def cmd_generate(argv: list[str]) -> None:
@@ -83,10 +87,6 @@ def cmd_generate(argv: list[str]) -> None:
     for name, sig in _render_events(only or None).items():
         theme.write_wav(os.path.join(theme.SOUNDS, name + ".wav"), sig)
         print("wrote", name + ".wav")
-    if not only or "subagent-accent" in only:
-        theme.write_wav(os.path.join(theme.SOUNDS, "subagent-accent.wav"),
-                        voices.render_subagent_accent())
-        print("wrote subagent-accent.wav")
 
 
 def _play(path: str) -> None:
@@ -99,13 +99,13 @@ def cmd_preview(names: list[str]) -> int:
         return 2
     os.makedirs(PREVIEW_DIR, exist_ok=True)
     for name in names:
-        if name == "subagent-accent":
-            sig = voices.render_subagent_accent()
-        else:
-            sound = theme.all_targets()[name]
-            sig = next(iter(loudness.normalize_palette({name: voices.render_event(sound)}).values()))
-            if sound.level_db:                       # match _render_events: apply the per-sound trim
-                sig = sig * (10 ** (sound.level_db / 20))
+        base = name[: -len("-subagent")] if name.endswith("-subagent") else name
+        sound = theme.all_targets()[base]
+        sig = next(iter(loudness.normalize_palette({base: voices.render_event(sound)}).values()))
+        if sound.level_db:                       # match _render_events: apply the per-sound trim
+            sig = sig * (10 ** (sound.level_db / 20))
+        if name.endswith("-subagent"):
+            sig = voices.to_background(sig)
         path = os.path.join(PREVIEW_DIR, name + ".wav")
         theme.write_wav(path, sig)
         print("preview", name)

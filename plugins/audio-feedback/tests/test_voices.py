@@ -57,11 +57,19 @@ def test_render_event_dispatches_each_voice():
         assert len(sig) > 0 and np.all(np.isfinite(sig))
 
 
-def test_subagent_accent_is_quiet():
-    sig = voices.render_subagent_accent()
-    assert sig.dtype == np.float32
-    assert len(sig) > 0
-    assert float(np.max(np.abs(sig))) < 1.0          # sits under the palette
+def test_to_background_is_darker():
+    from variants import SOUNDS
+
+    dry = voices.render_event(SOUNDS["pre-tool-use"])
+    bg = voices.to_background(dry)
+    assert bg.dtype == np.float32 and len(bg) > 0 and np.all(np.isfinite(bg))
+
+    def hf_frac(x):
+        m = np.abs(np.fft.rfft(x.astype(np.float64)))
+        f = np.fft.rfftfreq(len(x), 1 / SR)
+        return m[f > 3000].sum() / (m.sum() + 1e-9)
+
+    assert hf_frac(bg) < hf_frac(dry)                # low-passed -> less high-frequency energy
 
 
 def test_clicks_train_decelerates():

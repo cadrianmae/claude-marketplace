@@ -18,9 +18,9 @@ def test_serve_dir_emits_wavs_and_palette(tmp_path):
     out = str(tmp_path / "preview")
     r = subprocess.run([_py(), GEN, "--serve-dir", out], capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
-    # 28 sounds (8 base + 19 variants + subagent-accent) all present, mono 44100
+    # 41 sounds (27 palette + 14 tool -subagent variants) all present, mono 44100
     names = [f[:-4] for f in os.listdir(out) if f.endswith(".wav")]
-    assert len(names) == 28
+    assert len(names) == 41
     for b in BASE:
         assert b in names
         with wave.open(os.path.join(out, b + ".wav")) as w:

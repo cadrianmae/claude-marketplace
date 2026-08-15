@@ -222,17 +222,16 @@ af_dispatch_play() {
     paplay "$wav" 2>/dev/null || true
 }
 
-# Mix the subagent accent over the current event sound (daemon overlays it).
-# Only sounds when the plugin is enabled, this event's sound is not "off",
-# SUBAGENT_ACCENT is on, and the accent file exists.
-af_play_subagent_accent() {
-    local event="$1"
-    [ "$AF_ENABLED" = "true" ] || return 0
-    [ "${AF_SUBAGENT_ACCENT:-true}" = "true" ] || return 0
-    [ "$(af_sound_for_event "$event")" = "off" ] && return 0
-    local accent
-    accent="$(_af_sounds_dir)/subagent-accent.wav"
-    [ -f "$accent" ] && af_dispatch_play "$accent"
+# Background variant selector: if this event fired INSIDE a subagent (agent_id
+# set) and a <name>-subagent.wav exists, prefer it (the normal sound pushed to
+# the background -- extra reverb + low-pass). Gated by the SUBAGENT_ACCENT config
+# toggle (kept for back-compat). Echoes the file to play.
+_af_subagent_variant() {
+    local file="$1" agent_id="$2"
+    [ -n "$agent_id" ] || { printf '%s' "$file"; return 0; }
+    [ "${AF_SUBAGENT_ACCENT:-true}" = "true" ] || { printf '%s' "$file"; return 0; }
+    local bg="${file%.wav}-subagent.wav"
+    [ -f "$bg" ] && printf '%s' "$bg" || printf '%s' "$file"
 }
 
 # Play the sound for a given event. Blocks until done.
@@ -268,6 +267,7 @@ af_play_event() {
 af_play_event_with_subtype() {
     local event="$1"
     local subtype="$2"
+    local agent_id="$3"
 
     af_load_config
     [ "$AF_ENABLED" = "true" ] || return 0
@@ -281,7 +281,9 @@ af_play_event_with_subtype() {
     local sounds_dir
     sounds_dir="$(_af_sounds_dir)"
 
-    # Try subtype-specific file first (if subtype is non-empty).
+    # Resolve the sound file: subtype-specific first (if subtype non-empty),
+    # else the generic event sound.
+    local chosen=""
     if [ -n "$subtype" ]; then
         # Normalize event: underscores -> hyphens, lowercase
         local norm_event norm_subtype
@@ -296,15 +298,13 @@ af_play_event_with_subtype() {
         fi
 
         local subtype_file="$sounds_dir/${norm_event}-${norm_subtype}.wav"
-        if [ -f "$subtype_file" ]; then
-            af_dispatch_play "$subtype_file"
-            return 0
-        fi
+        [ -f "$subtype_file" ] && chosen="$subtype_file"
     fi
+    [ -z "$chosen" ] && chosen="$sounds_dir/${sound}.wav"
+    [ -f "$chosen" ] || return 0
 
-    # Fall back to generic event sound from config (already resolved above).
-    local sound_file="$sounds_dir/${sound}.wav"
-    [ -f "$sound_file" ] || return 0
+    # Tool call INSIDE a subagent -> play the background (-subagent) variant.
+    chosen="$(_af_subagent_variant "$chosen" "$agent_id")"
 
-    af_dispatch_play "$sound_file"
+    af_dispatch_play "$chosen"
 }

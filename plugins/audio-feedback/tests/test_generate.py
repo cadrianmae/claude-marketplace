@@ -59,8 +59,8 @@ def test_palette_passes_loudness(palette_dir):
     assert r.returncode == 0, f"palette gate failed: {r.stdout}\n{r.stderr}"
 
 
-def test_subagent_accent_emitted(palette_dir):
-    p = os.path.join(palette_dir, "subagent-accent.wav")
+def test_subagent_variant_emitted(palette_dir):
+    p = os.path.join(palette_dir, "pre-tool-use-execute-subagent.wav")
     assert os.path.exists(p)
     with wave.open(p) as w:
         assert w.getnchannels() == 1 and w.getframerate() == 44100

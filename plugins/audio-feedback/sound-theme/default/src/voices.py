@@ -303,16 +303,14 @@ def render_event(sound: type[Sound]) -> Signal:
     return postprocess(out)
 
 
-def render_subagent_accent() -> Signal:
-    """The bare quiet shimmer mixed over subagent tool sounds at runtime."""
-    freq = midi_hz(tuning.SUBAGENT_NOTE)
-    n = int(SR * tuning.SUBAGENT_RENDER_S)
-    out = np.zeros(n, dtype="float32")
-    for ratio, release, level in tuning.SUBAGENT_PARTIALS:
-        out += (
-            dsp.oscillator(freq * ratio, n)
-            * dsp.ar(n, tuning.ATTACK_S, release)
-            * level
-        )
-    out = postprocess(out)
-    return out * 10 ** (tuning.SUBAGENT_OFFSET_DB / 20)
+def to_background(sig: Signal) -> Signal:
+    """Push a finished sound into the background -- a tool run INSIDE a subagent,
+    heard from another room: extra reverb wash + a low-pass + a level trim.
+    (Replaces the old overlaid subagent-accent note.)"""
+    sig = dsp.reverb(
+        sig, tuning.REVERB_DECAY_S, tuning.REVERB_WET * tuning.SUBAGENT_REVERB_MULT,
+        tuning.REVERB_DAMP, extend=True,
+    )
+    if tuning.SUBAGENT_LPF_HZ > 0:
+        sig = dsp.lowpass(sig, tuning.SUBAGENT_LPF_HZ)
+    return (sig * 10 ** (tuning.SUBAGENT_LEVEL_DB / 20)).astype("float32")

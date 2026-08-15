@@ -62,9 +62,9 @@ CURVE = 1.0
 # decay (fast tau into a slow sustain tail), a gentle tremolo, and light reverb,
 # reverse-engineered from the original sine blips. (Renamed from the old "sine"
 # voice; a new sustained "sine" voice takes its own fresh SINE_* consts.)
-PLUCK_LENGTH_S = 0.55  # played length of a pluck note (seconds)
+PLUCK_LENGTH_S = 0.5  # played length of a pluck note (seconds)
 PLUCK_ATTACK_S = 0.15  # pluck attack (fast; NOT the slow bell ATTACK_S)
-PLUCK_TAU_FAST = 0.026  # fast pluck decay time constant (s)
+PLUCK_TAU_FAST = 0.052  # fast pluck decay time constant (s)
 PLUCK_TAU_SLOW = 0.15  # slow tail decay time constant (s)
 PLUCK_SUSTAIN = 0.1  # weight of the slow tail (0..1)
 PLUCK_TREMOLO_HZ = 1.0  # amplitude-wobble rate (unused while depth = 0)
@@ -151,7 +151,7 @@ TAIL_FADE_S = 0.2  # fade the final N seconds to silence (no abrupt cut)
 
 # ---- palette loudness policy (loudness.py) ------------------------------
 
-PEAK_CEILING_DB = -1.0  # final per-file peak ceiling (dBFS); gate wants <= -0.7
+PEAK_CEILING_DB = -7.0  # final per-file peak ceiling (dBFS); gate wants <= -0.7
 CREST_TOLERANCE_DB = 1.0  # only adjust files whose crest deviates from the
 # palette mean by more than this (outliers only)
 PEAK_GUARD_S = 0.015  # protect the transient: adjust only after peak + this
@@ -176,14 +176,11 @@ SWOOSH_ATTACK = 0.1  # fade-in (soft, so it reads as a whoosh not a burst)
 SWOOSH_LEVEL = 0.2  # pre-normalize level
 SWOOSH_SEED = 18  # seed the noise so swoosh renders are deterministic
 
-# ---- subagent-accent overlay (generate.py) ------------------------------
+# ---- subagent background treatment (generate.py: <name>-subagent.wav) ----
 
-# A bare quiet shimmer mixed over tool sounds fired on behalf of a subagent.
-# Two high partials of a high note, low level, a few dB under the palette.
-SUBAGENT_NOTE = 84  # MIDI (C6)
-SUBAGENT_PARTIALS = [
-    (6.01, 0.30, 0.05),  # (ratio, env_release_s, level)
-    (4.02, 0.25, 0.04),
-]
-SUBAGENT_RENDER_S = 0.35
-SUBAGENT_OFFSET_DB = -6.0  # sit under the palette so it stays subtle
+# A tool run INSIDE a subagent plays its NORMAL sound pushed into the background,
+# as if heard from another room: extra reverb wash + a low-pass + a level trim.
+# (Replaces the old overlaid high-shimmer accent note.)
+SUBAGENT_REVERB_MULT = 3.0  # extra reverb wet (x REVERB_WET) on the bg version
+SUBAGENT_LPF_HZ = 1500.0  # low-pass the bg version (darker/distant); <= 0 = off
+SUBAGENT_LEVEL_DB = -3.0  # pull the bg version down a touch
