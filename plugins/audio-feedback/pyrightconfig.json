@@ -1,0 +1,8 @@
+{
+  "venvPath": "sound-theme/default",
+  "venv": ".venv",
+  "extraPaths": ["sound-theme/default/src", "scripts"],
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "standard",
+  "reportMissingModuleSource": "none"
+}

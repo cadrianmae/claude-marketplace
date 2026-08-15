@@ -8,13 +8,14 @@ Thumbs.db
 *~
 .vscode/
 .idea/
-
 # Temporary files
 *.tmp
 *.bak
-
 # Claude files
 .claude/
-
 # Worktrees
 .worktrees/
+# Audio-feedback dev venv
+plugins/audio-feedback/sound-theme/default/src/.preview/
+plugins/audio-feedback/sound-theme/default/src/__pycache__/
+plugins/audio-feedback/sound-theme/default/.venv/

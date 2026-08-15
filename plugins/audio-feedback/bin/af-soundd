@@ -1,0 +1,273 @@
+#!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["sounddevice", "soundfile", "numpy"]
+# ///
+"""af-soundd: resident audio-feedback playback daemon + client.
+
+Subcommands:
+  daemon    run the mixing daemon (foreground) on a Unix socket
+  play      ensure a daemon exists (auto-spawn via uv) then send a path [Task 5]
+  raw-send  write stdin lines to an existing socket (no spawn) [testing]
+  selftest  run internal mixer assertions
+
+Client subcommands (play, raw-send) import stdlib only and run fine under a
+bare python3. Only the daemon needs numpy/sounddevice/soundfile, imported
+lazily below and supplied by uv from the PEP 723 block when launched with
+`uv run --script`.
+"""
+import argparse
+import os
+import socket
+import sys
+import threading
+import time
+
+SAMPLE_RATE = 44100
+CHANNELS = 1
+BLOCK = 1024
+
+
+class Mixer:
+    """Sum active voices into fixed-size float32 blocks."""
+
+    def __init__(self, max_voices):
+        self.max_voices = max_voices
+        self._voices = []  # list of [samples(np.float32), pos(int)]
+        self._lock = threading.Lock()
+
+    def add(self, samples):
+        with self._lock:
+            if len(self._voices) >= self.max_voices:
+                self._voices.pop(0)  # drop oldest
+            self._voices.append([samples, 0])
+
+    def active(self):
+        with self._lock:
+            return len(self._voices) > 0
+
+    def render(self, frames):
+        import numpy as np
+        out = np.zeros(frames, dtype="float32")
+        with self._lock:
+            keep = []
+            for v in self._voices:
+                s, pos = v
+                chunk = s[pos:pos + frames]
+                out[:len(chunk)] += chunk
+                v[1] = pos + len(chunk)
+                if v[1] < len(s):
+                    keep.append(v)
+            self._voices = keep
+        np.clip(out, -1.0, 1.0, out=out)
+        return out
+
+
+def _load_wav(path, cache):
+    """Load a mono float32 array at SAMPLE_RATE, or None on failure."""
+    import numpy as np
+    import soundfile as sf
+    if path in cache:
+        return cache[path]
+    try:
+        data, sr = sf.read(path, dtype="float32", always_2d=False)
+    except Exception:
+        cache[path] = None
+        return None
+    if data.ndim > 1:
+        data = data.mean(axis=1).astype("float32")
+    if sr != SAMPLE_RATE:
+        n = int(round(len(data) * SAMPLE_RATE / sr))
+        if n > 0:
+            xp = np.linspace(0.0, 1.0, num=len(data), endpoint=False)
+            x = np.linspace(0.0, 1.0, num=n, endpoint=False)
+            data = np.interp(x, xp, data).astype("float32")
+    cache[path] = data
+    return data
+
+
+def run_daemon(args):
+    mixer = Mixer(args.max_voices)
+    cache = {}
+    last = [time.monotonic()]
+
+    if os.path.exists(args.socket):
+        os.unlink(args.socket)
+    srv = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    srv.bind(args.socket)
+    srv.listen(16)
+    srv.settimeout(0.25)
+
+    stream = None
+    if not args.no_audio:
+        import sounddevice as sd
+
+        def callback(outdata, frames, time_info, status):
+            outdata[:, 0] = mixer.render(frames)
+
+        stream = sd.OutputStream(
+            samplerate=SAMPLE_RATE, channels=CHANNELS,
+            blocksize=BLOCK, dtype="float32", callback=callback,
+        )
+        stream.start()
+
+    print("READY", file=sys.stderr, flush=True)
+    try:
+        while True:
+            if (time.monotonic() - last[0] > args.idle_timeout) and not mixer.active():
+                break
+            try:
+                conn, _ = srv.accept()
+            except socket.timeout:
+                continue
+            with conn:
+                data = conn.recv(8192).decode("utf-8", "replace")
+            for line in data.splitlines():
+                path = line.strip()
+                if not path:
+                    continue
+                print("PLAY " + path, file=sys.stderr, flush=True)
+                last[0] = time.monotonic()
+                if args.no_audio:
+                    continue
+                samples = _load_wav(path, cache)
+                if samples is not None:
+                    mixer.add(samples)
+    finally:
+        if stream is not None:
+            stream.stop(); stream.close()
+        srv.close()
+        try:
+            os.unlink(args.socket)
+        except OSError:
+            pass
+        print("IDLE-EXIT", file=sys.stderr, flush=True)
+
+
+def run_raw_send(args):
+    data = sys.stdin.read()
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.connect(args.socket)
+    s.sendall(data.encode("utf-8"))
+    s.close()
+
+
+def run_selftest(_args):
+    import numpy as np
+    m = Mixer(max_voices=2)
+    m.add(np.ones(3, dtype="float32") * 0.5)
+    assert np.allclose(m.render(2), [0.5, 0.5])
+    assert m.active()
+    assert np.allclose(m.render(2)[0], 0.5)
+    assert not m.active()
+    m.add(np.ones(1, dtype="float32") * 0.8)
+    m.add(np.ones(1, dtype="float32") * 0.8)
+    assert np.allclose(m.render(1), [1.0])  # 1.6 clipped
+    m2 = Mixer(max_voices=1)
+    m2.add(np.zeros(1, dtype="float32"))
+    m2.add(np.ones(1, dtype="float32"))
+    assert np.allclose(m2.render(1), [1.0])  # oldest dropped
+    print("selftest OK")
+
+
+def _try_send(sock_path, payload):
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(sock_path)
+        s.sendall(payload.encode("utf-8"))
+        s.close()
+        return True
+    except (FileNotFoundError, ConnectionRefusedError, OSError):
+        return False
+
+
+def _spawn_daemon(args):
+    """Ensure exactly one daemon. Fork+exec it via `uv run --script`, then
+    HOLD the flock until the new daemon is actually listening on the socket.
+    Concurrent callers block on the lock; when it releases the daemon is up,
+    so their re-check succeeds and they never spawn a duplicate. Returns
+    False only if uv is missing."""
+    import fcntl
+    import shutil
+    uv = shutil.which("uv")
+    if uv is None:
+        return False
+    lock_path = args.socket + ".spawn.lock"
+    lf = open(lock_path, "w")
+    try:
+        fcntl.flock(lf, fcntl.LOCK_EX)
+        if _try_send(args.socket, ""):  # someone already started it
+            return True
+        cmd = [uv, "run", "--script", os.path.abspath(__file__), "daemon",
+               "--socket", args.socket,
+               "--idle-timeout", str(args.idle_timeout),
+               "--max-voices", str(args.max_voices)]
+        if args.no_audio:
+            cmd.append("--no-audio")
+        devnull = os.open(os.devnull, os.O_RDWR)
+        pid = os.fork()
+        if pid == 0:
+            os.setsid()
+            os.dup2(devnull, 0); os.dup2(devnull, 1); os.dup2(devnull, 2)
+            try:
+                os.execv(cmd[0], cmd)
+            except BaseException:
+                os._exit(127)
+        os.close(devnull)
+        # Hold the lock until the daemon is reachable (~15s covers a cold uv
+        # cache). Queued callers then find it up and skip their own spawn.
+        for _ in range(300):
+            if _try_send(args.socket, ""):
+                break
+            time.sleep(0.05)
+        return True
+    finally:
+        fcntl.flock(lf, fcntl.LOCK_UN)
+        lf.close()
+
+
+def run_play(args):
+    payload = args.path + "\n"
+    if _try_send(args.socket, payload):
+        return
+    if not _spawn_daemon(args):
+        sys.exit(1)  # no uv; caller falls back to paplay
+    for _ in range(100):  # up to ~5s for the daemon to bind
+        if _try_send(args.socket, payload):
+            return
+        time.sleep(0.05)
+    sys.exit(1)
+
+
+def main():
+    ap = argparse.ArgumentParser(prog="af-soundd")
+    sub = ap.add_subparsers(dest="cmd", required=True)
+
+    d = sub.add_parser("daemon")
+    d.add_argument("--socket", required=True)
+    d.add_argument("--idle-timeout", type=float, default=30.0)
+    d.add_argument("--max-voices", type=int, default=8)
+    d.add_argument("--no-audio", action="store_true")
+    d.set_defaults(func=run_daemon)
+
+    r = sub.add_parser("raw-send")
+    r.add_argument("--socket", required=True)
+    r.set_defaults(func=run_raw_send)
+
+    p = sub.add_parser("play")
+    p.add_argument("--socket", required=True)
+    p.add_argument("--path", required=True)
+    p.add_argument("--idle-timeout", type=float, default=30.0)
+    p.add_argument("--max-voices", type=int, default=8)
+    p.add_argument("--no-audio", action="store_true")
+    p.set_defaults(func=run_play)
+
+    t = sub.add_parser("selftest")
+    t.set_defaults(func=run_selftest)
+
+    args = ap.parse_args()
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()

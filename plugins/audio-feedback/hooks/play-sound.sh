@@ -40,50 +40,17 @@ if [ -n "$HOOK_JSON" ] && command -v jq >/dev/null 2>&1; then
     esac
 fi
 
-# Load config for click event checking.
-af_load_config
-
-# Extract a token count for click-enabled events.
-# - stop:          true output_tokens from last assistant entry in transcript
-# - subagent_stop: sum of output_tokens across the subagent's transcript
-# - post_tool_use: estimated from tool_response length (chars / 4)
-# - notification:  estimated from message length (chars / 4)
-# - pre_compact:   fixed sentinel for a consistent "crunching" feel
-TOKEN_COUNT=0
-if af_clicks_enabled_for "$EVENT" && command -v jq >/dev/null 2>&1; then
-    case "$EVENT" in
-        stop)
-            t_path="$(printf '%s' "$HOOK_JSON" | jq -r '.transcript_path // empty' 2>/dev/null)"
-            [ -n "$t_path" ] && TOKEN_COUNT="$(af_tokens_from_transcript "$t_path" last)"
-            ;;
-        subagent_stop)
-            t_path="$(printf '%s' "$HOOK_JSON" | jq -r '.agent_transcript_path // empty' 2>/dev/null)"
-            [ -n "$t_path" ] && TOKEN_COUNT="$(af_tokens_from_transcript "$t_path" sum)"
-            ;;
-        post_tool_use)
-            chars="$(printf '%s' "$HOOK_JSON" | jq -r '.tool_response // empty' 2>/dev/null | wc -c)"
-            TOKEN_COUNT=$(( chars / 4 ))
-            ;;
-        notification)
-            chars="$(printf '%s' "$HOOK_JSON" | jq -r '.message // empty' 2>/dev/null | wc -c)"
-            TOKEN_COUNT=$(( chars / 4 ))
-            ;;
-        pre_compact)
-            TOKEN_COUNT=260
-            ;;
-    esac
-    TOKEN_COUNT="${TOKEN_COUNT//[^0-9]/}"
-    [ -z "$TOKEN_COUNT" ] && TOKEN_COUNT=0
+AGENT_ID=""
+if [ -n "$HOOK_JSON" ] && command -v jq >/dev/null 2>&1; then
+    AGENT_ID="$(printf '%s' "$HOOK_JSON" | jq -r '.agent_id // empty' 2>/dev/null)"
 fi
 
-# Background the entire sound sequence (event sound + optional clicks)
-# and detach, so the hook script returns to Claude Code immediately
-# regardless of sox/paplay latency.
+# Background the event sound and detach, so the hook returns to Claude Code
+# immediately regardless of paplay latency. Overlay the subagent accent
+# (if applicable) in the same detached block.
 {
     af_play_event_with_subtype "$EVENT" "$SUBTYPE"
-    if af_clicks_enabled_for "$EVENT" && [ "$TOKEN_COUNT" -gt 0 ] 2>/dev/null; then
-        af_play_clicks "$TOKEN_COUNT"
-    fi
+    [ -n "$AGENT_ID" ] && af_play_subagent_accent "$EVENT"
 } </dev/null >/dev/null 2>&1 &
 disown 2>/dev/null || true
 
