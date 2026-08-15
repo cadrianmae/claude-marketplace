@@ -48,7 +48,8 @@ Global config: `~/.claude/.audio-feedback-config`
 | `DAEMON_ENABLED` | `true` | Use the resident playback daemon when available |
 | `DAEMON_IDLE_TIMEOUT` | `30` | Seconds of inactivity before the daemon self-exits |
 | `DAEMON_MAX_VOICES` | `8` | Max concurrent mixed voices in the daemon |
-| `SUBAGENT_ACCENT` | `true` | Overlay `subagent-accent.wav` on tool sounds fired on behalf of a subagent |
+| `VOLUME` | `1.0` | Playback level, `0.0`–`1.0` (linear); scales daemon + paplay output |
+| `SUBAGENT_ACCENT` | `true` | For a tool run inside a subagent, play the sound's `-subagent` background variant (extra reverb + low-pass) instead of the plain sound |
 
 Set any event to `off` to silence it. Set `ENABLED=false` to silence everything.
 
@@ -144,6 +145,6 @@ Print the subcommand grammar, config reference table, and bundled sounds table i
 
 - **Coexistence with tts plugin:** If tts is also installed with CHIME_ENABLED=true, both plugins fire on Stop — double chime. Disable one: either `/tts config CHIME_ENABLED=false` or `/audio-feedback config STOP_SOUND=off`.
 - PreToolUse and PostToolUse default to `off` because they fire on EVERY tool call (high frequency, can be annoying during heavy tool use).
-- When a hook's JSON payload carries `agent_id` (i.e. the tool call was made on behalf of a subagent), `subagent-accent.wav` is mixed in over the event sound if `SUBAGENT_ACCENT=true` (default).
+- When a hook's JSON payload carries `agent_id` (i.e. the tool call was made on behalf of a subagent), the sound's `<name>-subagent.wav` background variant (extra reverb + low-pass, "heard from another room") plays instead of the plain sound, if `SUBAGENT_ACCENT=true` (default).
 - Hooks are non-blocking: the event sound runs in a detached background process, so the hook script returns in ~50ms regardless of paplay latency.
 - Requires PipeWire (`paplay`). The optional playback daemon (`af-soundd`) needs `uv` (which supplies sounddevice/soundfile/numpy via PEP 723) and collapses concurrent playback into one process / one PipeWire client; without uv, each event uses paplay. Subtype resolution needs `jq`.

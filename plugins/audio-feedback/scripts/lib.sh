@@ -31,6 +31,7 @@ af_default_daemon_enabled="true"
 af_default_daemon_idle_timeout="30"
 af_default_daemon_max_voices="8"
 af_default_subagent_accent="true"
+af_default_volume="1.0"
 af_default_stop="stop"
 af_default_notification="notification"
 af_default_pre_compact="pre-compact"
@@ -53,6 +54,7 @@ af_load_config() {
     AF_DAEMON_IDLE_TIMEOUT="$af_default_daemon_idle_timeout"
     AF_DAEMON_MAX_VOICES="$af_default_daemon_max_voices"
     AF_SUBAGENT_ACCENT="$af_default_subagent_accent"
+    AF_VOLUME="$af_default_volume"
     AF_STOP_SOUND="$af_default_stop"
     AF_NOTIFICATION_SOUND="$af_default_notification"
     AF_PRE_COMPACT_SOUND="$af_default_pre_compact"
@@ -78,6 +80,7 @@ af_load_config() {
             DAEMON_IDLE_TIMEOUT) AF_DAEMON_IDLE_TIMEOUT="$value" ;;
             DAEMON_MAX_VOICES) AF_DAEMON_MAX_VOICES="$value" ;;
             SUBAGENT_ACCENT) AF_SUBAGENT_ACCENT="$value" ;;
+            VOLUME) AF_VOLUME="$value" ;;
             STOP_SOUND) AF_STOP_SOUND="$value" ;;
             NOTIFICATION_SOUND) AF_NOTIFICATION_SOUND="$value" ;;
             PRE_COMPACT_SOUND) AF_PRE_COMPACT_SOUND="$value" ;;
@@ -207,19 +210,25 @@ _af_deps_ok() {
 # Play one resolved WAV. Prefer the single daemon; fall back to paplay.
 # Ladder: daemon disabled -> no runtime dir -> no python3/uv -> delivery
 # failure. Any miss falls through to paplay so we are never silent.
+# Convert a 0.0-1.0 VOLUME to paplay's 0-65536 linear scale (clamped).
+_af_pa_volume() {
+    awk -v v="$1" 'BEGIN{ n=int(v*65536); if(n<0)n=0; if(n>65536)n=65536; print n }'
+}
+
 af_dispatch_play() {
-    local wav="$1" sock
+    local wav="$1" sock vol
     [ -f "$wav" ] || return 0
+    vol="${AF_VOLUME:-1.0}"
     sock="$(_af_daemon_socket)"
     if [ "${AF_DAEMON_ENABLED:-true}" = "true" ] && [ -n "$sock" ] && _af_deps_ok; then
         if python3 "$(_af_soundd)" play \
-                --socket "$sock" --path "$wav" \
+                --socket "$sock" --path "$wav" --volume "$vol" \
                 --idle-timeout "${AF_DAEMON_IDLE_TIMEOUT:-30}" \
                 --max-voices "${AF_DAEMON_MAX_VOICES:-8}" 2>/dev/null; then
             return 0
         fi
     fi
-    paplay "$wav" 2>/dev/null || true
+    paplay --volume="$(_af_pa_volume "$vol")" "$wav" 2>/dev/null || true
 }
 
 # Background variant selector: if this event fired INSIDE a subagent (agent_id

@@ -123,7 +123,19 @@ def run_daemon(args):
             with conn:
                 data = conn.recv(8192).decode("utf-8", "replace")
             for line in data.splitlines():
-                path = line.strip()
+                line = line.strip()
+                if not line:
+                    continue
+                # message format: "<volume>\t<path>" (a bare path = volume 1.0)
+                if "\t" in line:
+                    vol_str, path = line.split("\t", 1)
+                    try:
+                        vol = float(vol_str)
+                    except ValueError:
+                        vol, path = 1.0, line
+                else:
+                    vol, path = 1.0, line
+                path = path.strip()
                 if not path:
                     continue
                 print("PLAY " + path, file=sys.stderr, flush=True)
@@ -132,7 +144,7 @@ def run_daemon(args):
                     continue
                 samples = _load_wav(path, cache)
                 if samples is not None:
-                    mixer.add(samples)
+                    mixer.add(samples if vol == 1.0 else (samples * vol).astype("float32"))
     finally:
         if stream is not None:
             stream.stop(); stream.close()
@@ -227,7 +239,7 @@ def _spawn_daemon(args):
 
 
 def run_play(args):
-    payload = args.path + "\n"
+    payload = f"{args.volume}\t{args.path}\n"
     if _try_send(args.socket, payload):
         return
     if not _spawn_daemon(args):
@@ -257,6 +269,7 @@ def main():
     p = sub.add_parser("play")
     p.add_argument("--socket", required=True)
     p.add_argument("--path", required=True)
+    p.add_argument("--volume", type=float, default=1.0)
     p.add_argument("--idle-timeout", type=float, default=30.0)
     p.add_argument("--max-voices", type=int, default=8)
     p.add_argument("--no-audio", action="store_true")

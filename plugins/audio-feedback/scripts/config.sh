@@ -13,7 +13,7 @@ source "$SCRIPT_DIR/lib.sh"
 af_ensure_config
 af_load_config
 
-VALID_KEYS="THEME ENABLED DAEMON_ENABLED DAEMON_IDLE_TIMEOUT DAEMON_MAX_VOICES SUBAGENT_ACCENT STOP_SOUND NOTIFICATION_SOUND PRE_COMPACT_SOUND USER_PROMPT_SOUND SESSION_START_SOUND SUBAGENT_STOP_SOUND PRE_TOOL_USE_SOUND POST_TOOL_USE_SOUND"
+VALID_KEYS="THEME ENABLED DAEMON_ENABLED DAEMON_IDLE_TIMEOUT DAEMON_MAX_VOICES SUBAGENT_ACCENT VOLUME STOP_SOUND NOTIFICATION_SOUND PRE_COMPACT_SOUND USER_PROMPT_SOUND SESSION_START_SOUND SUBAGENT_STOP_SOUND PRE_TOOL_USE_SOUND POST_TOOL_USE_SOUND"
 
 if [ $# -eq 0 ]; then
     echo "audio-feedback configuration ($(af_config_file)):"
@@ -24,6 +24,7 @@ if [ $# -eq 0 ]; then
     echo "  DAEMON_IDLE_TIMEOUT=$AF_DAEMON_IDLE_TIMEOUT"
     echo "  DAEMON_MAX_VOICES=$AF_DAEMON_MAX_VOICES"
     echo "  SUBAGENT_ACCENT=$AF_SUBAGENT_ACCENT"
+    echo "  VOLUME=$AF_VOLUME"
     echo
     echo "  Event sounds (set to 'off' to disable):"
     echo "  STOP_SOUND=$AF_STOP_SOUND"
@@ -70,6 +71,13 @@ for arg in "$@"; do
         DAEMON_IDLE_TIMEOUT|DAEMON_MAX_VOICES)
             if ! [[ "$value" =~ ^[0-9]+$ ]] || [ "$value" -lt 1 ]; then
                 echo "Error: $key must be a positive integer (got '$value')" >&2
+                exit 1
+            fi
+            ;;
+        VOLUME)
+            if ! [[ "$value" =~ ^[0-9]+([.][0-9]+)?$ ]] \
+               || ! awk -v v="$value" 'BEGIN{exit !(v>=0 && v<=1)}'; then
+                echo "Error: VOLUME must be a number 0.0-1.0 (got '$value')" >&2
                 exit 1
             fi
             ;;

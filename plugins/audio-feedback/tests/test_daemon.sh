@@ -70,6 +70,6 @@ HOME="$CFG3" PATH="$STUB:$PATH" bash -c "
   af_load_config
   af_dispatch_play '$WAV'
 "
-if grep -q "PAPLAY $WAV" /tmp/aftest-calls.log; then ok "DAEMON_ENABLED=false falls back to paplay"; else bad "DAEMON_ENABLED=false falls back to paplay"; fi
+if grep -q "PAPLAY .*$WAV" /tmp/aftest-calls.log; then ok "DAEMON_ENABLED=false falls back to paplay"; else bad "DAEMON_ENABLED=false falls back to paplay"; fi
 
 exit "$fail"
