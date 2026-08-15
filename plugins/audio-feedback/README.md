@@ -75,18 +75,26 @@ Set any event to `off` to silence it. Sound values are filenames (without `.wav`
 
 ## Default Theme Sounds
 
-| File | Event | Character | Duration |
-|---|---|---|---|
-| `stop.wav` | Stop | Descending G4-C4 fifth, settling | 1.0s |
-| `notification.wav` | Notification | Ascending A4-C5, attention | 0.9s |
-| `pre-compact.wav` | PreCompact | Low G3 tone, warning | 1.1s |
-| `user-prompt-submit.wav` | UserPromptSubmit | Tiny 600Hz click | 0.55s |
-| `session-start.wav` | SessionStart | Ascending C4-E4-G4 arpeggio | 0.94s |
-| `subagent-stop.wav` | SubagentStop | Double ping E5 | 0.66s |
-| `pre-tool-use.wav` | PreToolUse | Barely-there 500Hz tick | 0.53s |
-| `post-tool-use.wav` | PostToolUse | Short 700Hz tick | 0.54s |
+Note-map, voice, and cycle length are the source of truth in `variants.py`;
+this table is generated from it. `Notes` is the mini-notation phrase (`@N` =
+hold N sub-steps, `[...]` = one bracketed step, `,` = stacked/simultaneous).
 
-All sounds: lo-fi minimal aesthetic, synthesised with reverb, 0.5s decay tail, normalized to 0dB peak, mono 44.1kHz.
+| File | Event | Voice | Notes | Character | Cycle |
+|---|---|---|---|---|---|
+| `stop.wav` | Stop | pluck | `[c5 b4@2] g4 e4@2 c4@3` | Ionian fall, settles | 0.96s |
+| `notification.wav` | Notification | pluck | `g4 a#4@2` | Open rise, kept subtle (quieter, sits back) | 0.48s |
+| `pre-compact.wav` | PreCompact | sine | `[c3,e3,g3]` | Low sustained warn triad | 0.96s |
+| `user-prompt-submit.wav` | UserPromptSubmit | pluck | `g4` | Single plucked tone, input ack | 0.12s |
+| `session-start.wav` | SessionStart | pluck | `c3@3 e3@2 g3 [a#3 c4]` | Mixolydian rise, accelerating | 1.44s |
+| `subagent-stop.wav` | SubagentStop | pluck | `e4 c4@2` | Short two-note fall | 0.36s |
+| `pre-tool-use.wav` | PreToolUse | pluck | `a#4` | Open flat-7, barely-there tick | 0.06s |
+| `post-tool-use.wav` | PostToolUse | pluck | `c5` | Tonic, resolved tick | 0.06s |
+
+`Cycle` is the musical cycle length (`cycle_sec`); the rendered WAV runs a
+little longer with its reverb tail. All sounds: mono 44.1 kHz, peak-normalized
+then trimmed per-sound by ear (`level_db`). The 19 subtype variants (e.g.
+`pre-tool-use-execute`, `notification-idle`) extend these base events with
+`dsp` overrides and overlay layers — see `variants.py`.
 
 ## Sound design
 
