@@ -107,6 +107,7 @@ DAEMON_ENABLED=$af_default_daemon_enabled
 DAEMON_IDLE_TIMEOUT=$af_default_daemon_idle_timeout
 DAEMON_MAX_VOICES=$af_default_daemon_max_voices
 SUBAGENT_ACCENT=$af_default_subagent_accent
+VOLUME=$af_default_volume
 STOP_SOUND=$af_default_stop
 NOTIFICATION_SOUND=$af_default_notification
 PRE_COMPACT_SOUND=$af_default_pre_compact

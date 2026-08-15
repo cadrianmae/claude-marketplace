@@ -82,7 +82,7 @@ def cmd_serve_dir(out: str) -> None:
 
 
 def cmd_generate(argv: list[str]) -> None:
-    only = [argv[i + 1] for i, a in enumerate(argv) if a == "--only"]
+    only = [argv[i + 1] for i, a in enumerate(argv) if a == "--only" and i + 1 < len(argv)]
     os.makedirs(theme.SOUNDS, exist_ok=True)
     for name, sig in _render_events(only or None).items():
         theme.write_wav(os.path.join(theme.SOUNDS, name + ".wav"), sig)

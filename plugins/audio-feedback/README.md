@@ -1,7 +1,7 @@
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
+[![Version](https://img.shields.io/badge/version-1.1.1-blue.svg)](https://github.com/cadrianmae/claude-marketplace)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-# Audio Feedback Plugin v1.0
+# Audio Feedback Plugin v1.1.1
 
 Audio feedback for Claude Code hook events. Plays short synth sounds on response complete, notifications, context compaction, user input, and more. Configurable per-event with bundled theme sounds. Independent of the tts plugin.
 
@@ -68,7 +68,8 @@ Global config: `~/.claude/.audio-feedback-config`
 | `DAEMON_ENABLED` | `true` | Use the resident playback daemon when available |
 | `DAEMON_IDLE_TIMEOUT` | `30` | Seconds of inactivity before the daemon self-exits |
 | `DAEMON_MAX_VOICES` | `8` | Max concurrent mixed voices in the daemon |
-| `SUBAGENT_ACCENT` | `true` | Overlay `subagent-accent.wav` on tool sounds fired on behalf of a subagent |
+| `SUBAGENT_ACCENT` | `true` | Play the `-subagent` background variant (extra reverb, low-pass, level trim) for tool sounds fired on behalf of a subagent |
+| `VOLUME` | `1.0` | Playback level, linear `0.0`-`1.0` (scales both daemon mix and `paplay`) |
 
 Set any event to `off` to silence it. Sound values are filenames (without `.wav`) from the active theme directory.
 
@@ -89,14 +90,16 @@ All sounds: lo-fi minimal aesthetic, synthesised with reverb, 0.5s decay tail, n
 
 ## Sound design
 
-The default theme's 27 sounds (8 base events + 19 subtype variants) are all derived
-from the locked note-map in `variants.py`: each base event is a `seq` (melodic line) or `chord`
-(simultaneous notes) of MIDI note/duration pairs, additively synthesised as bells by
-`generate.py`. Variants (e.g. `notification-permission`, `pre-tool-use-execute`) are
-declared in `variants.py` as small accent deltas (brightness, detune, punch) layered
-on top of their base event's contour, rather than hand-authored from scratch, so the
-whole palette stays sonically related while each event/subtype still reads distinctly
-by ear.
+The default theme's 27 cards (8 base events + 19 subtype variants) are derived from
+the locked note-map in `variants.py`: each base event is a mini-notation `phrase` of
+notes rendered by one of the numpy/scipy voices in `voices.py` (`bell`, `pluck`,
+`sine`, `clicks`, `swoosh`), with the voice primitives defined in `dsp.py` and tuned
+by `tuning.py`. Variants (e.g. `notification-permission`, `pre-tool-use-execute`) are
+declared as per-sound `dsp` overrides and optional overlay layers (`clicks_layer`,
+`slide_layer`) on top of their base event's contour, so the palette stays sonically
+related while each event/subtype reads distinctly by ear. Tool sounds fired on behalf
+of a subagent also render a `-subagent` background variant (see `SUBAGENT_ACCENT`),
+for 41 WAVs total.
 
 ## Regenerating sounds
 

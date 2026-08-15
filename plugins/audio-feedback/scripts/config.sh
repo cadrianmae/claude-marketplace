@@ -43,7 +43,6 @@ if [ $# -eq 0 ]; then
 fi
 
 # Validate and apply
-sounds_dir="$(_af_sounds_dir)"
 for arg in "$@"; do
     if [[ "$arg" != *=* ]]; then
         echo "Error: '$arg' is not in KEY=VALUE form" >&2
@@ -82,6 +81,9 @@ for arg in "$@"; do
             fi
             ;;
         STOP_SOUND|NOTIFICATION_SOUND|PRE_COMPACT_SOUND|USER_PROMPT_SOUND|SESSION_START_SOUND|SUBAGENT_STOP_SOUND|PRE_TOOL_USE_SOUND|POST_TOOL_USE_SOUND)
+            # recompute per-arg: a THEME= set earlier in this same invocation
+            # has already been persisted, so validate against the pending theme
+            sounds_dir="$(_af_sounds_dir)"
             if [ "$value" != "off" ] && [ ! -f "$sounds_dir/${value}.wav" ]; then
                 echo "Error: sound '$value' not found. Use 'off' or one of: $(af_list_sounds | tr '\n' ' ')" >&2
                 exit 1
